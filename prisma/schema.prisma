@@ -36,7 +36,7 @@ model User {
   id        String   @id @default(cuid())
   email     String
   password  String
-  role      Role     @default(USER)
+  role      Role
   firstName String?
   lastName  String?
   isActive  Boolean  @default(true)
@@ -165,10 +165,19 @@ model Subscription {
 
 // --- ÉNUMÉRATIONS ---
 enum Role {
-  USER
-  ADMIN
-  TEACHER
-  PARENT
+  // Rôle de super-administrateur de la plateforme (nous, les développeurs)
+  SUPER_ADMIN
+
+  // Rôles au sein d'une école
+  FONDATEUR       // Le propriétaire du compte sur la plateforme
+  DIRECTEUR       // Le chef d'établissement
+  SECRETAIRE      // Gère l'administratif, les inscriptions
+  COMPTABLE       // Gère les finances, les paiements
+  SURVEILLANT     // Gère la discipline, les absences
+  CENSEUR         // Gère la pédagogie, les bulletins
+  ENSEIGNANT      // Le professeur
+  ELEVE           // L'élève
+  PARENT          // Le parent d'élève
 }
 
 enum Gender {
