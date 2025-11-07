@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Link } from 'react-router-dom';
-import { authService, LoginRequest } from '../../services/authService';
+// authService will be used when the API is wired; removed unused imports for now
 
 // Schéma de validation avec Yup pour le formulaire
 const loginSchema = yup.object().shape({

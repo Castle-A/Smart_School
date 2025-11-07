@@ -21,13 +21,8 @@ export interface LoginResponse {
 export const authService = {
   // Fonction pour se connecter
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    try {
-      const response = await api.post<LoginResponse>('/auth/login', credentials);
-      return response.data;
-    } catch (error) {
-      // On relance l'erreur pour que le composant puisse la gérer
-      throw error;
-    }
+    const response = await api.post<LoginResponse>('/auth/login', credentials);
+    return response.data;
   },
 
   // Fonction pour s'inscrire (on l'ajoutera plus tard)

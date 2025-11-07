@@ -1,0 +1,247 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// --- MODÈLE CENTRAL : L'ÉCOLE (TENANT) ---
+model School {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  address   String?
+  phone     String?
+  email     String   @unique
+  logoUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users           User[]
+  students        Student[]
+  teacherProfiles TeacherProfile[]
+  classes         Class[]
+  subjects        Subject[]
+  subscriptions   Subscription[]
+
+  @@map("schools")
+}
+
+// --- MODÈLES UTILISATEURS ---
+model User {
+  id        String   @id @default(cuid())
+  email     String
+  password  String
+  role      Role // Pas de valeur par défaut
+  firstName String?
+  lastName  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  studentProfile Student?
+  teacherProfile TeacherProfile?
+
+  @@unique([schoolId, email])
+  @@map("users")
+}
+
+model Student {
+  id        String    @id @default(cuid())
+  matricule String
+  firstName String
+  lastName  String
+  gender    Gender?
+  birthDate DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  classId String?
+  class   Class?  @relation(fields: [classId], references: [id])
+
+  @@unique([schoolId, matricule])
+  @@map("students")
+}
+
+model TeacherProfile {
+  id        String   @id @default(cuid())
+  hireDate  DateTime
+  salary    Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  subjectsTaught Subject[]
+
+  @@map("teacher_profiles")
+}
+
+// --- MODÈLES PÉDAGOGIQUES ---
+model Class {
+  id        String     @id @default(cuid())
+  name      String
+  level     GradeLevel
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  students Student[]
+  subjects Subject[]
+
+  @@unique([schoolId, name])
+  @@map("classes")
+}
+
+model Subject {
+  id        String   @id @default(cuid())
+  name      String
+  code      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  teachers TeacherProfile[]
+  classes  Class[]
+
+  @@unique([schoolId, code])
+  @@map("subjects")
+}
+
+// --- MODÈLES ÉCONOMIQUES (SaaS) ---
+model Plan {
+  id               String   @id @default(cuid())
+  name             String   @unique
+  price            Float
+  durationInMonths Int
+  features         Json
+  isArchived       Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id                String             @id @default(cuid())
+  status            SubscriptionStatus @default(ACTIVE)
+  startDate         DateTime
+  endDate           DateTime
+  trialEndDate      DateTime? // Date de fin de la période d'essai (1 mois après startDate)
+  gracePeriodEndsAt DateTime? // Date de fin de la période de grâce (1 mois après endDate)
+  lastNotifiedAt    DateTime? // Pour ne pas spammer d'emails
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  planId String
+  plan   Plan   @relation(fields: [planId], references: [id])
+
+  @@unique([schoolId, status])
+  @@map("subscriptions")
+}
+
+// --- ÉNUMÉRATIONS ---
+enum Role {
+  // Rôle de super-administrateur de la plateforme (nous, les développeurs)
+  SUPER_ADMIN
+
+  // Rôles au sein d'une école
+  FONDATEUR // Le propriétaire du compte sur la plateforme
+  DIRECTEUR // Le chef d'établissement
+  SECRETAIRE // Gère l'administratif, les inscriptions
+  COMPTABLE // Gère les finances, les paiements
+  SURVEILLANT // Gère la discipline, les absences
+  CENSEUR // Gère la pédagogie, les bulletins
+  ENSEIGNANT // Le professeur
+  ELEVE // L'élève
+  PARENT // Le parent d'élève
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+// NOUVEL ENUM POUR LES NIVEAUX DE CLASSE
+enum GradeLevel {
+  // --- Maternelle ---
+  MATERNELLE_1
+  MATERNELLE_2
+  MATERNELLE_3
+
+  // --- Primaire (CI, CP, CE1, CE2, CM1, CM2) ---
+  CLASSE_INITIALE // CI
+  COURS_PREPARATOIRE_1 // CP1
+  COURS_PREPARATOIRE_2 // CP2
+  COURS_ELEMENTAIRE_1 // CE1
+  COURS_ELEMENTAIRE_2 // CE2
+  COURS_MOYEN_1 // CM1
+  COURS_MOYEN_2 // CM2
+
+  // --- Secondaire 1er Cycle (6ème à 3ème) ---
+  SIXIEME_A
+  SIXIEME_B
+  SIXIEME_C
+  CINQUIEME_A
+  CINQUIEME_B
+  CINQUIEME_C
+  QUATRIEME_A
+  QUATRIEME_B
+  QUATRIEME_C
+  TROISIEME_A
+  TROISIEME_B
+  TROISIEME_C
+
+  // --- Secondaire 2nd Cycle (Seconde à Terminale) ---
+  SECONDE_A
+  SECONDE_B
+  SECONDE_C
+  SECONDE_D
+  PREMIERE_A
+  PREMIERE_B
+  PREMIERE_C
+  PREMIERE_D
+  PREMIERE_G1
+  PREMIERE_G2
+  PREMIERE_G3
+  TERMINALE_A
+  TERMINALE_B
+  TERMINALE_C
+  TERMINALE_D
+  TERMINALE_G1
+  TERMINALE_G2
+  TERMINALE_G3
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+}
