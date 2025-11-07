@@ -23,7 +23,7 @@ model School {
   // Relations
   users            User[]
   students         Student[]
-  teacherProfiles  TeacherProfile[] // <-- AJOUTEZ CETTE LIGNE
+  teacherProfiles  TeacherProfile[]
   classes          Class[]
   subjects         Subject[]
   subscriptions    Subscription[]
@@ -36,7 +36,7 @@ model User {
   id        String   @id @default(cuid())
   email     String
   password  String
-  role      Role
+  role      Role // Pas de valeur par défaut
   firstName String?
   lastName  String?
   isActive  Boolean  @default(true)
@@ -146,12 +146,15 @@ model Plan {
 }
 
 model Subscription {
-  id        String             @id @default(cuid())
-  status    SubscriptionStatus @default(ACTIVE)
-  startDate DateTime
-  endDate   DateTime
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
+  id               String             @id @default(cuid())
+  status           SubscriptionStatus @default(ACTIVE)
+  startDate        DateTime
+  endDate          DateTime
+  trialEndDate     DateTime?          // Date de fin de la période d'essai (1 mois après startDate)
+  gracePeriodEndsAt DateTime?          // Date de fin de la période de grâce (1 mois après endDate)
+  lastNotifiedAt   DateTime?          // Pour ne pas spammer d'emails
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 
   schoolId String
   school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
@@ -239,6 +242,6 @@ enum GradeLevel {
 
 enum SubscriptionStatus {
   ACTIVE
-  EXPIRED
+  PAUSED
   CANCELLED
 }
