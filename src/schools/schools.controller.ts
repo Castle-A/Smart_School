@@ -1,12 +1,14 @@
-// src/schools/schools.controller.ts
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { SchoolsService } from './schools.service';
 import { CreateSchoolDto } from './dto/create-school.dto';
 import { UpdateSchoolDto } from './dto/update-school.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('schools')
+@UseGuards(JwtAuthGuard)
 export class SchoolsController {
   constructor(private readonly schoolsService: SchoolsService) {}
+
 
   @Post()
   create(@Body() createSchoolDto: CreateSchoolDto) {

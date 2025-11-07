@@ -1,7 +1,10 @@
+// src/auth/auth.module.ts
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
+
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { PrismaService } from '../prisma.service';
 
@@ -9,16 +12,12 @@ import { PrismaService } from '../prisma.service';
   imports: [
     PassportModule,
     JwtModule.register({
-      secret: 'VOTRE_SECRET_SUPER_SECRET', // TODO: Mettre ceci dans .env
-      signOptions: { expiresIn: '60m' }, // Le token expire en 1 heure
+      secret: process.env.JWT_SECRET ?? 'dev-secret', // mets-le dans .env
+      signOptions: { expiresIn: '60m' },
     }),
   ],
-  // C'EST LA PARTIE LA PLUS IMPORTANTE :
-  providers: [
-    AuthService,
-    PrismaService,
-    JwtStrategy,
-  ],
-  exports: [AuthService],
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy, PrismaService],
+  exports: [AuthService, JwtModule, PassportModule],
 })
 export class AuthModule {}
