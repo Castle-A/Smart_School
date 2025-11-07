@@ -10,7 +10,7 @@ export class TasksService {
   constructor(private prisma: PrismaService) {}
 
   // S'exécute tous les jours à minuit (0 minutes, 0 heures)
-  @Cron('0 0 * * *')
+  //@Cron('0 0 * * *')
   async handleCron() {
     this.logger.log('Exécution de la tâche de vérification des abonnements...');
     
