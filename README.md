@@ -1,3 +1,7 @@
+# Smart_School Backend
+
+This is the backend for the Smart_School application, a comprehensive SaaS school management system.
+=======
 <<<<<<< HEAD
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
@@ -120,3 +124,4 @@ This project uses the same MIT license as the NestJS starter. See the repository
 
 ---
 _Merged README: kept the project header from the remote and important usage notes from the local NestJS starter._
+>>>>>>> 9a8775c37c420f37e484d4f25a62b85c45e3975d
