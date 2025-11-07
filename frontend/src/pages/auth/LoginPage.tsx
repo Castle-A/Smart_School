@@ -1,32 +1,41 @@
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Link } from 'react-router-dom';
-// authService will be used when the API is wired; removed unused imports for now
+import { Link, useNavigate } from 'react-router-dom'; // 1. Importer useNavigate
+import { authService, LoginRequest } from '../../services/authService'; // 2. Importer le service et le type
 
-// Schéma de validation avec Yup pour le formulaire
+// Schéma de validation avec Yup
 const loginSchema = yup.object().shape({
   email: yup.string().email('Format de l\'email invalide').required('L\'email est requis'),
   password: yup.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères').required('Le mot de passe est requis'),
 });
 
-// Définition du type pour les données du formulaire
-type LoginFormInputs = {
-  email: string;
-  password: string;
-};
-
 const LoginPage = () => {
-  // Initialisation de react-hook-form avec le validateur Yup
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>({
+  // 3. Initialiser le hook de navigation
+  const navigate = useNavigate();
+
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginRequest>({
     resolver: yupResolver(loginSchema),
   });
 
   // Fonction appelée lors de la soumission du formulaire
-  const onSubmit = (data: LoginFormInputs) => {
-    console.log('Données de connexion envoyées :', data);
-    // TODO: Appeler votre API de connexion ici avec axios
-    // Exemple : authService.login(data);
+  const onSubmit = async (data: LoginRequest) => {
+    console.log('!!! ÉTAPE 1: onSubmit appelé avec les données:', data);
+
+    try {
+      // 4. APPEL VRAI VERS L'API
+      const response = await authService.login(data);
+      console.log('!!! ÉTAPE 2: Réponse reçue de l\'API:', response);
+
+      // 5. En cas de succès, stocker le token et rediriger
+      localStorage.setItem('access_token', response.access_token);
+      navigate('/dashboard'); // Redirige vers le tableau de bord
+
+    } catch (error: any) {
+      console.error('!!! ÉTAPE 3: Erreur capturée:', error);
+      // 6. En cas d'erreur, vous pourrez l'afficher à l'utilisateur plus tard
+      alert('Erreur de connexion: ' + (error.response?.data?.message || 'Erreur inconnue'));
+    }
   };
 
   return (
@@ -42,42 +51,21 @@ const LoginPage = () => {
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          {/* ... Le reste de votre JSX pour le formulaire ... */}
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Adresse email
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                {...register('email')}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="vous@exemple.com"
-              />
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Adresse email</label>
+              <input id="email" type="email" autoComplete="email" {...register('email')} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="vous@exemple.com" />
               {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>}
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Mot de passe
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                {...register('password')}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="••••••••"
-              />
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Mot de passe</label>
+              <input id="password" type="password" autoComplete="current-password" {...register('password')} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="•••••••" />
               {errors.password && <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>}
             </div>
           </div>
-
           <div>
-            <button
-              type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
+            <button type="submit" className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
               Se connecter
             </button>
           </div>
