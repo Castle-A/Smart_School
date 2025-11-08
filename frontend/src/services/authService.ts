@@ -1,11 +1,14 @@
 import axios from 'axios';
 
-// URL de backend. Adaptable.
-const API_URL = 'https://automatic-waffle-wr99w9j6vpr4h9vqx-3000.app.github.dev/'; // Mettez le port de votre backend NestJS
+const API_URL =
+  import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL !== ''
+    ? import.meta.env.VITE_API_URL   //  Prod (ou si défini)
+    : '/';                           //  Dev → passe par le proxy Vite
 
-// Crée une instance d'axios pour ne pas avoir à répéter l'URL
+// Instance axios unique
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 15000,
 });
 
 export interface LoginRequest {
@@ -15,16 +18,26 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   access_token: string;
-  // Ajoutez d'autres champs si votre API les retourne (ex: user)
+  // + éventuellement: user?: {...}
 }
 
 export const authService = {
-  // Fonction pour se connecter
+  // Login (inchangé)
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     const response = await api.post<LoginResponse>('/auth/login', credentials);
     return response.data;
   },
 
-  // Fonction pour s'inscrire (on l'ajoutera plus tard)
-  // register: async (userData: RegisterRequest): Promise<any> => { ... }
+  //  Register school (TYPE MIS À JOUR)
+  registerSchool: async (payload: {
+    schoolName: string;
+    schoolAddress: string; // <-- AJOUTÉ
+    schoolPhone: string;   // <-- AJOUTÉ
+    email: string;
+    password: string;
+    role: 'FONDATEUR' | 'DIRECTEUR';
+  }) => {
+    const response = await api.post('/auth/register-school', payload);
+    return response.data;
+  },
 };
