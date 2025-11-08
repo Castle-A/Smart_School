@@ -5,8 +5,10 @@ import { authService } from '@/services/authService';
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     schoolName: '',
-    schoolAddress: '', // <-- AJOUTÉ
-    schoolPhone: '',   // <-- AJOUTÉ
+    schoolAddress: '',
+    schoolPhone: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -33,8 +35,10 @@ const RegisterPage = () => {
     try {
       await authService.registerSchool({
         schoolName: formData.schoolName,
-        schoolAddress: formData.schoolAddress, // <-- ENVOYÉ
-        schoolPhone: formData.schoolPhone,     // <-- ENVOYÉ
+        schoolAddress: formData.schoolAddress,
+        schoolPhone: formData.schoolPhone,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
         role: formData.role as 'FONDATEUR' | 'DIRECTEUR',
@@ -44,7 +48,7 @@ const RegisterPage = () => {
         state: { message: 'Compte créé avec succès ! Vous pouvez maintenant vous connecter.' },
       });
     } catch (err: any) {
-      setError(err.response?.data?.message || "Une erreur est survenue.");
+      setError(err.response?.data?.message || "Une erreur est survenue lors de l'inscription.");
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +56,7 @@ const RegisterPage = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="px-8 py-6 mt-4 text-left bg-white shadow-lg rounded-lg w-full max-w-md">
+      <div className="px-8 py-6 mt-4 text-left bg-white shadow-lg rounded-lg w-full max-w-lg">
         <h3 className="text-2xl font-bold text-center text-gray-800">Créer un compte</h3>
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           {error && <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">{error}</div>}
@@ -91,12 +95,30 @@ const RegisterPage = () => {
 
           {/* Section Administrateur */}
           <div>
-            <h4 className="text-lg font-semibold text-gray-700 mb-2 mt-4">Votre compte</h4>
+            <h4 className="text-lg font-semibold text-gray-700 mb-2 mt-4">Vos informations</h4>
+            <input
+              type="text"
+              name="firstName"
+              placeholder="Votre prénom"
+              value={formData.firstName}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+              required
+            />
+            <input
+              type="text"
+              name="lastName"
+              placeholder="Votre nom de famille"
+              value={formData.lastName}
+              onChange={handleChange}
+              className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+              required
+            />
             <select
               name="role"
               value={formData.role}
               onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
             >
               <option value="FONDATEUR">Fondateur</option>
               <option value="DIRECTEUR">Directeur</option>

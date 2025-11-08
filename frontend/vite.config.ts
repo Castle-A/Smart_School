@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vite' // <-- CETTE LIGNE ÉTAIT MANQUANTE
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
@@ -9,7 +9,12 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/auth': { target: 'http://localhost:3000', changeOrigin: true },
+      // 🔁 tout ce qui commence par /auth est proxifié vers le backend NestJS
+      '/auth': { 
+        target: 'http://localhost:3000', 
+        changeOrigin: true,
+        secure: false // Bon pour Codespaces
+      },
     },
   },
 })

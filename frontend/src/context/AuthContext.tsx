@@ -1,27 +1,32 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { authService } from '../services/authService';
 
-// --- Types utilisateur (adapte a mon backend) ---
+// --- Types utilisateur (mis à jour) ---
 type AuthUser = {
   id: string;
   email: string;
-  firstName?: string;
-  role?: string;
+  firstName: string;
+  role: string;
+  schoolId: string;
+  schoolName: string;
+  avatarUrl?: string; // <-- AJOUTÉ : Le champ pour l'URL de l'avatar
 } | null;
 
-// MODIFICATION : Ajout de `isLoading` au type
 type AuthContextType = {
   user: AuthUser;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  // Expose a setter so les pages (ex: ProfilePage) puissent mettre à jour
+  // l'utilisateur après un changement de profil (avatar, nom, ...)
+  setUser: (u: AuthUser) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const TOKEN_KEY = 'access_token';
-const USER_KEY  = 'auth_user';
+const USER_KEY = 'auth_user';
 
 // Helpers sûrs
 function safeParse<T>(json: string | null): T | null {
@@ -33,7 +38,9 @@ function decodeJwtPayload(token: string): any | null {
   try {
     const base64 = token.split('.')[1];
     const json = atob(base64.replace(/-/g, '+').replace(/_/g, '/'));
-    return JSON.parse(json);
+    const decoded = JSON.parse(json);
+    console.log('TOKEN DÉCODÉ PAR LE FRONTEND:', decoded);
+    return decoded;
   } catch {
     return null;
   }
@@ -42,14 +49,12 @@ function decodeJwtPayload(token: string): any | null {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<AuthUser>(null);
-  // MODIFICATION : On initialise l'état de chargement à `true`
   const [isLoading, setIsLoading] = useState(true);
 
   // Restaure la session au chargement
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) {
-      // MODIFICATION : S'il n'y a pas de token, on a fini de vérifier
       setIsLoading(false);
       return;
     }
@@ -59,31 +64,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const cachedUser = safeParse<AuthUser>(localStorage.getItem(USER_KEY));
     if (cachedUser) {
       setUser(cachedUser);
-      // MODIFICATION : On a fini de charger grâce au cache
       setIsLoading(false);
       return;
     }
 
     (async () => {
       try {
-        // auth/me côté backend
-        if ((authService as any).getProfile) {
-          const { user } = await (authService as any).getProfile();
-          setUser(user);
-          localStorage.setItem(USER_KEY, JSON.stringify(user));
-        } else {
-          // Fallback: décoder le JWT
-          const payload = decodeJwtPayload(token); // token est string ici
-          if (payload) {
-            const u = {
-              id: payload.sub ?? 'me',
-              email: payload.email ?? '',
-              firstName: payload.firstName ?? 'Utilisateur',
-              role: payload.role ?? 'USER',
-            };
-            setUser(u);
-            localStorage.setItem(USER_KEY, JSON.stringify(u));
-          }
+        const payload = decodeJwtPayload(token);
+        if (payload) {
+          const u: AuthUser = {
+            id: payload.sub ?? 'me',
+            email: payload.email ?? '',
+            firstName: payload.firstName ?? 'Utilisateur',
+            role: payload.role ?? 'USER',
+            schoolId: payload.schoolId ?? '',
+            schoolName: payload.schoolName ?? 'École non définie',
+            avatarUrl: payload.avatarUrl, // <-- AJOUTÉ : On récupère l'avatar depuis le token
+          };
+          setUser(u);
+          localStorage.setItem(USER_KEY, JSON.stringify(u));
         }
       } catch {
         localStorage.removeItem(TOKEN_KEY);
@@ -91,41 +90,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsAuthenticated(false);
         setUser(null);
       } finally {
-        // MODIFICATION : Dans tous les cas (succès ou erreur), le chargement est terminé
         setIsLoading(false);
       }
     })();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Utilise email/password pour obtenir un token
-    const result: any = await authService.login({ email, password });
-    const access_token: string = result.access_token;
+    try {
+      const result: any = await authService.login({ email, password });
+      const access_token: string = result.access_token;
 
-    // Stocker token
-    localStorage.setItem(TOKEN_KEY, access_token);
-    setIsAuthenticated(true);
+      if (!access_token) {
+        throw new Error('Token non reçu du serveur.');
+      }
 
-    // Récupérer l’utilisateur
-    let u: AuthUser = null;
+      localStorage.setItem(TOKEN_KEY, access_token);
+      setIsAuthenticated(true);
 
-    if (result.user) {
-      u = result.user as AuthUser;
-    } else if ((authService as any).getProfile) {
-      const { user } = await (authService as any).getProfile();
-      u = user as AuthUser;
-    } else {
       const payload = decodeJwtPayload(access_token);
-      u = {
-        id: payload?.sub ?? 'me',
-        email: payload?.email ?? email,   // fallback sur l’email saisi
-        firstName: payload?.firstName ?? 'Utilisateur',
-        role: payload?.role ?? 'USER',
-      };
-    }
 
-    setUser(u);
-    localStorage.setItem(USER_KEY, JSON.stringify(u));
+      if (!payload) {
+        throw new Error('Le token reçu est invalide.');
+      }
+
+      const u: AuthUser = {
+        id: payload.sub ?? 'me',
+        email: payload.email ?? email,
+        firstName: payload.firstName ?? 'Utilisateur',
+        role: payload.role ?? 'USER',
+        schoolId: payload.schoolId ?? '',
+        schoolName: payload.schoolName ?? 'École non définie',
+        avatarUrl: payload.avatarUrl, // <-- AJOUTÉ : On récupère l'avatar depuis le token
+      };
+
+      setUser(u);
+      localStorage.setItem(USER_KEY, JSON.stringify(u));
+
+    } catch (error) {
+      logout();
+      throw error;
+    }
   };
 
   const logout = () => {
@@ -136,8 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    // MODIFICATION : On expose `isLoading` dans la valeur du contexte
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );
