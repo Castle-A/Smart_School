@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- default-avatar.svg: avatar neutre gris/blanc -->
+<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150" role="img" aria-label="Default avatar">
+  <title>Default avatar</title>
+  <defs>
+    <clipPath id="c"><circle cx="75" cy="75" r="75"/></clipPath>
+  </defs>
+  <g clip-path="url(#c)">
+    <!-- fond gris clair -->
+    <rect width="150" height="150" fill="#E5E7EB"/>
+    <!-- silhouette blanche avec léger contour gris -->
+    <circle cx="75" cy="52" r="22" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+    <path d="M40 118c0-18 14-32 35-32s35 14 35 32" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+  </g>
+</svg>

@@ -3,6 +3,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom'; // 1. Importer useNavigate
 import { authService, LoginRequest } from '../../services/authService'; // 2. Importer le service et le type
+import { useAuth } from '../../context/AuthContext';
 
 // Schéma de validation avec Yup
 const loginSchema = yup.object().shape({
@@ -18,23 +19,24 @@ const LoginPage = () => {
     resolver: yupResolver(loginSchema),
   });
 
+  // Récupère la méthode login du contexte pour mettre à jour l'état global
+  const { login } = useAuth();
+
   // Fonction appelée lors de la soumission du formulaire
   const onSubmit = async (data: LoginRequest) => {
     console.log('!!! ÉTAPE 1: onSubmit appelé avec les données:', data);
 
     try {
-      // 4. APPEL VRAI VERS L'API
-      const response = await authService.login(data);
-      console.log('!!! ÉTAPE 2: Réponse reçue de l\'API:', response);
+      // Utilise le login du contexte (mettra à jour isAuthenticated et user)
+      await login(data.email, data.password);
+      console.log('!!! ÉTAPE 2: AuthContext login réussi');
 
-      // 5. En cas de succès, stocker le token et rediriger
-      localStorage.setItem('access_token', response.access_token);
-      navigate('/dashboard'); // Redirige vers le tableau de bord
+      // Redirige vers le tableau de bord
+      navigate('/dashboard');
 
     } catch (error: any) {
       console.error('!!! ÉTAPE 3: Erreur capturée:', error);
-      // 6. En cas d'erreur, vous pourrez l'afficher à l'utilisateur plus tard
-      alert('Erreur de connexion: ' + (error.response?.data?.message || 'Erreur inconnue'));
+      alert('Erreur de connexion: ' + (error.response?.data?.message || error.message || 'Erreur inconnue'));
     }
   };
 
