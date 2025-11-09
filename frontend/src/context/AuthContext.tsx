@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import { authService } from '../services/authService';
 
 // --- Types utilisateur (mis à jour) ---
-type AuthUser = {
+export type AuthUser = {
   id: string;
   email: string;
   firstName: string;
@@ -12,7 +12,7 @@ type AuthUser = {
   avatarUrl?: string; // <-- AJOUTÉ : Le champ pour l'URL de l'avatar
 } | null;
 
-type AuthContextType = {
+export type AuthContextType = {
   user: AuthUser;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -34,16 +34,21 @@ function safeParse<T>(json: string | null): T | null {
   try { return JSON.parse(json) as T; } catch { return null; }
 }
 
-function decodeJwtPayload(token: string): any | null {
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
     const base64 = token.split('.')[1];
     const json = atob(base64.replace(/-/g, '+').replace(/_/g, '/'));
-    const decoded = JSON.parse(json);
+    const decoded = JSON.parse(json) as Record<string, unknown>;
     console.log('TOKEN DÉCODÉ PAR LE FRONTEND:', decoded);
     return decoded;
   } catch {
     return null;
   }
+}
+
+function strOr(payload: Record<string, unknown> | null, key: string, fallback = ''): string {
+  const v = payload?.[key];
+  return typeof v === 'string' ? v : fallback;
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -73,13 +78,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const payload = decodeJwtPayload(token);
         if (payload) {
           const u: AuthUser = {
-            id: payload.sub ?? 'me',
-            email: payload.email ?? '',
-            firstName: payload.firstName ?? 'Utilisateur',
-            role: payload.role ?? 'USER',
-            schoolId: payload.schoolId ?? '',
-            schoolName: payload.schoolName ?? 'École non définie',
-            avatarUrl: payload.avatarUrl, // <-- AJOUTÉ : On récupère l'avatar depuis le token
+            id: strOr(payload, 'sub', 'me'),
+            email: strOr(payload, 'email', ''),
+            firstName: strOr(payload, 'firstName', 'Utilisateur'),
+            role: strOr(payload, 'role', 'USER'),
+            schoolId: strOr(payload, 'schoolId', ''),
+            schoolName: strOr(payload, 'schoolName', 'École non définie'),
+            avatarUrl: typeof payload['avatarUrl'] === 'string' ? (payload['avatarUrl'] as string) : undefined,
           };
           setUser(u);
           localStorage.setItem(USER_KEY, JSON.stringify(u));
@@ -97,7 +102,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const result: any = await authService.login({ email, password });
+      const result = await authService.login({ email, password });
       const access_token: string = result.access_token;
 
       if (!access_token) {
@@ -114,13 +119,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const u: AuthUser = {
-        id: payload.sub ?? 'me',
-        email: payload.email ?? email,
-        firstName: payload.firstName ?? 'Utilisateur',
-        role: payload.role ?? 'USER',
-        schoolId: payload.schoolId ?? '',
-        schoolName: payload.schoolName ?? 'École non définie',
-        avatarUrl: payload.avatarUrl, // <-- AJOUTÉ : On récupère l'avatar depuis le token
+        id: strOr(payload, 'sub', 'me'),
+        email: strOr(payload, 'email', email),
+        firstName: strOr(payload, 'firstName', 'Utilisateur'),
+        role: strOr(payload, 'role', 'USER'),
+        schoolId: strOr(payload, 'schoolId', ''),
+        schoolName: strOr(payload, 'schoolName', 'École non définie'),
+        avatarUrl: typeof payload['avatarUrl'] === 'string' ? (payload['avatarUrl'] as string) : undefined,
       };
 
       setUser(u);

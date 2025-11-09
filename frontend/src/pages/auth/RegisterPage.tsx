@@ -47,8 +47,16 @@ const RegisterPage = () => {
       navigate('/login', {
         state: { message: 'Compte créé avec succès ! Vous pouvez maintenant vous connecter.' },
       });
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Une erreur est survenue lors de l'inscription.");
+    } catch (err: unknown) {
+      // Extract a message safely when possible
+      let message = 'Une erreur est survenue lors de l\'inscription.';
+      if (typeof err === 'object' && err !== null) {
+        const maybeResp = (err as { response?: { data?: { message?: unknown } } }).response;
+        if (maybeResp && maybeResp.data && typeof maybeResp.data.message === 'string') {
+          message = maybeResp.data.message;
+        }
+      }
+      setError(message);
     } finally {
       setIsLoading(false);
     }

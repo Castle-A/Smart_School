@@ -1,13 +1,49 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // <-- Importer Link
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+
+// Import des dashboards par rôle
+import AdminDashboard from './dashboad/AdminDashboard';
+import HeadTeacherDashboard from './dashboad/HeadTeacherDashboard';
+import TeacherDashboard from './dashboad/TeacherDashboard';
+import StudentDashboard from './dashboad/StudentDashboard';
+import ParentDashboard from './dashboad/ParentDashboard';
+import SecretaryDashboard from './dashboad/SecretaryDashboard';
 
 const DashboardPage = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   if (!isAuthenticated || !user) return <div>Redirection en cours...</div>;
   const handleLogout = () => { logout(); navigate('/login'); };
+
+  const renderRoleDashboard = () => {
+    // Chaque dashboard reçoit l'utilisateur afin d'utiliser user.schoolId pour les requêtes multi-tenant
+    switch (user.role) {
+      case 'SUPER_ADMIN':
+      case 'DIRECTEUR':
+      case 'FONDATEUR':
+        return <AdminDashboard />;
+      case 'ENSEIGNANT':
+        return <TeacherDashboard user={user} />;
+      case 'CHEF_DECLASSE':
+        return <HeadTeacherDashboard user={user} />;
+      case 'ELEVE':
+        return <StudentDashboard user={user} />;
+      case 'PARENT':
+        return <ParentDashboard user={user} />;
+      case 'SECRETAIRE':
+        return <SecretaryDashboard user={user} />;
+      default:
+        return (
+          <div className="p-6 bg-white rounded shadow">
+            <h3 className="text-lg font-semibold">Tableau de bord</h3>
+            <p>Rôle non reconnu : {user.role}</p>
+          </div>
+        );
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -19,6 +55,7 @@ const DashboardPage = () => {
           <button onClick={handleLogout} className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Se déconnecter</button>
         </div>
       </div>
+
       <div className="mt-4 p-6 bg-white rounded-lg shadow">
         <div className="flex items-center space-x-4">
           <img
@@ -30,7 +67,6 @@ const DashboardPage = () => {
             onError={(e) => {
               const t = e.currentTarget as HTMLImageElement;
               t.onerror = null;
-              // si l'image externe échoue, on bascule vers l'asset local
               if (t.src && !t.src.includes('/default-avatar.svg')) {
                 t.src = '/default-avatar.svg';
               }
@@ -42,7 +78,10 @@ const DashboardPage = () => {
           </div>
         </div>
       </div>
-      {/* ... le reste de votre page ... */}
+
+      <div className="mt-6">
+        {renderRoleDashboard()}
+      </div>
     </div>
   );
 };

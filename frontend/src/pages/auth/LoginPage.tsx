@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom'; // 1. Importer useNavigate
-import { authService, LoginRequest } from '../../services/authService'; // 2. Importer le service et le type
+import { LoginRequest } from '../../services/authService'; // 2. Importer le type
 import { useAuth } from '../../context/AuthContext';
 
 // Schéma de validation avec Yup
@@ -34,9 +34,10 @@ const LoginPage = () => {
       // Redirige vers le tableau de bord
       navigate('/dashboard');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('!!! ÉTAPE 3: Erreur capturée:', error);
-      alert('Erreur de connexion: ' + (error.response?.data?.message || error.message || 'Erreur inconnue'));
+      const message = typeof error === 'object' && error !== null && 'message' in error ? String((error as { message?: unknown }).message) : 'Erreur inconnue';
+      alert('Erreur de connexion: ' + message);
     }
   };
 
