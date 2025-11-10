@@ -8,7 +8,14 @@ const TeacherPage: React.FC = () => {
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Espace Professeur</h1>
       <p className="text-gray-600">
-        Bienvenue, {user?.firstName} !
+        {(() => {
+          const g = user?.gender;
+          if (!user) return 'Bienvenue';
+          if (g === 'MALE') return `M. ${user.firstName}`;
+          if (g === 'FEMALE') return `Mme ${user.firstName}`;
+          if (g === 'OTHER') return `Mx ${user.firstName}`;
+          return `Bienvenue, ${user.firstName} !`;
+        })()}
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

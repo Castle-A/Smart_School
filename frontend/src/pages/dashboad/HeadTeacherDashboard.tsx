@@ -1,17 +1,18 @@
 import React from 'react';
 import type { User } from '../../types';
+import { salutation } from '../../utils/salutation';
 
 interface HeadTeacherDashboardProps {
   user: User;
 }
 
 const HeadTeacherDashboard: React.FC<HeadTeacherDashboardProps> = ({ user }) => {
+  // Utiliser user.schoolId pour les requêtes multi-tenant
+  const schoolId = user.schoolId;
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Tableau de Bord Censeur</h1>
-      <p className="text-gray-600">
-        Bienvenue, {user?.lastName ? `M. ${user.lastName}` : ""} !
-      </p>
+      <p className="text-gray-600">{salutation(user)}{user?.firstName ? (user.gender ? '' : ' !') : ''}</p>
 
       {/* Vue d'Ensemble Pédagogique */}
       <div className="bg-white p-6 rounded-lg shadow mb-6">

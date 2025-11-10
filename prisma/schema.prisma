@@ -11,14 +11,18 @@ datasource db {
 
 // --- MODÈLE CENTRAL : L'ÉCOLE (TENANT) ---
 model School {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  address   String?
-  phone     String?
-  email     String   @unique
-  logoUrl   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String   @unique
+  address      String?
+  phone        String?
+  email        String   @unique
+  logoUrl      String?
+  // Liste des cycles enseignés par l'établissement (ex: ["Primaire","Premier cycle"]).
+  // Stocké en Json pour compatibilité avec SQLite en dev ; en production Postgres
+  // on pourrait changer ce champ en String[] si on le souhaite.
+  schoolCycles Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
   users           User[]
@@ -33,15 +37,20 @@ model School {
 
 // --- MODÈLES UTILISATEURS ---
 model User {
-  id        String   @id @default(cuid())
-  email     String
-  password  String
-  role      Role // Pas de valeur par défaut
-  firstName String?
-  lastName  String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  email              String
+  password           String
+  // Si true, l'utilisateur devra choisir un nouveau mot de passe lors de sa prochaine connexion
+  mustChangePassword Boolean  @default(false)
+  role               Role // Pas de valeur par défaut
+  permissions        Json?
+  gender             Gender?
+  phoneNumber        String?
+  firstName          String?
+  lastName           String?
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   schoolId String
   school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)

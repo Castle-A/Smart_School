@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '@/services/authService';
+import { useAuth } from '@/context/AuthContext';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     schoolName: '',
     schoolAddress: '',
     schoolPhone: '',
+    schoolEmail: '',
+    schoolCycles: [] as string[],
     firstName: '',
     lastName: '',
+    gender: 'MALE',
     email: '',
     password: '',
     confirmPassword: '',
@@ -17,9 +21,20 @@ const RegisterPage = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { setSessionFromToken } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const toggleCycle = (cycle: string) => {
+    setFormData((prev) => {
+      const exists = prev.schoolCycles.includes(cycle);
+      return {
+        ...prev,
+        schoolCycles: exists ? prev.schoolCycles.filter((c) => c !== cycle) : [...prev.schoolCycles, cycle],
+      };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,20 +48,30 @@ const RegisterPage = () => {
 
     setIsLoading(true);
     try {
-      await authService.registerSchool({
+      const result = await authService.registerSchool({
         schoolName: formData.schoolName,
         schoolAddress: formData.schoolAddress,
         schoolPhone: formData.schoolPhone,
+        schoolEmail: formData.schoolEmail,
+        schoolCycles: formData.schoolCycles,
         firstName: formData.firstName,
         lastName: formData.lastName,
+        gender: formData.gender as 'MALE' | 'FEMALE' | 'OTHER',
         email: formData.email,
         password: formData.password,
         role: formData.role as 'FONDATEUR' | 'DIRECTEUR',
       });
-
-      navigate('/login', {
-        state: { message: 'Compte créé avec succès ! Vous pouvez maintenant vous connecter.' },
-      });
+      // Si le backend retourne un token, initialise la session directement
+      const token = (result as any)?.access_token as string | undefined;
+      if (token) {
+        setSessionFromToken(token);
+        navigate('/dashboard', { state: { welcome: 'account_created' } });
+      } else {
+        // fallback: rediriger vers la page de connexion
+        navigate('/login', {
+          state: { message: 'Compte créé avec succès ! Veuillez vous connecter.' },
+        });
+      }
     } catch (err: unknown) {
       // Extract a message safely when possible
       let message = 'Une erreur est survenue lors de l\'inscription.';
@@ -99,6 +124,46 @@ const RegisterPage = () => {
               className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
               required
             />
+            <input
+              type="email"
+              name="schoolEmail"
+              placeholder="Email de l'établissement"
+              value={formData.schoolEmail}
+              onChange={handleChange}
+              className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+              required
+            />
+
+            {/* Cycle d'étude - boutons dynamiques */}
+            <div className="mt-3">
+              <p className="mb-2 text-sm font-medium text-gray-600">Cycle d'étude de l'école</p>
+              <div className="flex gap-2 flex-wrap">
+                {['Primaire', 'Premier cycle', 'Second cycle'].map((cycle) => {
+                  const selected = formData.schoolCycles.includes(cycle);
+                  return (
+                    <button
+                      key={cycle}
+                      type="button"
+                      onClick={() => toggleCycle(cycle)}
+                      className={`px-3 py-1.5 rounded-full border transition transform duration-150 ease-out flex items-center gap-2 ${selected ? 'bg-indigo-600 text-white border-indigo-600 scale-105 shadow-md' : 'bg-white text-gray-700 hover:scale-105'}`}
+                      aria-pressed={selected}
+                    >
+                      <span className={`inline-block w-3 h-3 rounded-full ${selected ? 'bg-white' : 'bg-gray-200'}`} />
+                      <span className="text-sm">{cycle}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-2 flex flex-wrap gap-2">
+                {formData.schoolCycles.map((c) => (
+                  <span key={c} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-sm transition-opacity duration-200">
+                    {c}
+                    <button type="button" onClick={() => toggleCycle(c)} aria-label={`Retirer ${c}`} className="ml-1 text-indigo-600 font-bold">×</button>
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Section Administrateur */}
@@ -130,6 +195,16 @@ const RegisterPage = () => {
             >
               <option value="FONDATEUR">Fondateur</option>
               <option value="DIRECTEUR">Directeur</option>
+            </select>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+            >
+              <option value="MALE">Homme</option>
+              <option value="FEMALE">Femme</option>
+              <option value="OTHER">Autre</option>
             </select>
             <input
               type="email"

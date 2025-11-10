@@ -10,10 +10,19 @@ export default defineConfig({
   server: {
     proxy: {
       // 🔁 tout ce qui commence par /auth est proxifié vers le backend NestJS
-      '/auth': { 
-        target: 'http://localhost:3000', 
+      '/auth': {
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        secure: false // Bon pour Codespaces
+        secure: false, // Bon pour Codespaces
+      },
+      // proxy des appels API généraux utilisés par le frontend
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+        // remove the `/api` prefix when proxying to the NestJS server
+        // so a request to `/api/users` becomes `/users` on the backend
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

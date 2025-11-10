@@ -10,6 +10,7 @@ export type User = {
   id: string;
   email: string;
   firstName: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
   lastName?: string;
   role: string;
   schoolId: string;

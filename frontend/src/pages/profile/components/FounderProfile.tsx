@@ -82,8 +82,11 @@ const FounderProfile: React.FC<FounderProfileProps> = ({ user }) => {
       <div className="bg-white p-6 rounded-lg shadow">
         <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Actions Rapides</h2>
         <div className="space-y-2">
-          <button className="w-full text-left px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200">
-            👥 Gérer les utilisateurs
+          <button
+            onClick={() => { window.location.href = '/admin/administration'; }}
+            className="w-full text-left px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200"
+          >
+            👥 Gérer l'Administration
           </button>
           <button className="w-full text-left px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200">
             💰 Voir les finances

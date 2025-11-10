@@ -1,16 +1,20 @@
 import React from 'react';
+import type { User } from '../../types';
+import { salutation } from '../../utils/salutation';
 
 interface SecretaryDashboardProps {
-  user?: { firstName?: string; lastName?: string };
+  user?: User;
 }
 
 const SecretaryDashboard: React.FC<SecretaryDashboardProps> = ({ user }) => {
+  // Utiliser user.schoolId pour les requêtes multi-tenant
+  const schoolId = user?.schoolId;
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <header>
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Tableau de bord Secrétaire</h1>
-        <p className="text-gray-600">Bienvenue, {user?.firstName ?? '—'} !</p>
+  <p className="text-gray-600">{salutation(user)}{user?.firstName ? (user.gender ? '' : ' !') : ''}</p>
       </header>
 
       {/* Accès direct Inscription */}

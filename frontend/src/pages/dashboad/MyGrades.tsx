@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { salutation } from '../../utils/salutation';
 
 type ClassItem = { id: string; name: string };
 
@@ -17,8 +18,7 @@ const MyGrades: React.FC = () => {
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-800 mb-2">Gérer les Notes</h1>
       <p className="text-gray-600">
-        {user?.firstName ? `Bonjour ${user.firstName}. ` : ''}
-        Consultez et gérez les notes des élèves par classe et par matière.
+        {salutation(user)}{user?.firstName ? (user.gender ? '' : '.') : ''} Consultez et gérez les notes des élèves par classe et par matière.
       </p>
 
       <div className="mt-6">

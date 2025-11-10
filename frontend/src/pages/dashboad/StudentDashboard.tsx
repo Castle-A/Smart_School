@@ -1,20 +1,24 @@
 import React from 'react';
+import type { User } from '../../types';
+import { salutation } from '../../utils/salutation';
 
 interface StudentDashboardProps {
-  user?: { firstName?: string; lastName?: string };
+  user?: User;
 }
 
 const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
+  // Utiliser user.schoolId pour les requêtes multi-tenant
+  const schoolId = user?.schoolId;
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <header>
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Espace Élève</h1>
-        <p className="text-gray-600">Bonjour, {user?.firstName ?? '—'} !</p>
+  <p className="text-gray-600">{salutation(user)}{user?.firstName ? (user.gender ? '' : ' !') : ''}</p>
       </header>
 
       {/* Carte de Bienvenue */}
       <section className="bg-gradient-to-br from-blue-50 to-indigo-100 p-8 rounded-lg shadow">
-        <h2 className="text-2xl font-bold text-gray-800">Bienvenue, {user?.firstName ?? '—'} !</h2>
+  <h2 className="text-2xl font-bold text-gray-800">{salutation(user)}{user?.firstName ? (user.gender ? '' : ' !') : ''}</h2>
         <p className="text-lg text-gray-700">Prépare-toi pour une année scolaire réussie !</p>
         <p className="text-sm text-gray-600">
           Explore ton tableau de bord pour suivre tes cours et tes résultats.

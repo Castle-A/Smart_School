@@ -19,8 +19,8 @@ const LoginPage = () => {
     resolver: yupResolver(loginSchema),
   });
 
-  // Récupère la méthode login du contexte pour mettre à jour l'état global
-  const { login } = useAuth();
+  // Récupère la méthode login et le flag mustChangePassword du contexte
+  const { login, mustChangePassword } = useAuth();
 
   // Fonction appelée lors de la soumission du formulaire
   const onSubmit = async (data: LoginRequest) => {
@@ -28,10 +28,16 @@ const LoginPage = () => {
 
     try {
       // Utilise le login du contexte (mettra à jour isAuthenticated et user)
-      await login(data.email, data.password);
-      console.log('!!! ÉTAPE 2: AuthContext login réussi');
+      const res = await login(data.email, data.password);
+      console.log('!!! ÉTAPE 2: AuthContext login réussi', res);
 
-      // Redirige vers le tableau de bord
+      // Si le serveur indique que l'utilisateur doit changer son mot de passe, on redirige
+      if (res?.mustChangePassword || mustChangePassword) {
+        navigate('/change-password');
+        return;
+      }
+
+      // Sinon, redirige vers le tableau de bord (DashboardPage choisira le dashboard selon le rôle)
       navigate('/dashboard');
 
     } catch (error: unknown) {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { salutation } from '../../utils/salutation';
 import { useNavigate } from 'react-router-dom';
 
 // Sous-pages supprimées (pas utilisées pour l'instant)
@@ -12,7 +13,7 @@ const StudentsPage: React.FC = () => {
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Espace Élève</h1>
       <p className="text-gray-600">
-        Bienvenue, {user?.firstName} ! Voici votre espace personnel.
+        {salutation(user)}{user?.firstName ? (user.gender ? '' : ' !') : ''} Voici votre espace personnel.
       </p>
 
       {/* Menu de navigation pour les pages de l'élève */}

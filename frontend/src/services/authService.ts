@@ -30,6 +30,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   access_token: string;
+  mustChangePassword?: boolean;
 }
 
 export const authService = {
@@ -39,6 +40,16 @@ export const authService = {
       return response.data;
     } catch (err: unknown) {
       console.error('Login error:', err);
+      throw err;
+    }
+  },
+
+  changePassword: async (newPassword: string) => {
+    try {
+      const response = await api.patch('/auth/change-password', { newPassword });
+      return response.data;
+    } catch (err: unknown) {
+      console.error('Change password error:', err);
       throw err;
     }
   },
@@ -57,11 +68,14 @@ export const authService = {
     schoolName: string;
     schoolAddress: string;
     schoolPhone: string;
+    schoolEmail?: string;
+    schoolCycles?: string[];
     firstName: string;
     lastName: string;
     email: string;
     password: string;
     role: 'FONDATEUR' | 'DIRECTEUR';
+    gender: 'MALE' | 'FEMALE' | 'OTHER';
   }) => {
     try {
   const response = await api.post('/auth/register-school', payload);
