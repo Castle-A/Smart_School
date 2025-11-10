@@ -2,12 +2,17 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import React from 'react';
 
-// MODIFICATION : Le type des enfants est plus flexible avec React.ReactNode
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  // MODIFICATION : On récupère `isLoading` depuis le contexte
-  const { isAuthenticated, isLoading } = useAuth();
+type Props = {
+  children: React.ReactNode;
+  // Si fourni, n'autorise que les rôles listés (ex: ['ENSEIGNANT','DIRECTEUR'])
+  allowedRoles?: string[];
+  // Si true, vérifie que l'utilisateur possède un `schoolId` (multi-tenant safety)
+  requireSchool?: boolean;
+};
 
-  // MODIFICATION : Si on est en train de charger, on affiche un indicateur
+const ProtectedRoute = ({ children, allowedRoles, requireSchool = false }: Props) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen text-gray-600">
@@ -16,12 +21,21 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // Si le chargement est fini et que l'utilisateur n'est pas authentifié, on redirige
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // Sinon, on affiche le contenu protégé
+  // Vérification multi-tenant : si la route exige une école et que l'utilisateur
+  // n'en a pas, on le redirige vers la landing
+  if (requireSchool && !user?.schoolId) {
+    return <Navigate to="/home" replace />;
+  }
+
+  // Vérification des rôles si fournis
+  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    return <div className="p-6">Accès refusé — rôle insuffisant.</div>;
+  }
+
   return <>{children}</>;
 };
 

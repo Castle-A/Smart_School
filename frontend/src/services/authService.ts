@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './api';
 
 // NOUVELLE LOGIQUE : On utilise la variable d'environnement si elle existe,
 // sinon le proxy local. En environnement de développement (Vite/Codespaces)
@@ -22,11 +22,6 @@ const API_URL =
 console.log('[authService] rawApiUrl =', rawApiUrl, 'isDev =', isDev);
 console.log('[authService] using API_URL =', API_URL);
 
-const api = axios.create({
-  baseURL: API_URL,
-  timeout: 15000,
-  withCredentials: true, // si cookies
-});
 
 export interface LoginRequest {
   email: string;
@@ -35,15 +30,36 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   access_token: string;
+  mustChangePassword?: boolean;
 }
 
 export const authService = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     try {
-      const response = await api.post<LoginResponse>('/auth/login', credentials);
+  const response = await api.post<LoginResponse>('/auth/login', credentials);
       return response.data;
-    } catch (err: any) {
-      console.error('Login error:', err?.response?.status, err?.response?.data);
+    } catch (err: unknown) {
+      console.error('Login error:', err);
+      throw err;
+    }
+  },
+
+  changePassword: async (newPassword: string) => {
+    try {
+      const response = await api.patch('/auth/change-password', { newPassword });
+      return response.data;
+    } catch (err: unknown) {
+      console.error('Change password error:', err);
+      throw err;
+    }
+  },
+
+  refresh: async (refreshToken: string) => {
+    try {
+      const response = await api.post('/auth/refresh', { refresh_token: refreshToken });
+      return response.data;
+    } catch (err: unknown) {
+      console.error('Refresh error:', err);
       throw err;
     }
   },
@@ -52,27 +68,30 @@ export const authService = {
     schoolName: string;
     schoolAddress: string;
     schoolPhone: string;
+    schoolEmail?: string;
+    schoolCycles?: string[];
     firstName: string;
     lastName: string;
     email: string;
     password: string;
     role: 'FONDATEUR' | 'DIRECTEUR';
+    gender: 'MALE' | 'FEMALE' | 'OTHER';
   }) => {
     try {
-      const response = await api.post('/auth/register-school', payload);
+  const response = await api.post('/auth/register-school', payload);
       return response.data;
-    } catch (err: any) {
-      console.error('Register error:', err?.response?.status, err?.response?.data);
+    } catch (err: unknown) {
+      console.error('Register error:', err);
       throw err;
     }
   },
 
   updateAvatar: async (avatarUrl: string) => {
     try {
-      const response = await api.patch('/auth/update-avatar', { avatarUrl });
+  const response = await api.patch('/auth/update-avatar', { avatarUrl });
       return response.data;
-    } catch (err: any) {
-      console.error('Update avatar error:', err?.response?.status, err?.response?.data);
+    } catch (err: unknown) {
+      console.error('Update avatar error:', err);
       throw err;
     }
   },
