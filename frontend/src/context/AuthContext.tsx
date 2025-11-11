@@ -1,5 +1,6 @@
 // frontend/src/context/AuthContext.tsx
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { authService } from '../services/authService';
 import { TOKEN_KEY, USER_KEY, MUST_CHANGE_KEY, JUST_LOGGED_IN_SESSION, safeParse, decodeJwtPayload, strOr, strOrMulti } from './authHelpers';
@@ -206,6 +207,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const navigate = useNavigate();
+
   const logout = () => {
   try { localStorage.removeItem(TOKEN_KEY); } catch { void 0; }
   try { localStorage.removeItem(USER_KEY); } catch { void 0; }
@@ -214,6 +217,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsAuthenticated(false);
     setUser(null);
     setJustLoggedIn(false);
+    // After logout, navigate to the public homepage
+    try { navigate('/', { replace: true }); } catch { try { window.location.href = '/'; } catch { void 0; } }
   };
 
   const value = useMemo<AuthContextType>(() => ({
