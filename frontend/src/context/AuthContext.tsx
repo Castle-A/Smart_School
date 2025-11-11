@@ -221,6 +221,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try { navigate('/', { replace: true }); } catch { try { window.location.href = '/'; } catch { void 0; } }
   };
 
+  // Déconnexion automatique après 10 minutes d'inactivité (600000 ms)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const INACTIVITY_MS = 10 * 60 * 1000; // 10 minutes
+    let timeoutId: number | undefined;
+
+    const resetTimer = () => {
+      if (typeof timeoutId !== 'undefined') window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        try { logout(); } catch { /* ignore */ }
+      }, INACTIVITY_MS) as unknown as number;
+    };
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
+    events.forEach((ev) => window.addEventListener(ev, resetTimer, true));
+
+    // start the timer
+    resetTimer();
+
+    return () => {
+      if (typeof timeoutId !== 'undefined') window.clearTimeout(timeoutId);
+      events.forEach((ev) => window.removeEventListener(ev, resetTimer, true));
+    };
+  }, [isAuthenticated, logout]);
+
   const value = useMemo<AuthContextType>(() => ({
     user,
     isAuthenticated,
