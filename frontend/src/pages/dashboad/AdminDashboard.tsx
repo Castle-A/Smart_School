@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const AdminDashboard: React.FC = () => {
   return (
@@ -33,6 +34,11 @@ const AdminDashboard: React.FC = () => {
       {/* Tableau de bord des Écoles */}
       <div className="bg-white p-6 rounded-lg shadow">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">🏫 Liste des Écoles</h2>
+        <div className="mb-4">
+          <Link to="/admin/holidays" className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+            Gérer les plages de vacances
+          </Link>
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto">
             <thead>

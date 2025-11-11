@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext'; // <-- chemin corrigé
+import { useAuth } from '../../context'; // <-- chemin corrigé
 const ClassesPage = () => {
     const { user } = useAuth();
     const [classes, setClasses] = useState([]);

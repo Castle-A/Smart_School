@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext'; // <-- chemin corrigé
+import { useAuth } from '../../context'; // <-- chemin corrigé
 
 // Type pour une classe
 interface Student {

@@ -2,7 +2,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '@/services/authService';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context';
 const RegisterPage = () => {
     const [formData, setFormData] = useState({
         schoolName: '',
@@ -21,7 +21,8 @@ const RegisterPage = () => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
-    const { setSessionFromToken } = useAuth();
+    // ⬅️ Récupère setSessionFromToken + setJustLoggedIn pour le toast
+    const { setSessionFromToken, setJustLoggedIn } = useAuth();
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -56,21 +57,30 @@ const RegisterPage = () => {
                 password: formData.password,
                 role: formData.role,
             });
-            // Si le backend retourne un token, initialise la session directement
-            const token = result?.access_token;
+            const _res = result;
+            const token = typeof _res?.['access_token'] === 'string' ? String(_res['access_token']) : undefined;
             if (token) {
+                // ✅ Initialise la session immédiatement
                 setSessionFromToken(token);
-                navigate('/dashboard', { state: { welcome: 'account_created' } });
+                // ✅ Flag “just logged in” pour le toast sur la Home
+                try {
+                    setJustLoggedIn(true);
+                    sessionStorage.setItem('justLoggedIn', '1');
+                }
+                catch {
+                    void 0;
+                }
+                // ✅ Redirige vers la Home
+                navigate('/', { replace: true });
             }
             else {
-                // fallback: rediriger vers la page de connexion
+                // Pas de login auto : on redirige vers /login (le toast viendra après login)
                 navigate('/login', {
                     state: { message: 'Compte créé avec succès ! Veuillez vous connecter.' },
                 });
             }
         }
         catch (err) {
-            // Extract a message safely when possible
             let message = 'Une erreur est survenue lors de l\'inscription.';
             if (typeof err === 'object' && err !== null) {
                 const maybeResp = err.response;

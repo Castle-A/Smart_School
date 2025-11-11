@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context';
 import { salutation } from '../../utils/salutation';
 import { useNavigate } from 'react-router-dom';
 // Sous-pages supprimées (pas utilisées pour l'instant)

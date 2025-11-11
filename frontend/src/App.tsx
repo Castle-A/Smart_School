@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext'; // <-- Importer useAuth
+import { useAuth } from './context'; // <-- Importer useAuth
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -7,6 +7,7 @@ import ProfilePage from './pages/ProfilePage'; // <-- Importer ProfilePage
 import DashboardPage from './pages/DashboardPage';
 import AdminDashboard from './pages/dashboad/AdminDashboard';
 import AdministrationManager from './pages/admin/AdministrationManager';
+import HolidaysManager from './pages/admin/HolidaysManager';
 import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
 import ChangePasswordPage from './pages/auth/ChangePasswordPage';
@@ -29,6 +30,7 @@ function AppRoutes() {
   <Route path="/admin" element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]}><AdminDashboard /></ProtectedRoute>} />
   {/* Gestion de l'administration (création/attribution des rôles au sein d'une école) */}
   <Route path="/admin/administration" element={<ProtectedRoute requireSchool={true} allowedRoles={["FONDATEUR","DIRECTEUR","SUPER_ADMIN"]}><AdministrationManager /></ProtectedRoute>} />
+  <Route path="/admin/holidays" element={<ProtectedRoute requireSchool={true} allowedRoles={["SUPER_ADMIN"]}><HolidaysManager /></ProtectedRoute>} />
       <Route path="*" element={<div>Page introuvable</div>} />
     </Routes>
   );

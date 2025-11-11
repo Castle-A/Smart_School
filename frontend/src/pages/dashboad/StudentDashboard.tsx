@@ -7,8 +7,7 @@ interface StudentDashboardProps {
 }
 
 const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
-  // Utiliser user.schoolId pour les requêtes multi-tenant
-  const schoolId = user?.schoolId;
+  // Utiliser user.schoolId pour les requêtes multi-tenant si nécessaire
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <header>

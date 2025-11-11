@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context';
 const TeacherPage = () => {
     const { user } = useAuth();
     return (_jsxs("div", { className: "p-6 max-w-5xl mx-auto", children: [_jsx("h1", { className: "text-3xl font-bold text-gray-800 mb-6", children: "Espace Professeur" }), _jsx("p", { className: "text-gray-600", children: (() => {

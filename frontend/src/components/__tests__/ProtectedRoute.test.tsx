@@ -4,7 +4,8 @@ import '@testing-library/jest-dom/extend-expect';
 import { vi } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from '../ProtectedRoute';
-import AuthContext, { AuthContextType } from '../../context/AuthContext';
+import AuthContext from '../../context/authContextObj';
+import type { AuthContextType } from '../../types/auth';
 
 const MockAuthProvider = ({ value, children }: { value: Partial<AuthContextType>; children: React.ReactNode }) => {
   return <AuthContext.Provider value={value as AuthContextType}>{children}</AuthContext.Provider>;

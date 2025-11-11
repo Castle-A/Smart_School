@@ -1,8 +1,9 @@
 import React from 'react';
 import { salutation } from '../../utils/salutation';
+import type { User } from '../../types';
 
 interface AccountantDashboardProps {
-  user?: { firstName?: string; lastName?: string };
+  user?: User | null;
 }
 
 const AccountantDashboard: React.FC<AccountantDashboardProps> = ({ user }) => {
@@ -11,7 +12,7 @@ const AccountantDashboard: React.FC<AccountantDashboardProps> = ({ user }) => {
       {/* Header */}
       <header>
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Tableau de bord Comptable</h1>
-            <p className="text-gray-600">{salutation(user as any)}{user?.firstName ? ((user as any).gender ? '' : ' !') : ''}</p>
+            <p className="text-gray-600">{salutation(user ?? undefined)}</p>
       </header>
 
       {/* Accès direct Paiement / Reçu */}

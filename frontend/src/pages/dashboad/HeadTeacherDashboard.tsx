@@ -7,8 +7,7 @@ interface HeadTeacherDashboardProps {
 }
 
 const HeadTeacherDashboard: React.FC<HeadTeacherDashboardProps> = ({ user }) => {
-  // Utiliser user.schoolId pour les requêtes multi-tenant
-  const schoolId = user.schoolId;
+  // Utiliser user.schoolId pour les requêtes multi-tenant si nécessaire
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Tableau de Bord Censeur</h1>

@@ -1,9 +1,9 @@
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Link, useNavigate } from 'react-router-dom'; // 1. Importer useNavigate
-import { LoginRequest } from '../../services/authService'; // 2. Importer le type
-import { useAuth } from '../../context/AuthContext';
+import { Link, useNavigate } from 'react-router-dom';
+import { LoginRequest } from '../../services/authService';
+import { useAuth } from '../../context';
 
 // Schéma de validation avec Yup
 const loginSchema = yup.object().shape({
@@ -12,38 +12,53 @@ const loginSchema = yup.object().shape({
 });
 
 const LoginPage = () => {
-  // 3. Initialiser le hook de navigation
   const navigate = useNavigate();
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginRequest>({
     resolver: yupResolver(loginSchema),
   });
 
-  // Récupère la méthode login et le flag mustChangePassword du contexte
-  const { login, mustChangePassword } = useAuth();
+  // ⬅️ On récupère aussi setJustLoggedIn pour le toast de bienvenue
+  const { login, mustChangePassword, setJustLoggedIn } = useAuth();
 
-  // Fonction appelée lors de la soumission du formulaire
   const onSubmit = async (data: LoginRequest) => {
     console.log('!!! ÉTAPE 1: onSubmit appelé avec les données:', data);
 
     try {
-      // Utilise le login du contexte (mettra à jour isAuthenticated et user)
       const res = await login(data.email, data.password);
       console.log('!!! ÉTAPE 2: AuthContext login réussi', res);
 
-      // Si le serveur indique que l'utilisateur doit changer son mot de passe, on redirige
       if (res?.mustChangePassword || mustChangePassword) {
         navigate('/change-password');
         return;
       }
 
-      // Sinon, redirige vers le tableau de bord (DashboardPage choisira le dashboard selon le rôle)
-      navigate('/dashboard');
+      // ✅ Flag “just logged in” pour la Home (toast de bienvenue)
+      try {
+        setJustLoggedIn(true);
+        sessionStorage.setItem('justLoggedIn', '1');
+      } catch { void 0; }
+
+      // ✅ Redirection vers la Home
+      navigate('/', { replace: true });
 
     } catch (error: unknown) {
       console.error('!!! ÉTAPE 3: Erreur capturée:', error);
-      const message = typeof error === 'object' && error !== null && 'message' in error ? String((error as { message?: unknown }).message) : 'Erreur inconnue';
-      alert('Erreur de connexion: ' + message);
+      let message = 'Erreur inconnue';
+      if (error instanceof Error) message = error.message;
+      else if (typeof error === 'object' && error !== null) {
+        const e = error as unknown as Record<string, unknown> | null;
+        if (e && typeof e['response'] === 'object' && e['response'] !== null) {
+          const resp = e['response'] as Record<string, unknown> | null;
+          const data = resp?.['data'] as Record<string, unknown> | undefined;
+          if (data && typeof data?.['message'] === 'string') message = String(data['message']);
+          else if (typeof e['message'] === 'string') message = String(e['message']);
+          else message = String(e);
+        } else {
+          message = String(e);
+        }
+      }
+      alert('Erreur de connexion : ' + message);
     }
   };
 
@@ -60,7 +75,6 @@ const LoginPage = () => {
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          {/* ... Le reste de votre JSX pour le formulaire ... */}
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">Adresse email</label>

@@ -24,7 +24,7 @@ api.interceptors.request.use((config) => {
         config.headers = headers;
     }
     catch {
-        // ignore errors reading localStorage
+        void 0;
     }
     return config;
 });
@@ -51,6 +51,13 @@ api.interceptors.response.use((res) => res, async (error) => {
                 localStorage.setItem('access_token', newAccessToken);
                 if (newRefreshToken)
                     localStorage.setItem('refresh_token', newRefreshToken);
+                // Notify UI that token was refreshed (useful to show a reconnect toast)
+                try {
+                    window.dispatchEvent(new CustomEvent('auth:token_refreshed', { detail: { accessToken: newAccessToken } }));
+                }
+                catch {
+                    void 0;
+                }
                 // update header and retry original request
                 const headers = originalRequest.headers ?? {};
                 headers.Authorization = `Bearer ${newAccessToken}`;

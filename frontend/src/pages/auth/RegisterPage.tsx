@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '@/services/authService';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -21,7 +21,9 @@ const RegisterPage = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { setSessionFromToken } = useAuth();
+
+  // ⬅️ Récupère setSessionFromToken + setJustLoggedIn pour le toast
+  const { setSessionFromToken, setJustLoggedIn } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -61,19 +63,29 @@ const RegisterPage = () => {
         password: formData.password,
         role: formData.role as 'FONDATEUR' | 'DIRECTEUR',
       });
-      // Si le backend retourne un token, initialise la session directement
-      const token = (result as any)?.access_token as string | undefined;
+
+      const _res = result as unknown as Record<string, unknown> | null;
+      const token = typeof _res?.['access_token'] === 'string' ? String(_res['access_token']) : undefined;
+
       if (token) {
+        // ✅ Initialise la session immédiatement
         setSessionFromToken(token);
-        navigate('/dashboard', { state: { welcome: 'account_created' } });
+
+        // ✅ Flag “just logged in” pour le toast sur la Home
+        try {
+          setJustLoggedIn(true);
+          sessionStorage.setItem('justLoggedIn', '1');
+        } catch { void 0; }
+
+        // ✅ Redirige vers la Home
+        navigate('/', { replace: true });
       } else {
-        // fallback: rediriger vers la page de connexion
+        // Pas de login auto : on redirige vers /login (le toast viendra après login)
         navigate('/login', {
           state: { message: 'Compte créé avec succès ! Veuillez vous connecter.' },
         });
       }
     } catch (err: unknown) {
-      // Extract a message safely when possible
       let message = 'Une erreur est survenue lors de l\'inscription.';
       if (typeof err === 'object' && err !== null) {
         const maybeResp = (err as { response?: { data?: { message?: unknown } } }).response;
@@ -93,7 +105,7 @@ const RegisterPage = () => {
         <h3 className="text-2xl font-bold text-center text-gray-800">Créer un compte</h3>
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           {error && <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">{error}</div>}
-          
+
           {/* Section Établissement */}
           <div>
             <h4 className="text-lg font-semibold text-gray-700 mb-2">Informations sur l'établissement</h4>
@@ -134,7 +146,7 @@ const RegisterPage = () => {
               required
             />
 
-            {/* Cycle d'étude - boutons dynamiques */}
+            {/* Cycle d'étude */}
             <div className="mt-3">
               <p className="mb-2 text-sm font-medium text-gray-600">Cycle d'étude de l'école</p>
               <div className="flex gap-2 flex-wrap">

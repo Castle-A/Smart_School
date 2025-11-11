@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AuthUser } from '../context/AuthContext';
+import type { AuthUser } from '../types/auth';
 import type { InternalAxiosRequestConfig } from 'axios';
 
 const rawApiUrl = import.meta.env.VITE_API_URL as string | undefined;
@@ -32,7 +32,7 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     // cast through unknown to satisfy axios internal header types while keeping our simple record
     config.headers = headers as unknown as InternalAxiosRequestConfig['headers'];
   } catch {
-    // ignore errors reading localStorage
+    void 0;
   }
 
   return config;
@@ -60,9 +60,13 @@ api.interceptors.response.use(
         const resp = await axios.post(`${API_URL}auth/refresh`, { refresh_token: refreshToken }, { withCredentials: true });
         const newAccessToken = resp?.data?.access_token as string | undefined;
         const newRefreshToken = resp?.data?.refresh_token as string | undefined;
-        if (newAccessToken) {
+          if (newAccessToken) {
           localStorage.setItem('access_token', newAccessToken);
           if (newRefreshToken) localStorage.setItem('refresh_token', newRefreshToken);
+          // Notify UI that token was refreshed (useful to show a reconnect toast)
+            try {
+              window.dispatchEvent(new CustomEvent('auth:token_refreshed', { detail: { accessToken: newAccessToken } }));
+            } catch { void 0; }
           // update header and retry original request
           const headers = (originalRequest.headers as Record<string, string> | undefined) ?? {};
           headers.Authorization = `Bearer ${newAccessToken}`;

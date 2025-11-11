@@ -1,8 +1,9 @@
 import React from 'react';
 import { salutation } from '../../utils/salutation';
+import type { User } from '../../types';
 
 interface DirectorDashboardProps {
-  user?: { firstName?: string; lastName?: string };
+  user?: User | null;
 }
 
 const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user }) => {
@@ -10,7 +11,7 @@ const DirectorDashboard: React.FC<DirectorDashboardProps> = ({ user }) => {
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <header>
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Tableau de bord Directeur</h1>
-  <p className="text-gray-600">{salutation(user as any)}{user?.firstName ? ((user as any).gender ? '' : ' !') : ''}</p>
+  <p className="text-gray-600">{salutation(user ?? undefined)}</p>
       </header>
 
       {/* Vue d'ensemble du personnel pédagogique */}

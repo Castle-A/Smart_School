@@ -1,7 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from 'react';
 import ConfirmModal from '../../components/ConfirmModal';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context';
 import api from '../../services/api';
 const AVAILABLE_ADMIN_ROLES = [
     'DIRECTEUR',
@@ -70,33 +70,24 @@ const AdministrationManager = () => {
             setUsers(resp.data);
         }
         catch (err) {
-            // axios error handling: try to show server message/details
-            const serverMessage = err?.response?.data?.message || err?.response?.data || err?.message || String(err);
-            setError(typeof serverMessage === 'string' ? serverMessage : JSON.stringify(serverMessage));
+            const e = err;
+            // axios-style error normalization without using `any`
+            const axiosResp = e && typeof e['response'] === 'object' && e['response'] !== null ? e['response'] : null;
+            const data = axiosResp?.['data'];
+            const serverMessage = typeof data?.['message'] === 'string'
+                ? String(data['message'])
+                : typeof data?.['error'] === 'string'
+                    ? String(data['error'])
+                    : typeof e?.['message'] === 'string'
+                        ? String(e['message'])
+                        : String(e);
+            setError(serverMessage);
         }
         finally {
             setLoading(false);
         }
     }
-    async function handleRoleChange(userId, role) {
-        setSavingId(userId);
-        setError(null);
-        setSuccess(null);
-        try {
-            const resp = await api.patch(`/api/users/${userId}/role`, { role });
-            const updated = resp.data;
-            setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: updated.role } : u)));
-            setSuccess('Rôle mis à jour avec succès');
-            setTimeout(() => setSuccess(null), 3000);
-        }
-        catch (err) {
-            const serverMessage = err?.response?.data?.message || err?.response?.data || err?.message || String(err);
-            setError(typeof serverMessage === 'string' ? serverMessage : JSON.stringify(serverMessage));
-        }
-        finally {
-            setSavingId(null);
-        }
-    }
+    // role change handler was removed because the UI shows roles in read-only mode
     function togglePermission(key) {
         setNewPermissions((prev) => prev.includes(key) ? prev.filter((p) => p !== key) : [...prev, key]);
     }
@@ -123,7 +114,7 @@ const AdministrationManager = () => {
             const generatedPwd = createdResp.password ?? null;
             setUsers((prev) => [created, ...prev]);
             if (created?.email)
-                setGeneratedUserEmail(created.email);
+                setGeneratedUserEmail(String(created.email));
             setSuccess('Membre créé avec succès');
             setCreatedPassword(generatedPwd);
             // reset form
@@ -138,8 +129,17 @@ const AdministrationManager = () => {
             setTimeout(() => setSuccess(null), 4000);
         }
         catch (err) {
-            const serverMessage = err?.response?.data?.message || err?.response?.data || err?.message || String(err);
-            setError(typeof serverMessage === 'string' ? serverMessage : JSON.stringify(serverMessage));
+            const e = err;
+            const axiosResp = e && typeof e['response'] === 'object' && e['response'] !== null ? e['response'] : null;
+            const data = axiosResp?.['data'];
+            const serverMessage = typeof data?.['message'] === 'string'
+                ? String(data['message'])
+                : typeof data?.['error'] === 'string'
+                    ? String(data['error'])
+                    : typeof e?.['message'] === 'string'
+                        ? String(e['message'])
+                        : String(e);
+            setError(serverMessage);
         }
         finally {
             setCreating(false);
@@ -155,8 +155,17 @@ const AdministrationManager = () => {
             setTimeout(() => setSuccess(null), 4000);
         }
         catch (err) {
-            const serverMessage = err?.response?.data?.message || err?.response?.data || err?.message || String(err);
-            setError(typeof serverMessage === 'string' ? serverMessage : JSON.stringify(serverMessage));
+            const e = err;
+            const axiosResp = e && typeof e['response'] === 'object' && e['response'] !== null ? e['response'] : null;
+            const data = axiosResp?.['data'];
+            const serverMessage = typeof data?.['message'] === 'string'
+                ? String(data['message'])
+                : typeof data?.['error'] === 'string'
+                    ? String(data['error'])
+                    : typeof e?.['message'] === 'string'
+                        ? String(e['message'])
+                        : String(e);
+            setError(serverMessage);
         }
     }
     const { user: currentUser } = useAuth();
@@ -185,8 +194,17 @@ const AdministrationManager = () => {
             setTimeout(() => setSuccess(null), 4000);
         }
         catch (err) {
-            const serverMessage = err?.response?.data?.message || err?.response?.data || err?.message || String(err);
-            setError(typeof serverMessage === 'string' ? serverMessage : JSON.stringify(serverMessage));
+            const e = err;
+            const axiosResp = e && typeof e['response'] === 'object' && e['response'] !== null ? e['response'] : null;
+            const data = axiosResp?.['data'];
+            const serverMessage = typeof data?.['message'] === 'string'
+                ? String(data['message'])
+                : typeof data?.['error'] === 'string'
+                    ? String(data['error'])
+                    : typeof e?.['message'] === 'string'
+                        ? String(e['message'])
+                        : String(e);
+            setError(serverMessage);
         }
         finally {
             setSavingId(null);

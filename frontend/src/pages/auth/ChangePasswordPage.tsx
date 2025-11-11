@@ -1,10 +1,10 @@
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/authService';
-import { useAuth } from '../../context/AuthContext';
-import { useState } from 'react';
+import { useAuth } from '../../context';
 import Toast from '../../components/Toast';
 
 const schema = yup.object().shape({
@@ -17,10 +17,13 @@ export default function ChangePasswordPage() {
   const { register, handleSubmit, formState: { errors } } = useForm({ resolver: yupResolver(schema) });
   const { setMustChangePassword } = useAuth();
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: Record<string, unknown>) => {
     try {
-      await authService.changePassword(data.newPassword);
+      const newPassword = typeof data['newPassword'] === 'string' ? data['newPassword'] : '';
+      await authService.changePassword(newPassword);
       // clear flag in context and localStorage
       setMustChangePassword(false);
       localStorage.setItem('must_change_password', 'false');
@@ -31,14 +34,18 @@ export default function ChangePasswordPage() {
         navigate('/dashboard');
       }, 1300);
     } catch (err: unknown) {
-      const message = typeof err === 'object' && err !== null && 'message' in err ? String((err as any).message) : 'Erreur';
-      alert('Erreur: ' + message);
+      const e = err as Record<string, unknown> | null;
+      const message = typeof e?.['message'] === 'string' ? String(e!['message']) : 'Erreur';
+      // Affiche le message via Toast au lieu d'alert natif
+      setErrorMessage(message);
+      setShowError(true);
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
       <Toast message="Mot de passe mis à jour avec succès. Redirection…" type="success" visible={showSuccess} onClose={() => setShowSuccess(false)} />
+  <Toast message={errorMessage} type="error" visible={showError} onClose={() => setShowError(false)} />
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
         <h2 className="text-2xl font-bold">Veuillez changer votre mot de passe</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

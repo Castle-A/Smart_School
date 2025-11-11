@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context';
 const SubjectPage = () => {
     const { user } = useAuth();
     const [subjects, setSubjects] = useState([]);

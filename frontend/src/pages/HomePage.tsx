@@ -1,20 +1,34 @@
-import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import React, { useEffect, useState, lazy } from 'react';
+import { useAuth } from '../context/useAuth';
 import { Link } from 'react-router-dom';
-import LandingNews from '../components/LandingNews';
+// LandingNews removed from HomePage to avoid showing the default heading/texts
+import BeninCalendar from '../components/BeninCalendar';
+import Toast from '../components/Toast';
 
 // Importez tous vos tableaux de bord ici
 import AdminDashboard from './dashboad/AdminDashboard';
 import FounderDashboard from './dashboad/FounderDashboard';
 import DirectorDashboard from './dashboad/DirectorDashboard';
-// HeadTeacherDashboard removed from imports — not used on the landing
 import TeacherDashboard from './dashboad/TeacherDashboard';
-// SecretaryProfile import removed — not used on the landing
 import StudentDashboard from './dashboad/StudentDashboard';
 import ParentDashboard from './dashboad/ParentDashboard';
 
 const HomePage = () => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, justLoggedIn, setJustLoggedIn } = useAuth();
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  const LandingHeroGraphics = lazy(() => import('../components/HeroGraphics'));
+
+  // Affiche le toast “Bienvenue !” une seule fois après login/inscription
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const fromSession = sessionStorage.getItem('justLoggedIn') === '1';
+    if (justLoggedIn || fromSession) {
+      setShowWelcome(true);
+      setJustLoggedIn(false); // consomme le flag contexte
+      sessionStorage.removeItem('justLoggedIn'); // consomme le flag storage
+    }
+  }, [isAuthenticated, justLoggedIn, setJustLoggedIn]);
 
   if (isLoading) {
     return (
@@ -66,25 +80,42 @@ const HomePage = () => {
 
             <div className="w-full lg:w-1/2">
               <div className="rounded-2xl shadow-xl overflow-hidden bg-gradient-to-br from-white to-indigo-50 p-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">Flux d'actualités</h3>
-                <LandingNews />
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    {/* Calendrier Béninois stylisé. Placez l'image du blason dans `public/assets/rep_benin_logo.png`. */}
+                    <BeninCalendar backgroundImageUrl="/assets/rep_benin_logo.png" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </header>
+        {/* Middle animated graphics */}
+        <section>
+          <div className="container mx-auto px-6 lg:px-20">
+            {/* Hero graphics carousel */}
+            <div className="my-10">
+              {/* Lazy load the hero graphics component */}
+              <React.Suspense fallback={<div className="text-center py-10">Chargement des illustrations…</div>}>
+                <LandingHeroGraphics />
+              </React.Suspense>
+            </div>
+          </div>
+        </section>
 
+        {/* Bottom capsules (trois petites capsules) */}
         <section className="py-12">
           <div className="container mx-auto px-6 lg:px-20">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-6 bg-white rounded-xl shadow">
+            <div className="flex flex-col lg:flex-row items-stretch gap-6 justify-center">
+              <div className="flex-1 p-6 bg-white rounded-xl shadow text-center">
                 <h4 className="font-semibold text-lg mb-2">Gagnez du temps</h4>
                 <p className="text-sm text-gray-600">Automatisez les tâches récurrentes et concentrez-vous sur l’enseignement.</p>
               </div>
-              <div className="p-6 bg-white rounded-xl shadow">
+              <div className="flex-1 p-6 bg-white rounded-xl shadow text-center">
                 <h4 className="font-semibold text-lg mb-2">Communication fluide</h4>
                 <p className="text-sm text-gray-600">Messagerie, notifications et partages de documents en quelques clics.</p>
               </div>
-              <div className="p-6 bg-white rounded-xl shadow">
+              <div className="flex-1 p-6 bg-white rounded-xl shadow text-center">
                 <h4 className="font-semibold text-lg mb-2">Sécurité & confidentialité</h4>
                 <p className="text-sm text-gray-600">Contrôlez qui voit quoi grâce à des permissions claires.</p>
               </div>
@@ -120,7 +151,20 @@ const HomePage = () => {
     }
   };
 
-  return <div className="min-h-screen bg-gray-100">{renderDashboard()}</div>;
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* Toast de bienvenue (uniquement si connecté et flag posé) */}
+      <Toast
+        visible={showWelcome}
+        type="success"
+        duration={2500}
+        onClose={() => setShowWelcome(false)}
+        message={`Bienvenue${user?.firstName ? `, ${user.firstName}` : ''} !`}
+      />
+
+      {renderDashboard()}
+    </div>
+  );
 };
 
 export default HomePage;

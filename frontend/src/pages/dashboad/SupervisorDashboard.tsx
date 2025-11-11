@@ -1,8 +1,9 @@
 import React from 'react';
 import { salutation } from '../../utils/salutation';
+import type { User } from '../../types';
 
 interface SupervisorDashboardProps {
-  user?: { firstName?: string; lastName?: string };
+  user?: User | null;
 }
 
 const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ user }) => {
@@ -11,7 +12,7 @@ const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ user }) => {
       {/* Header */}
       <header>
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Tableau de bord Surveillant Général</h1>
-  <p className="text-gray-600">{salutation(user as any)}{user?.firstName ? ((user as any).gender ? '' : ' !') : ''}</p>
+  <p className="text-gray-600">{salutation(user ?? undefined)}</p>
       </header>
 
       {/* Accès direct Discipline / Présences */}

@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context';
 import { salutation } from '../../utils/salutation';
 const classesMock = [
     { id: '1', name: '6ème A' },
