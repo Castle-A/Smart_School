@@ -1,5 +1,6 @@
 // frontend/src/context/AuthContext.tsx
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import ConfirmModal from '../components/ConfirmModal';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { authService } from '../services/authService';
@@ -209,6 +210,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const navigate = useNavigate();
 
+  const [idleModalOpen, setIdleModalOpen] = useState(false);
+  const [idleCountdown, setIdleCountdown] = useState<number>(0);
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const warnTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const logout = () => {
   try { localStorage.removeItem(TOKEN_KEY); } catch { void 0; }
   try { localStorage.removeItem(USER_KEY); } catch { void 0; }
@@ -222,28 +229,66 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Déconnexion automatique après 10 minutes d'inactivité (600000 ms)
+  // Affiche un modal d'avertissement 60s avant la déconnexion pour permettre à l'utilisateur
+  // de rester connecté.
   useEffect(() => {
     if (!isAuthenticated) return;
 
     const INACTIVITY_MS = 10 * 60 * 1000; // 10 minutes
-    let timeoutId: number | undefined;
+    const WARN_MS = 60 * 1000; // 1 minute before
 
-    const resetTimer = () => {
-      if (typeof timeoutId !== 'undefined') window.clearTimeout(timeoutId);
-      timeoutId = window.setTimeout(() => {
+    const clearAll = () => {
+      if (inactivityTimerRef.current) { clearTimeout(inactivityTimerRef.current); inactivityTimerRef.current = null; }
+      if (warnTimerRef.current) { clearTimeout(warnTimerRef.current); warnTimerRef.current = null; }
+      if (countdownIntervalRef.current) { clearInterval(countdownIntervalRef.current); countdownIntervalRef.current = null; }
+    };
+
+    const startTimers = () => {
+      clearAll();
+      const warnDelay = Math.max(0, INACTIVITY_MS - WARN_MS);
+
+      warnTimerRef.current = setTimeout(() => {
+        // open modal and start countdown
+        setIdleModalOpen(true);
+        let remaining = Math.ceil(WARN_MS / 1000);
+        setIdleCountdown(remaining);
+        countdownIntervalRef.current = setInterval(() => {
+          remaining -= 1;
+          setIdleCountdown(remaining);
+          if (remaining <= 0 && countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+            countdownIntervalRef.current = null;
+          }
+        }, 1000) as unknown as ReturnType<typeof setInterval>;
+      }, warnDelay) as unknown as ReturnType<typeof setTimeout>;
+
+      inactivityTimerRef.current = setTimeout(() => {
+        // force logout when inactivity reached
         try { logout(); } catch { /* ignore */ }
-      }, INACTIVITY_MS) as unknown as number;
+      }, INACTIVITY_MS) as unknown as ReturnType<typeof setTimeout>;
+    };
+
+    const resetHandler = () => {
+      // hide modal and reset timers
+      setIdleModalOpen(false);
+      setIdleCountdown(0);
+      startTimers();
     };
 
     const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
-    events.forEach((ev) => window.addEventListener(ev, resetTimer, true));
+    events.forEach((ev) => window.addEventListener(ev, resetHandler, true));
+    // also listen for programmatic reset from modal confirm
+    window.addEventListener('auth:idle-reset', resetHandler as EventListener);
 
-    // start the timer
-    resetTimer();
+    // start on mount
+    startTimers();
 
     return () => {
-      if (typeof timeoutId !== 'undefined') window.clearTimeout(timeoutId);
-      events.forEach((ev) => window.removeEventListener(ev, resetTimer, true));
+      clearAll();
+      events.forEach((ev) => window.removeEventListener(ev, resetHandler, true));
+      window.removeEventListener('auth:idle-reset', resetHandler as EventListener);
+      setIdleModalOpen(false);
+      setIdleCountdown(0);
     };
   }, [isAuthenticated, logout]);
 
@@ -261,7 +306,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setJustLoggedIn,
   }), [user, isAuthenticated, isLoading, mustChangePassword, justLoggedIn]);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <ConfirmModal
+        open={idleModalOpen}
+        title="Inactivité détectée"
+        message={
+          <div>
+            <p>Vous allez être déconnecté dans <strong>{idleCountdown}s</strong> pour cause d'inactivité.</p>
+            <p>Souhaitez-vous rester connecté ?</p>
+          </div>
+        }
+        confirmLabel="Rester connecté"
+        cancelLabel="Se déconnecter"
+        variant="primary"
+        onCancel={() => { /* logout on cancel */ logout(); setIdleModalOpen(false); }}
+        onConfirm={() => { /* keep alive */ setIdleModalOpen(false); setIdleCountdown(0); try { window.dispatchEvent(new CustomEvent('auth:idle-reset')); } catch {} }}
+      />
+    </AuthContext.Provider>
+  );
 };
 
 // `useAuth` is exported from `context/useAuth.ts` to keep this module export-clean for Fast Refresh.
