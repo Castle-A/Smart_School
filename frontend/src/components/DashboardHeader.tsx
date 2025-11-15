@@ -37,12 +37,15 @@ export default function FounderDashboard({ user }: { user?: User }) {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
+  // show duration (ms) for the welcome popover per login
+  const displayMs = 6000; // 6 seconds as requested
+
   const welcomeText = useMemo(() => {
     if (!user) return '';
     const s = salutation(user);
-    // salutation may return 'Bonjour <Name>' or 'M. <Name>' / 'Mme <Name>'
-    if (s.startsWith('Bonjour')) return s;
-    return `Bienvenue, ${s}`;
+    // salutation may return 'Bonjour <Name>' or 'Bonsoir <Name>' or titles like 'M. <Name>'
+    const alreadyGreeting = s.startsWith('Bonjour') || s.startsWith('Bonsoir');
+    return alreadyGreeting ? s : `Bienvenue, ${s}`;
   }, [user]);
 
   // Charger l'école du fondateur (s'il a un schoolId)
@@ -78,16 +81,17 @@ export default function FounderDashboard({ user }: { user?: User }) {
       }
     } catch { void 0; }
 
-    const fadeMs = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 200;
-    const displayMs = 2500;
+  // show duration (ms) for the welcome popover per login
+  const displayMs = 6000; // 6 seconds as requested
 
     const onLogin = (e: Event) => {
       try {
         const detail = (e as CustomEvent).detail as { user?: User } | undefined;
         const u = detail?.user ?? user;
         if (!u) return;
-        const s = salutation(u);
-        const text = s.startsWith('Bonjour') ? s : `Bienvenue, ${s}`;
+  const s = salutation(u);
+  const alreadyGreeting = s.startsWith('Bonjour') || s.startsWith('Bonsoir');
+  const text = alreadyGreeting ? s : `Bienvenue, ${s}`;
 
         try {
           const key = `welcome_shown_${u.id}`;
@@ -100,15 +104,9 @@ export default function FounderDashboard({ user }: { user?: User }) {
             sessionStorage.setItem(`greeting_${u.id}`, text);
             setPersistentGreeting(text);
 
-            // fade-out schedule: start fading at displayMs - fadeMs, unmount at displayMs
-            const fadeStart = Math.max(0, displayMs - fadeMs);
-            const fadeTimer = setTimeout(() => setShowWelcome(false), fadeStart);
-            const unmountTimer = setTimeout(() => setShowWelcome(false), displayMs);
-            // both setShowWelcome(false) but fade effect is handled by CSS transition in render
-            return () => {
-              clearTimeout(fadeTimer);
-              clearTimeout(unmountTimer);
-            };
+            // hide after displayMs (Toast handles the fade animation)
+            const t = setTimeout(() => setShowWelcome(false), displayMs);
+            return () => clearTimeout(t);
           }
         } catch { void 0; }
       } catch { void 0; }
@@ -116,10 +114,11 @@ export default function FounderDashboard({ user }: { user?: User }) {
 
     const onTokenRefreshed = () => {
       try {
-        const u = user ?? (JSON.parse(localStorage.getItem('auth_user') || 'null') as User | null);
-        if (!u) return;
-        const s = salutation(u);
-        const text = s.startsWith('Bonjour') ? s : `Bienvenue, ${s}`;
+  const u = user ?? (JSON.parse(localStorage.getItem('auth_user') || 'null') as User | null);
+  if (!u) return;
+  const s = salutation(u);
+  const alreadyGreeting = s.startsWith('Bonjour') || s.startsWith('Bonsoir');
+  const text = alreadyGreeting ? s : `Bienvenue, ${s}`;
         setToastMessage(`Session renouvelée — ${text}`);
         setToastVisible(true);
   } catch { void 0; }
@@ -183,27 +182,15 @@ export default function FounderDashboard({ user }: { user?: User }) {
   // Rendu
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {showWelcome && user && (
-        <div
-          className="mb-4 p-3 bg-indigo-50 border-l-4 border-indigo-500 rounded text-indigo-800 flex items-center justify-between"
-          style={
-            typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-              ? {}
-              : { transition: 'opacity 200ms ease', opacity: showWelcome ? 1 : 0 }
-          }
-        >
-          <div>
-            <div className="text-sm font-medium">{welcomeText}</div>
-            <div className="text-xs text-indigo-700">Ravi de vous revoir</div>
-          </div>
-          <button
-            aria-label="Fermer"
-            onClick={() => setShowWelcome(false)}
-            className="ml-4 text-indigo-600 hover:text-indigo-800 text-sm"
-          >
-            ×
-          </button>
-        </div>
+      {/* welcome toast: independent element, top-right, fades slowly and displays for displayMs */}
+      {user && (
+        <Toast
+          message={`${welcomeText} — Ravi de vous revoir`}
+          type="success"
+          visible={showWelcome}
+          duration={displayMs}
+          onClose={() => setShowWelcome(false)}
+        />
       )}
       {/* persistent greeting (header) */}
       {persistentGreeting && (

@@ -4,6 +4,7 @@ import * as yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
 import { LoginRequest } from '../../services/authService';
 import { useAuth } from '../../context';
+import PasswordField from '../../components/PasswordField';
 
 // Schéma de validation avec Yup
 const loginSchema = yup.object().shape({
@@ -83,7 +84,8 @@ const LoginPage = () => {
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">Mot de passe</label>
-              <input id="password" type="password" autoComplete="current-password" {...register('password')} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="•••••••" />
+              {/* PasswordField supports spreading register(...) or controlled props */}
+              <PasswordField id="password" autoComplete="current-password" {...register('password')} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="•••••••" />
               {errors.password && <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>}
             </div>
           </div>

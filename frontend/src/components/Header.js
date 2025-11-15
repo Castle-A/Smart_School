@@ -4,10 +4,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
-import { salutation } from '../utils/salutation';
+// salutation removed from header because a popup displays the greeting on login
 const Header = () => {
     const { user, logout } = useAuth();
-    const [greeting, setGreeting] = useState(null);
     const prefersReduced = typeof window !== 'undefined' &&
         window.matchMedia &&
         window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -25,48 +24,7 @@ const Header = () => {
         document.addEventListener('click', onDocClick);
         return () => document.removeEventListener('click', onDocClick);
     }, []);
-    // Gestion du message de salutation
-    useEffect(() => {
-        try {
-            const id = user?.id;
-            if (id) {
-                const g = sessionStorage.getItem(`greeting_${id}`);
-                if (g)
-                    setGreeting(g);
-                else if (user)
-                    setGreeting(salutation(user).startsWith('Bonjour')
-                        ? salutation(user)
-                        : `Bienvenue, ${salutation(user)}`);
-            }
-            else {
-                if (user)
-                    setGreeting(salutation(user).startsWith('Bonjour')
-                        ? salutation(user)
-                        : `Bienvenue, ${salutation(user)}`);
-            }
-        }
-        catch {
-            void 0;
-        }
-        const onLogin = (e) => {
-            try {
-                const detail = e.detail;
-                const u = (detail?.user ?? user);
-                if (!u)
-                    return;
-                const s = salutation(u);
-                const text = s.startsWith('Bonjour') ? s : `Bienvenue, ${s}`;
-                setGreeting(text);
-                if (u.id)
-                    sessionStorage.setItem(`greeting_${u.id}`, text);
-            }
-            catch {
-                void 0;
-            }
-        };
-        window.addEventListener('auth:login', onLogin);
-        return () => window.removeEventListener('auth:login', onLogin);
-    }, [user]);
+    // Greeting is shown as a popup on login; header no longer renders it.
     // ✅ Version corrigée : logout + redirection vers la home
     const handleLogout = async () => {
         try {
@@ -74,13 +32,11 @@ const Header = () => {
         }
         finally {
             setOpen(false); // ferme le menu
-            setGreeting(null); // évite un flash de message
+            // header greeting removed — no-op
             navigate('/', { replace: true }); // redirection directe vers la home
         }
     };
-    return (_jsxs("header", { className: "w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white shadow-lg", children: [_jsxs("div", { className: "container mx-auto flex items-center justify-between py-3 px-4", children: [_jsxs("div", { className: "flex items-center gap-3", children: [_jsx("div", { className: "w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg", children: "SS" }), _jsxs("div", { children: [_jsx(Link, { to: "/dashboard", className: "text-xl font-semibold tracking-tight", children: "Smart School" }), _jsx("div", { className: "text-xs opacity-80", children: user?.schoolName ?? '' }), greeting && (_jsx("div", { className: "text-sm opacity-90 mt-0.5", style: prefersReduced
-                                            ? undefined
-                                            : { transition: 'opacity 200ms ease', opacity: 1 }, children: greeting }))] })] }), _jsxs("div", { className: "flex items-center gap-4", ref: navRef, children: [_jsx("div", { className: "hidden sm:block text-sm opacity-90", children: user?.firstName }), _jsx("button", { onClick: () => setOpen((s) => !s), className: "relative focus:outline-none", "aria-expanded": open, "aria-label": "Menu utilisateur", children: _jsx("img", { src: user?.avatarUrl ?? '/src/assets/default-avatar.svg', alt: "avatar utilisateur", className: "w-10 h-10 rounded-full border-2 border-white shadow", onError: (e) => {
+    return (_jsxs("header", { className: "w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white shadow-lg", children: [_jsxs("div", { className: "container mx-auto flex items-center justify-between py-3 px-4", children: [_jsxs("div", { className: "flex items-center gap-3", children: [_jsx("div", { className: "w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg", children: "SS" }), _jsxs("div", { children: [_jsx(Link, { to: "/dashboard", className: "text-xl font-semibold tracking-tight", children: "Smart School" }), _jsx("div", { className: "text-xs opacity-80", children: user?.schoolName ?? '' })] })] }), _jsxs("div", { className: "flex items-center gap-4", ref: navRef, children: [_jsx("div", { className: "hidden sm:block text-sm opacity-90", children: user?.firstName }), _jsx("button", { onClick: () => setOpen((s) => !s), className: "relative focus:outline-none", "aria-expanded": open, "aria-label": "Menu utilisateur", children: _jsx("img", { src: user?.avatarUrl ?? '/src/assets/default-avatar.svg', alt: "avatar utilisateur", className: "w-10 h-10 rounded-full border-2 border-white shadow", onError: (e) => {
                                         const t = e.currentTarget;
                                         if (!t.src.includes('default-avatar.svg'))
                                             t.src = '/src/assets/default-avatar.svg';

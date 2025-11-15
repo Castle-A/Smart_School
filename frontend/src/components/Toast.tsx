@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type ToastProps = {
   message: string;
@@ -9,47 +10,102 @@ type ToastProps = {
 };
 
 const Toast: React.FC<ToastProps> = ({ message, type = 'success', visible, duration = 2500, onClose }) => {
-  const [mounted, setMounted] = useState<boolean>(false);
-  const [fading, setFading] = useState(false);
+  const mountedRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startedAtRef = useRef<number | null>(null);
+  const remainingRef = useRef<number>(duration);
+  const [paused, setPaused] = useState(false);
 
   // respect prefers-reduced-motion
   const prefersReduced = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const fadeMs = prefersReduced ? 0 : 200;
 
   useEffect(() => {
-    if (!visible) {
-      setMounted(false);
-      setFading(false);
-      return;
+    // when visible becomes true, (re)start timer
+    if (visible) {
+      mountedRef.current = true;
+      // reset timers
+      if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+      remainingRef.current = duration;
+      startedAtRef.current = Date.now();
+      timerRef.current = setTimeout(() => {
+        startedAtRef.current = null;
+        remainingRef.current = duration;
+        onClose?.();
+      }, duration);
+      return () => {
+        if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+      };
     }
-    setMounted(true);
-    setFading(false);
+    // when visible becomes false, clear
+    if (!visible) {
+      if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+      mountedRef.current = false;
+      startedAtRef.current = null;
+      remainingRef.current = duration;
+    }
+    return () => {};
+  }, [visible, duration, onClose]);
 
-    const fadeStart = Math.max(0, duration - fadeMs);
-    const t1 = setTimeout(() => setFading(true), fadeStart);
-    const t2 = setTimeout(() => {
-      setMounted(false);
-      setFading(false);
-      onClose?.();
-    }, duration);
+  // pause/resume on hover
+  const handleMouseEnter = () => {
+    if (prefersReduced) return;
+    if (!visible) return;
+    if (timerRef.current) {
+      const elapsed = startedAtRef.current ? Date.now() - startedAtRef.current : 0;
+      remainingRef.current = Math.max(0, (remainingRef.current - elapsed));
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+      startedAtRef.current = null;
+      setPaused(true);
+    }
+  };
 
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, [visible, duration, fadeMs, onClose]);
-
-  if (!mounted) return null;
+  const handleMouseLeave = () => {
+    if (prefersReduced) return;
+    if (!visible) return;
+    if (!timerRef.current) {
+      startedAtRef.current = Date.now();
+      timerRef.current = setTimeout(() => {
+        startedAtRef.current = null;
+        remainingRef.current = duration;
+        onClose?.();
+      }, remainingRef.current);
+      setPaused(false);
+    }
+  };
 
   const bg = type === 'success' ? 'bg-green-100 border-green-200 text-green-800' : type === 'error' ? 'bg-red-100 border-red-200 text-red-800' : 'bg-blue-100 border-blue-200 text-blue-800';
 
-  const style: React.CSSProperties = prefersReduced
-    ? {}
-    : { transition: `opacity ${fadeMs}ms ease`, opacity: fading ? 0 : 1 };
+  // Motion variants — subtle pop + slide
+  const variants = {
+    hidden: { opacity: 0, y: -8, scale: 0.98 },
+    enter: { opacity: 1, y: 0, scale: 1 },
+    exit: { opacity: 0, y: -8, scale: 0.98 },
+  } as const;
 
   return (
     <div className="fixed top-6 right-6 z-50">
-      <div style={style} className={`${bg} px-4 py-2 rounded shadow-md`}>{message}</div>
+      <AnimatePresence>
+        {visible && (
+          <motion.div
+            role="status"
+            initial="hidden"
+            animate="enter"
+            exit="exit"
+            variants={variants}
+            transition={prefersReduced ? { duration: 0.18 } : { duration: 0.45, ease: [0.2, 0.8, 0.2, 1] }}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className="pointer-events-auto"
+          >
+            <div className={`${bg} px-4 py-2 rounded shadow-md border`}>
+              <div className="flex items-center gap-3">
+                <div className="text-sm leading-tight">{message}</div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
