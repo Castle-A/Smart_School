@@ -47,3 +47,9 @@ prisma/dev.db
 
 # Backups accidentels
 backend.git.backup/
+# Ignore TypeScript incremental build files
+*.tsbuildinfo
+# Ignore log files
+*.log
+# Ignore backup bundles
+*.bundle
