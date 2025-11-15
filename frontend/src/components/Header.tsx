@@ -3,11 +3,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
-import { salutation } from '../utils/salutation';
+// salutation removed from header because a popup displays the greeting on login
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
-  const [greeting, setGreeting] = useState<string | null>(null);
   const prefersReduced =
     typeof window !== 'undefined' &&
     window.matchMedia &&
@@ -26,44 +25,7 @@ const Header: React.FC = () => {
     return () => document.removeEventListener('click', onDocClick);
   }, []);
 
-  // Gestion du message de salutation
-  useEffect(() => {
-    try {
-      const id = user?.id;
-      if (id) {
-        const g = sessionStorage.getItem(`greeting_${id}`);
-        if (g) setGreeting(g);
-        else if (user)
-          setGreeting(
-            salutation(user).startsWith('Bonjour')
-              ? salutation(user)
-              : `Bienvenue, ${salutation(user)}`
-          );
-      } else {
-        if (user)
-          setGreeting(
-            salutation(user).startsWith('Bonjour')
-              ? salutation(user)
-              : `Bienvenue, ${salutation(user)}`
-          );
-      }
-  } catch { void 0; }
-
-    const onLogin = (e: Event) => {
-      try {
-        const detail = (e as CustomEvent).detail as { user?: unknown } | undefined;
-  const u = (detail?.user ?? user) as unknown as import('../types').User | undefined;
-        if (!u) return;
-        const s = salutation(u);
-        const text = s.startsWith('Bonjour') ? s : `Bienvenue, ${s}`;
-        setGreeting(text);
-        if (u.id) sessionStorage.setItem(`greeting_${u.id}`, text);
-  } catch { void 0; }
-    };
-
-    window.addEventListener('auth:login', onLogin as EventListener);
-    return () => window.removeEventListener('auth:login', onLogin as EventListener);
-  }, [user]);
+  // Greeting is shown as a popup on login; header no longer renders it.
 
   // ✅ Version corrigée : logout + redirection vers la home
   const handleLogout = async () => {
@@ -71,7 +33,7 @@ const Header: React.FC = () => {
       await logout(); // vide la session
     } finally {
       setOpen(false); // ferme le menu
-      setGreeting(null); // évite un flash de message
+      // header greeting removed — no-op
       navigate('/', { replace: true }); // redirection directe vers la home
     }
   };
@@ -90,18 +52,7 @@ const Header: React.FC = () => {
               Smart School
             </Link>
             <div className="text-xs opacity-80">{user?.schoolName ?? ''}</div>
-            {greeting && (
-              <div
-                className="text-sm opacity-90 mt-0.5"
-                style={
-                  prefersReduced
-                    ? undefined
-                    : { transition: 'opacity 200ms ease', opacity: 1 }
-                }
-              >
-                {greeting}
-              </div>
-            )}
+            {/* greeting removed from header (shown as popup at login) */}
           </div>
         </div>
 

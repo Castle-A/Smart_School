@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '@/services/authService';
 import { useAuth } from '@/context';
+import PasswordField from '../../components/PasswordField';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -227,8 +228,7 @@ const RegisterPage = () => {
               className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
               required
             />
-            <input
-              type="password"
+            <PasswordField
               name="password"
               placeholder="Votre mot de passe"
               value={formData.password}
@@ -236,8 +236,7 @@ const RegisterPage = () => {
               className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
               required
             />
-            <input
-              type="password"
+            <PasswordField
               name="confirmPassword"
               placeholder="Confirmer le mot de passe"
               value={formData.confirmPassword}

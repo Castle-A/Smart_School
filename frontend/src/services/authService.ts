@@ -42,12 +42,8 @@ export const authService = {
     } catch (err: unknown) {
       // Normalise l'erreur pour que les callers reçoivent toujours une Error
       const axiosErr = err as AxiosError | undefined;
-      const serverData = axiosErr?.response?.data as unknown as Record<string, unknown> | undefined;
-      const serverMessage = typeof serverData?.['message'] === 'string'
-        ? String(serverData!['message'])
-        : typeof serverData?.['error'] === 'string'
-        ? String(serverData!['error'])
-        : axiosErr?.message ?? 'Erreur inconnue lors de la connexion';
+      const serverData = axiosErr?.response?.data as any | undefined;
+      const serverMessage = serverData?.message ?? serverData?.error ?? axiosErr?.message ?? 'Erreur inconnue lors de la connexion';
       console.error('Login error:', serverData ?? err);
       throw new Error(String(serverMessage));
     }
@@ -60,12 +56,8 @@ export const authService = {
     } catch (err: unknown) {
       // Normalise l'erreur Axios pour renvoyer un message lisible aux callers
       const axiosErr = err as AxiosError | undefined;
-      const serverData = axiosErr?.response?.data as unknown as Record<string, unknown> | undefined;
-      const serverMessage = typeof serverData?.['message'] === 'string'
-        ? String(serverData!['message'])
-        : typeof serverData?.['error'] === 'string'
-        ? String(serverData!['error'])
-        : axiosErr?.message ?? 'Erreur inconnue lors du changement de mot de passe';
+      const serverData = axiosErr?.response?.data as any | undefined;
+      const serverMessage = serverData?.message ?? serverData?.error ?? axiosErr?.message ?? 'Erreur inconnue lors du changement de mot de passe';
       console.error('Change password error:', serverData ?? err);
       throw new Error(String(serverMessage));
     }
@@ -76,15 +68,8 @@ export const authService = {
       const response = await api.post('/auth/refresh', { refresh_token: refreshToken });
       return response.data;
     } catch (err: unknown) {
-      const axiosErr = err as AxiosError | undefined;
-      const serverData = axiosErr?.response?.data as unknown as Record<string, unknown> | undefined;
-      const serverMessage = typeof serverData?.['message'] === 'string'
-        ? String(serverData!['message'])
-        : typeof serverData?.['error'] === 'string'
-        ? String(serverData!['error'])
-        : axiosErr?.message ?? 'Erreur inconnue lors du rafraîchissement du token';
-      console.error('Refresh error:', serverData ?? err);
-      throw new Error(String(serverMessage));
+      console.error('Refresh error:', err);
+      throw err;
     }
   },
 
@@ -105,15 +90,8 @@ export const authService = {
   const response = await api.post('/auth/register-school', payload);
       return response.data;
     } catch (err: unknown) {
-      const axiosErr = err as AxiosError | undefined;
-      const serverData = axiosErr?.response?.data as unknown as Record<string, unknown> | undefined;
-      const serverMessage = typeof serverData?.['message'] === 'string'
-        ? String(serverData!['message'])
-        : typeof serverData?.['error'] === 'string'
-        ? String(serverData!['error'])
-        : axiosErr?.message ?? 'Erreur inconnue lors de l\'inscription';
-      console.error('Register error:', serverData ?? err);
-      throw new Error(String(serverMessage));
+      console.error('Register error:', err);
+      throw err;
     }
   },
 
@@ -122,15 +100,8 @@ export const authService = {
   const response = await api.patch('/auth/update-avatar', { avatarUrl });
       return response.data;
     } catch (err: unknown) {
-      const axiosErr = err as AxiosError | undefined;
-      const serverData = axiosErr?.response?.data as unknown as Record<string, unknown> | undefined;
-      const serverMessage = typeof serverData?.['message'] === 'string'
-        ? String(serverData!['message'])
-        : typeof serverData?.['error'] === 'string'
-        ? String(serverData!['error'])
-        : axiosErr?.message ?? 'Erreur inconnue lors de la mise à jour de l\'avatar';
-      console.error('Update avatar error:', serverData ?? err);
-      throw new Error(String(serverMessage));
+      console.error('Update avatar error:', err);
+      throw err;
     }
   },
 };

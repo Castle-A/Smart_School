@@ -34,14 +34,15 @@ export default function FounderDashboard({ user }) {
     const [persistentGreeting, setPersistentGreeting] = useState(null);
     const [toastVisible, setToastVisible] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
+    // show duration (ms) for the welcome popover per login
+    const displayMs = 6000; // 6 seconds as requested
     const welcomeText = useMemo(() => {
         if (!user)
             return '';
         const s = salutation(user);
-        // salutation may return 'Bonjour <Name>' or 'M. <Name>' / 'Mme <Name>'
-        if (s.startsWith('Bonjour'))
-            return s;
-        return `Bienvenue, ${s}`;
+        // salutation may return 'Bonjour <Name>' or 'Bonsoir <Name>' or titles like 'M. <Name>'
+        const alreadyGreeting = s.startsWith('Bonjour') || s.startsWith('Bonsoir');
+        return alreadyGreeting ? s : `Bienvenue, ${s}`;
     }, [user]);
     // Charger l'école du fondateur (s'il a un schoolId)
     useEffect(() => {
@@ -85,8 +86,8 @@ export default function FounderDashboard({ user }) {
         catch {
             void 0;
         }
-        const fadeMs = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 200;
-        const displayMs = 2500;
+        // show duration (ms) for the welcome popover per login
+        const displayMs = 6000; // 6 seconds as requested
         const onLogin = (e) => {
             try {
                 const detail = e.detail;
@@ -94,7 +95,8 @@ export default function FounderDashboard({ user }) {
                 if (!u)
                     return;
                 const s = salutation(u);
-                const text = s.startsWith('Bonjour') ? s : `Bienvenue, ${s}`;
+                const alreadyGreeting = s.startsWith('Bonjour') || s.startsWith('Bonsoir');
+                const text = alreadyGreeting ? s : `Bienvenue, ${s}`;
                 try {
                     const key = `welcome_shown_${u.id}`;
                     const already = sessionStorage.getItem(key);
@@ -105,15 +107,9 @@ export default function FounderDashboard({ user }) {
                         // persist greeting in header for this session
                         sessionStorage.setItem(`greeting_${u.id}`, text);
                         setPersistentGreeting(text);
-                        // fade-out schedule: start fading at displayMs - fadeMs, unmount at displayMs
-                        const fadeStart = Math.max(0, displayMs - fadeMs);
-                        const fadeTimer = setTimeout(() => setShowWelcome(false), fadeStart);
-                        const unmountTimer = setTimeout(() => setShowWelcome(false), displayMs);
-                        // both setShowWelcome(false) but fade effect is handled by CSS transition in render
-                        return () => {
-                            clearTimeout(fadeTimer);
-                            clearTimeout(unmountTimer);
-                        };
+                        // hide after displayMs (Toast handles the fade animation)
+                        const t = setTimeout(() => setShowWelcome(false), displayMs);
+                        return () => clearTimeout(t);
                     }
                 }
                 catch {
@@ -130,7 +126,8 @@ export default function FounderDashboard({ user }) {
                 if (!u)
                     return;
                 const s = salutation(u);
-                const text = s.startsWith('Bonjour') ? s : `Bienvenue, ${s}`;
+                const alreadyGreeting = s.startsWith('Bonjour') || s.startsWith('Bonsoir');
+                const text = alreadyGreeting ? s : `Bienvenue, ${s}`;
                 setToastMessage(`Session renouvelée — ${text}`);
                 setToastVisible(true);
             }
@@ -191,9 +188,7 @@ export default function FounderDashboard({ user }) {
         return s?.name ?? user?.schoolName ?? '—';
     }, [school, user?.schoolName]);
     // Rendu
-    return (_jsxs("div", { className: "p-6 max-w-6xl mx-auto", children: [showWelcome && user && (_jsxs("div", { className: "mb-4 p-3 bg-indigo-50 border-l-4 border-indigo-500 rounded text-indigo-800 flex items-center justify-between", style: typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-                    ? {}
-                    : { transition: 'opacity 200ms ease', opacity: showWelcome ? 1 : 0 }, children: [_jsxs("div", { children: [_jsx("div", { className: "text-sm font-medium", children: welcomeText }), _jsx("div", { className: "text-xs text-indigo-700", children: "Ravi de vous revoir" })] }), _jsx("button", { "aria-label": "Fermer", onClick: () => setShowWelcome(false), className: "ml-4 text-indigo-600 hover:text-indigo-800 text-sm", children: "\u00D7" })] })), persistentGreeting && (_jsx("div", { className: "mb-3 text-sm text-gray-700", children: persistentGreeting })), _jsx(Toast, { message: toastMessage, type: "info", visible: toastVisible, onClose: () => setToastVisible(false) }), user?.role === 'FONDATEUR' && (_jsxs("div", { className: "mb-6", children: [_jsxs("div", { className: "p-5 bg-white rounded-lg shadow flex flex-col md:flex-row md:items-center md:gap-6", children: [_jsxs("div", { className: "min-w-[200px]", children: [_jsx("div", { className: "text-xs text-gray-500", children: "\u00C9cole" }), _jsx("div", { className: "font-semibold text-gray-800", children: schoolName })] }), _jsxs("div", { className: "min-w-[200px]", children: [_jsx("div", { className: "text-xs text-gray-500", children: "Statut abonnement" }), _jsx("div", { className: `font-semibold ${subscriptionStatus.variant === 'green'
+    return (_jsxs("div", { className: "p-6 max-w-6xl mx-auto", children: [user && (_jsx(Toast, { message: `${welcomeText} — Ravi de vous revoir`, type: "success", visible: showWelcome, duration: displayMs, onClose: () => setShowWelcome(false) })), persistentGreeting && (_jsx("div", { className: "mb-3 text-sm text-gray-700", children: persistentGreeting })), _jsx(Toast, { message: toastMessage, type: "info", visible: toastVisible, onClose: () => setToastVisible(false) }), user?.role === 'FONDATEUR' && (_jsxs("div", { className: "mb-6", children: [_jsxs("div", { className: "p-5 bg-white rounded-lg shadow flex flex-col md:flex-row md:items-center md:gap-6", children: [_jsxs("div", { className: "min-w-[200px]", children: [_jsx("div", { className: "text-xs text-gray-500", children: "\u00C9cole" }), _jsx("div", { className: "font-semibold text-gray-800", children: schoolName })] }), _jsxs("div", { className: "min-w-[200px]", children: [_jsx("div", { className: "text-xs text-gray-500", children: "Statut abonnement" }), _jsx("div", { className: `font-semibold ${subscriptionStatus.variant === 'green'
                                             ? 'text-green-600'
                                             : subscriptionStatus.variant === 'red'
                                                 ? 'text-red-600'

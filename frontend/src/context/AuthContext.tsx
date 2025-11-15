@@ -329,3 +329,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 // `useAuth` is exported from `context/useAuth.ts` to keep this module export-clean for Fast Refresh.
+// Re-export the `useAuth` hook for backward compatibility with imports from './AuthContext'
+export { useAuth } from './useAuth';
