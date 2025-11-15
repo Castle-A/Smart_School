@@ -22,7 +22,7 @@ export class AuthController {
   // Route protégée pour tester notre guard
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Request() req) {
+  getProfile(@Request() req: any) {
     // req.user est ajouté par JwtAuthGuard
     return req.user;
   }

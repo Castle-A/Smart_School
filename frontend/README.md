@@ -1,3 +1,27 @@
+# Frontend — Smart_School
+
+Dossier `frontend/` : application Vite + React.
+
+Commandes principales (depuis `frontend`)
+
+```bash
+# installer les dépendances
+npm ci
+
+# lancer en dev
+npm run dev
+
+# build pour production
+npm run build
+
+# preview build
+npm run preview
+```
+
+Remarques
+
+- Le code source se trouve dans `frontend/src`.
+- Le build produit `frontend/dist` (généré par Vite) et doit être ignoré dans Git.
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

@@ -14,7 +14,9 @@
     "types": [
       "vite/client",
       "vitest/globals"
-    ]
+    ],
+    "composite": true,
+    "declaration": true
   },
   "include": ["src"]
 }
