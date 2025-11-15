@@ -50,78 +50,40 @@ $ npm run start:prod
 ```
 
 ## Run tests
+# Smart_School
 
-```bash
-# unit tests
-$ npm run test
+Monorepo minimal pour le projet Smart_School.
 
-# e2e tests
-$ npm run test:e2e
+Structure recommandée
 
-# test coverage
-$ npm run test:cov
+```
+Smart_School/
+  backend/        # NestJS backend (cd backend && npm run start:dev)
+  frontend/       # Vite + React frontend (cd frontend && npm run dev)
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-## Smart_School — Backend
-
-This is the backend for the Smart_School application, a comprehensive SaaS school management system.
-
-This backend was initialized from the official NestJS TypeScript starter. The README below contains quick setup
-and run instructions adapted for this project.
-
-## Project setup
-
-Install dependencies:
+Commandes utiles (à la racine)
 
 ```bash
-npm install
+# installer les deps pour backend et frontend
+npm run install:all
+
+# lancer le backend en dev
+npm run dev:backend
+
+# lancer le frontend en dev
+npm run dev:frontend
 ```
 
-## Compile and run the project
+Notes
 
-```bash
-# development
-npm run start
+- Le backend : dossier `backend/` contient le projet NestJS. Utilise `npm run start:dev` depuis `backend`.
+- Le frontend : dossier `frontend/` contient l'app Vite/React. Utilise `npm run dev` depuis `frontend`.
+- Les artefacts compilés (fichiers `.js` et `.js.map` générés par build) ont été retirés du dossier `backend/src` — les sources TypeScript restent la source de vérité.
+- Un `.gitignore` racine a été ajouté pour ignorer `node_modules`, `dist`, logs, DB locales et fichiers compilés.
 
-# watch mode
-npm run start:dev
-
-# production mode
-npm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-npm run test
-
-# e2e tests
-npm run test:e2e
-
-# test coverage
-npm run test:cov
-```
-
-## Deployment
-
-See the NestJS deployment documentation for general guidance: https://docs.nestjs.com/deployment
-
-## Resources
-
-- NestJS documentation: https://docs.nestjs.com
-- NestJS Discord: https://discord.gg/G7Qnnhy
-
-## License
-
-This project uses the same MIT license as the NestJS starter. See the repository license for details.
+Si tu veux que je fasse une réorganisation plus agressive (déplacer configs, convertir en yarn/pnpm workspaces, etc.), dis-le et je prépare le plan détaillé.
 
 ---
-_Merged README: kept the project header from the remote and important usage notes from the local NestJS starter._
->>>>>>> 9a8775c37c420f37e484d4f25a62b85c45e3975d
+Fait par l'agent — prochaines étapes proposées : ajouter READMEs spécifiques `backend/` et `frontend/`, normaliser configs si besoin, puis commit final.
+# development
