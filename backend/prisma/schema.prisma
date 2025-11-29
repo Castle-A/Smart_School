@@ -1,0 +1,228 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String       @id @default(uuid())
+  email             String       @unique
+  password          String
+  firstName         String
+  lastName          String
+  gender            String?
+  phone             String?
+  profilePicture    String?
+  mustChangePassword Boolean     @default(true)
+  platformRole      String?      // SUPPORT_TECH, SUPER_ADMIN_PLATFORM
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  
+  schoolUsers       SchoolUser[]
+  sentMessages      Message[]    @relation("Sender")
+  receivedMessages  Message[]    @relation("Receiver")
+  notifications     Notification[]
+}
+
+model SupportLog {
+  id          String   @id @default(cuid())
+  supportId   String
+  schoolId    String?
+  action      String
+  details     String?  // Stored as JSON string if needed, or use Json type if supported by DB
+  createdAt   DateTime @default(now())
+}
+
+model School {
+  id          String       @id @default(uuid())
+  name        String
+  address     String?
+  phone       String?
+  email       String?
+  cycles      String?      // Comma-separated: MATERNELLE_I,MATERNELLE_II,PRIMAIRE_1,PRIMAIRE_2
+  plan        String       @default("BASIC")
+  subscriptionPlan   String?  @default("BASIC")
+  subscriptionStatus String?  @default("ACTIVE")
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  users       SchoolUser[]
+  students    Student[]
+  classes     Class[]
+  subjects    Subject[]
+  events      CalendarEvent[]
+  payments    Payment[]
+  payrolls    Payroll[]
+}
+
+model SchoolUser {
+  id        String   @id @default(uuid())
+  userId    String
+  schoolId  String
+  role      String
+  
+  user      User     @relation(fields: [userId], references: [id])
+  school    School   @relation(fields: [schoolId], references: [id])
+
+  permissions Permission[]
+
+  // Relations specific to roles
+  teacherClasses Class[] @relation("ClassTeacher")
+  teacherSubjects Subject[] @relation("SubjectTeacher")
+  payrolls      Payroll[]
+  
+  @@unique([userId, schoolId])
+}
+
+model Permission {
+  id           String     @id @default(uuid())
+  code         String     // ex: "calendar.manage", "finance.view"
+  schoolUserId String
+  schoolUser   SchoolUser @relation(fields: [schoolUserId], references: [id], onDelete: Cascade)
+}
+
+model Student {
+  id        String   @id @default(uuid())
+  matricule String   @unique
+  firstName String
+  lastName  String
+  dob       DateTime
+  gender    String
+  address   String?
+  
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  
+  classId   String?
+  class     Class?   @relation(fields: [classId], references: [id])
+  
+  grades    Grade[]
+  attendances Attendance[]
+  payments  Payment[]
+}
+
+model Class {
+  id        String   @id @default(uuid())
+  name      String
+  level     String
+  
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  
+  mainTeacherId String?
+  mainTeacher   SchoolUser? @relation("ClassTeacher", fields: [mainTeacherId], references: [id])
+  
+  students  Student[]
+  subjects  Subject[]
+}
+
+model Subject {
+  id        String   @id @default(uuid())
+  name      String
+  coefficient Int    @default(1)
+  
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  
+  classes   Class[]
+  teachers  SchoolUser[] @relation("SubjectTeacher")
+  grades    Grade[]
+}
+
+model Grade {
+  id        String   @id @default(uuid())
+  value     Float
+  type      String
+  coef      Int      @default(1)
+  date      DateTime @default(now())
+  term      String
+  
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+}
+
+model Attendance {
+  id        String   @id @default(uuid())
+  date      DateTime
+  status    String
+  reason    String?
+  
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  amount    Float
+  date      DateTime @default(now())
+  reason    String
+  method    String
+  reference String?
+  
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+}
+
+model Payroll {
+  id        String   @id @default(uuid())
+  month     String
+  year      Int
+  amount    Float
+  status    String
+  
+  staffId   String
+  staff     SchoolUser @relation(fields: [staffId], references: [id])
+  
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+}
+
+model CalendarEvent {
+  id        String   @id @default(uuid())
+  title     String
+  start     DateTime
+  end       DateTime
+  type      String
+  description String?
+  
+  schoolId  String?
+  school    School?  @relation(fields: [schoolId], references: [id])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  read      Boolean  @default(false)
+  
+  senderId  String
+  sender    User     @relation("Sender", fields: [senderId], references: [id])
+  
+  receiverId String
+  receiver  User     @relation("Receiver", fields: [receiverId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // PAYMENT, ABSENCE, VALIDATION, SECURITY, SYSTEM
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, isRead])
+}

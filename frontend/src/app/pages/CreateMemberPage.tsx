@@ -1,0 +1,402 @@
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { User, Mail, Phone, Briefcase, ArrowLeft, Check, X } from 'lucide-react';
+
+type MemberRole = 'directeur' | 'secretaire' | 'surveillant' | 'censeur' | 'comptable';
+
+interface RolePermissions {
+    role: MemberRole;
+    label: string;
+    permissions: string[];
+    sections: string[];
+}
+
+const ROLE_PERMISSIONS: Record<MemberRole, RolePermissions> = {
+    directeur: {
+        role: 'directeur',
+        label: 'Directeur',
+        permissions: [
+            'Voir toutes les classes, élèves, profs',
+            'Gérer les élèves (transferts, discipline)',
+            'Voir bulletins et notes',
+            'Droits optionnels (selon délégation)'
+        ],
+        sections: ['Vue d\'ensemble', 'Administration', 'Vie scolaire', 'Programme scolaire', 'Communication', 'Configuration']
+    },
+    secretaire: {
+        role: 'secretaire',
+        label: 'Secrétaire',
+        permissions: [
+            'Créer/modifier fiches élèves',
+            'Lier parents',
+            'Imprimer attestations/certificats',
+            'Envoi messages administratifs'
+        ],
+        sections: ['Vue d\'ensemble', 'Administration', 'Vie scolaire', 'Communication']
+    },
+    surveillant: {
+        role: 'surveillant',
+        label: 'Surveillant',
+        permissions: [
+            'Saisir présences/absences/retards',
+            'Noter incidents mineurs',
+            'Voir résumés discipline'
+        ],
+        sections: ['Vue d\'ensemble', 'Vie scolaire', 'Communication']
+    },
+    censeur: {
+        role: 'censeur',
+        label: 'Censeur',
+        permissions: [
+            'Enregistrer sanctions',
+            'Suivi pédagogique et discipline',
+            'Voir notes et bulletins',
+            'Corriger présences'
+        ],
+        sections: ['Vue d\'ensemble', 'Vie scolaire', 'Programme scolaire', 'Communication']
+    },
+    comptable: {
+        role: 'comptable',
+        label: 'Comptable',
+        permissions: [
+            'Gestion complète finance',
+            'Paiements et reçus',
+            'Relances parents',
+            'Paie des enseignants (Premium)'
+        ],
+        sections: ['Vue d\'ensemble', 'Comptabilité', 'Communication']
+    }
+};
+
+const CreateMemberPage = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const preSelectedRole = (location.state as any)?.role?.toLowerCase() || '';
+
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        gender: '',
+        phone: '',
+        email: '',
+        role: preSelectedRole as MemberRole | '',
+        loginMethod: 'email' as 'email' | 'phone'
+    });
+
+    const [showCredentials, setShowCredentials] = useState(false);
+    const [generatedCredentials, setGeneratedCredentials] = useState({
+        identifier: '',
+        password: ''
+    });
+
+    const generatePassword = () => {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+        let password = '';
+        for (let i = 0; i < 8; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return password;
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                console.error('No token found');
+                return;
+            }
+
+            const response = await fetch('http://localhost:3000/members/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    ...formData,
+                    schoolId: 'current-school-id' // This will be handled by backend from token
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create member');
+            }
+
+            const data = await response.json();
+            console.log('Member created:', data);
+
+            // Show credentials popup with returned data
+            setGeneratedCredentials({
+                identifier: data.credentials.identifier,
+                password: data.credentials.tempPassword
+            });
+            setShowCredentials(true);
+        } catch (error) {
+            console.error('Error creating member:', error);
+            alert('Erreur lors de la création du membre');
+        }
+    };
+
+    const handleChange = (field: string, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const selectedRolePermissions = formData.role ? ROLE_PERMISSIONS[formData.role] : null;
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] p-8">
+            <div className="max-w-4xl mx-auto">
+                {/* Header */}
+                <div className="flex items-center gap-4 mb-8">
+                    <button
+                        onClick={() => navigate('/app/dashboard')}
+                        className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                    <div>
+                        <h1 className="text-3xl font-bold text-white">Nouveau Membre</h1>
+                        <p className="text-gray-400 mt-1">Créer un nouveau membre de l'administration</p>
+                    </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Personal Information */}
+                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+                        <h2 className="text-xl font-semibold text-white mb-6">Informations personnelles</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Prénom *</label>
+                                <div className="relative">
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.firstName}
+                                        onChange={(e) => handleChange('firstName', e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+                                        placeholder="Jean"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Nom *</label>
+                                <div className="relative">
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.lastName}
+                                        onChange={(e) => handleChange('lastName', e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+                                        placeholder="Dupont"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Genre *</label>
+                                <select
+                                    required
+                                    value={formData.gender}
+                                    onChange={(e) => handleChange('gender', e.target.value)}
+                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-slate-800 [&>option]:text-white"
+                                >
+                                    <option value="" disabled hidden>Sélectionner</option>
+                                    <option value="M">Masculin</option>
+                                    <option value="F">Féminin</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Numéro de téléphone *</label>
+                                <div className="relative">
+                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <input
+                                        type="tel"
+                                        required
+                                        value={formData.phone}
+                                        onChange={(e) => handleChange('phone', e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+                                        placeholder="+225 XX XX XX XX XX"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Email *</label>
+                                <div className="relative">
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <input
+                                        type="email"
+                                        required
+                                        value={formData.email}
+                                        onChange={(e) => handleChange('email', e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+                                        placeholder="jean.dupont@smartschool.com"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Role Selection */}
+                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+                        <h2 className="text-xl font-semibold text-white mb-6">Poste et permissions</h2>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Poste *</label>
+                            <div className="relative">
+                                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                <select
+                                    required
+                                    value={formData.role}
+                                    onChange={(e) => handleChange('role', e.target.value)}
+                                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-slate-800 [&>option]:text-white"
+                                >
+                                    <option value="" disabled hidden>Sélectionner un poste</option>
+                                    <option value="directeur">Directeur</option>
+                                    <option value="secretaire">Secrétaire</option>
+                                    <option value="surveillant">Surveillant</option>
+                                    <option value="censeur">Censeur</option>
+                                    <option value="comptable">Comptable</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Display permissions for selected role */}
+                        {selectedRolePermissions && (
+                            <div className="mt-6 space-y-4">
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-300 mb-3">Permissions</h3>
+                                    <div className="space-y-2">
+                                        {selectedRolePermissions.permissions.map((permission, index) => (
+                                            <div key={index} className="flex items-center gap-2 text-sm text-gray-400">
+                                                <Check size={16} className="text-emerald-400" />
+                                                <span>{permission}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-300 mb-3">Sections accessibles</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedRolePermissions.sections.map((section, index) => (
+                                            <span
+                                                key={index}
+                                                className="px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-xs font-medium"
+                                            >
+                                                {section}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Login Method */}
+                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+                        <h2 className="text-xl font-semibold text-white mb-4">Méthode de connexion</h2>
+                        <div className="space-y-3">
+                            <label className="flex items-center gap-3 p-4 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
+                                <input
+                                    type="radio"
+                                    name="loginMethod"
+                                    value="email"
+                                    checked={formData.loginMethod === 'email'}
+                                    onChange={(e) => handleChange('loginMethod', e.target.value)}
+                                    className="w-4 h-4"
+                                />
+                                <div>
+                                    <p className="text-white font-medium">Email</p>
+                                    <p className="text-sm text-gray-400">L'utilisateur se connectera avec son email</p>
+                                </div>
+                            </label>
+
+                            <label className="flex items-center gap-3 p-4 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
+                                <input
+                                    type="radio"
+                                    name="loginMethod"
+                                    value="phone"
+                                    checked={formData.loginMethod === 'phone'}
+                                    onChange={(e) => handleChange('loginMethod', e.target.value)}
+                                    className="w-4 h-4"
+                                />
+                                <div>
+                                    <p className="text-white font-medium">Numéro de téléphone</p>
+                                    <p className="text-sm text-gray-400">L'utilisateur se connectera avec son numéro</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <div className="flex gap-4">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/app/dashboard')}
+                            className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            type="submit"
+                            className="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium"
+                        >
+                            Créer le membre
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {/* Credentials Popup */}
+            {showCredentials && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#1a1f37] border border-white/10 rounded-xl p-8 max-w-md w-full">
+                        <div className="text-center mb-6">
+                            <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Check size={32} className="text-emerald-400" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-white mb-2">Membre créé avec succès !</h2>
+                            <p className="text-gray-400">Voici les identifiants de connexion temporaires</p>
+                        </div>
+
+                        <div className="space-y-4 mb-6">
+                            <div className="bg-white/5 rounded-lg p-4">
+                                <p className="text-sm text-gray-400 mb-1">Identifiant</p>
+                                <p className="text-white font-mono font-medium">{generatedCredentials.identifier}</p>
+                            </div>
+
+                            <div className="bg-white/5 rounded-lg p-4">
+                                <p className="text-sm text-gray-400 mb-1">Mot de passe temporaire</p>
+                                <p className="text-white font-mono font-medium text-lg">{generatedCredentials.password}</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
+                            <p className="text-yellow-400 text-sm">
+                                ⚠️ L'utilisateur devra changer son mot de passe lors de sa première connexion
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={() => {
+                                setShowCredentials(false);
+                                navigate('/app/dashboard');
+                            }}
+                            className="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium"
+                        >
+                            Retour à l'Administration
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default CreateMemberPage;

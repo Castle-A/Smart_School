@@ -1,0 +1,285 @@
+{
+    "app": {
+        "name": "SmartSchool",
+        "tagline": "SaaS Platform #1 in Africa"
+    },
+    "home": {
+        "nav": {
+            "features": "Features",
+            "pricing": "Pricing",
+            "contact": "Contact",
+            "login": "Login",
+            "start": "Get Started"
+        },
+        "hero": {
+            "title": "Manage your school",
+            "intelligently": "intelligently",
+            "subtitle": "SmartSchool revolutionizes school management with an all-in-one platform: grades, finance, attendance, communication, and much more.",
+            "cta": "Create my school for free",
+            "demo": "View demo"
+        },
+        "stats": {
+            "schools": "Schools",
+            "students": "Students",
+            "uptime": "Uptime",
+            "support": "Support"
+        },
+        "features": {
+            "title": "Everything you need",
+            "subtitle": "A complete platform to manage your institution",
+            "management": {
+                "title": "Complete Management",
+                "description": "Students, teachers, classes and subjects in one place"
+            },
+            "grades": {
+                "title": "Grades & Report Cards",
+                "description": "Grade entry, automatic average calculation and report card generation"
+            },
+            "calendar": {
+                "title": "Smart Calendar",
+                "description": "School events, exams and national calendar"
+            },
+            "security": {
+                "title": "Advanced Security",
+                "description": "JWT authentication and granular permission management"
+            },
+            "finance": {
+                "title": "Finance & Payroll",
+                "description": "Manage payments, receipts and staff payroll"
+            },
+            "communication": {
+                "title": "Communication",
+                "description": "Internal messaging and SMS/Email notifications"
+            }
+        },
+        "pricing": {
+            "title": "Transparent Pricing",
+            "subtitle": "Choose the plan that fits your needs",
+            "popular": "Popular",
+            "perMonth": "FCFA/month",
+            "start": "Get Started",
+            "plans": {
+                "basic": {
+                    "name": "BASIC",
+                    "features": [
+                        "Student & Teacher Management",
+                        "Grades & PDF Report Cards",
+                        "Attendance Management",
+                        "Standard Support"
+                    ]
+                },
+                "standard": {
+                    "name": "STANDARD",
+                    "features": [
+                        "Everything in BASIC +",
+                        "Complete Financial Management",
+                        "Automatic PDF Receipts",
+                        "Manual SMS",
+                        "Internal Calendar"
+                    ]
+                },
+                "premium": {
+                    "name": "PREMIUM",
+                    "features": [
+                        "Everything in STANDARD +",
+                        "Automatic SMS",
+                        "AI Grade Analysis",
+                        "Multi-campus",
+                        "Advanced Calendar",
+                        "Priority Support"
+                    ]
+                }
+            }
+        },
+        "cta": {
+            "title": "Ready to transform your school?",
+            "subtitle": "Join hundreds of schools trusting SmartSchool",
+            "button": "Create my account now"
+        },
+        "footer": {
+            "product": "Product",
+            "company": "Company",
+            "legal": "Legal",
+            "links": {
+                "features": "Features",
+                "pricing": "Pricing",
+                "docs": "Documentation",
+                "about": "About",
+                "blog": "Blog",
+                "contact": "Contact",
+                "privacy": "Privacy",
+                "terms": "Terms"
+            },
+            "rights": "© 2025 SmartSchool. All rights reserved."
+        }
+    },
+    "auth": {
+        "login": {
+            "title": "Welcome",
+            "subtitle": "Sign in to your account",
+            "email": "Email",
+            "password": "Password",
+            "submit": "Sign in",
+            "noAccount": "Don't have an account?",
+            "register": "Sign up"
+        },
+        "register": {
+            "title": "Create your school",
+            "subtitle": "Join SmartSchool in a few clicks",
+            "heading": "Founder Registration",
+            "firstName": "First Name",
+            "lastName": "Last Name",
+            "email": "Email",
+            "password": "Password",
+            "confirmPassword": "Confirm",
+            "submit": "Create my account",
+            "submitting": "Registering...",
+            "hasAccount": "Already registered?",
+            "login": "Sign in",
+            "passwordMismatch": "Passwords do not match",
+            "success": "Registration successful! Please sign in.",
+            "error": "Registration error"
+        },
+        "changePassword": {
+            "title": "Password change required",
+            "subtitle": "For your security, please change your password",
+            "currentPassword": "Current password",
+            "newPassword": "New password",
+            "confirmPassword": "Confirm new password",
+            "submit": "Change password",
+            "submitting": "Changing...",
+            "passwordMismatch": "New passwords do not match",
+            "success": "Password changed successfully!",
+            "error": "Error changing password"
+        }
+    },
+    "dashboard": {
+        "founder": {
+            "title": "Founder Dashboard",
+            "welcome": "Welcome",
+            "schools": "My Schools",
+            "addSchool": "Add a school",
+            "noSchools": "No schools yet",
+            "createFirst": "Create your first school to get started",
+            "stats": {
+                "students": "Total Students",
+                "teachers": "Teachers",
+                "attendance": "Attendance Rate",
+                "events": "Events"
+            },
+            "overview": "School Overview",
+            "quickActions": {
+                "title": "Quick Actions",
+                "addStudent": "Add a student",
+                "createSchedule": "Create schedule",
+                "sendNotification": "Send notification"
+            }
+        },
+        "menu": {
+            "vue_ensemble": "Overview",
+            "administration": "Administration",
+            "comptabilite": "Accounting",
+            "vie_scolaire": "School Life",
+            "programme_scolaire": "Curriculum",
+            "communication": "Communication",
+            "configuration": "Configuration",
+            "settings": "Settings"
+        }
+    },
+    "subscription": {
+        "title": "Choose your subscription",
+        "subtitle": "Select the plan that best fits your school's needs",
+        "successMessage": "Registration successful! Choose your subscription.",
+        "popular": "Most popular",
+        "perMonth": "FCFA/month",
+        "plans": {
+            "basic": {
+                "name": "BASIC",
+                "features": [
+                    "Up to 200 students",
+                    "3 admin users",
+                    "Basic management",
+                    "Email support",
+                    "Monthly reports"
+                ]
+            },
+            "standard": {
+                "name": "STANDARD",
+                "features": [
+                    "Up to 500 students",
+                    "10 admin users",
+                    "Complete management",
+                    "Priority support",
+                    "Custom reports",
+                    "Payment module",
+                    "Parent SMS"
+                ]
+            },
+            "premium": {
+                "name": "PREMIUM",
+                "features": [
+                    "Unlimited students",
+                    "Unlimited users",
+                    "All features",
+                    "24/7 support",
+                    "Advanced dashboards",
+                    "Custom API",
+                    "Dedicated training",
+                    "Daily backup"
+                ]
+            }
+        },
+        "cycles": {
+            "monthly": "Monthly",
+            "semiannual": "6 Months",
+            "annual": "9 Months + 1 Free"
+        },
+        "selected": "Selected",
+        "choose": "Choose",
+        "savings": "1 month free included!",
+        "payment": {
+            "title": "Payment Method",
+            "selectMethod": "Please select a payment method",
+            "methods": {
+                "momo": {
+                    "name": "MTN MoMo",
+                    "description": "Payment via MTN MoMo"
+                },
+                "moov": {
+                    "name": "Moov Money",
+                    "description": "Payment via Moov Money"
+                },
+                "celtiis": {
+                    "name": "Celtiis",
+                    "description": "Payment via Celtiis"
+                },
+                "card": {
+                    "name": "Bank Card",
+                    "description": "Visa, Mastercard, etc."
+                }
+            }
+        },
+        "summary": {
+            "title": "Order Summary",
+            "selectedPlan": "Selected Plan",
+            "amount": "Unit Price",
+            "period": "Commitment Period",
+            "total": "Total to Pay"
+        },
+        "subscribe": "Pay and Activate",
+        "processing": "Secure Processing...",
+        "securePayment": "100% Secure and Encrypted Payment",
+        "backToLogin": "Cancel and Return to Login",
+        "processingMessage": "Subscription being processed. Login to access your dashboard."
+    },
+    "common": {
+        "loading": "Loading...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "close": "Close",
+        "search": "Search",
+        "logout": "Logout"
+    }
+}
