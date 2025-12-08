@@ -11,10 +11,16 @@ interface User {
     schoolRole?: string;
     platformRole?: string;
     schoolId?: string;
+    schoolName?: string;
     phone?: string;
     gender?: string;
     mustChangePassword?: boolean;
+    directorType?: string;
+    permissions?: string[];
 }
+
+// ... (in decodeJWT)
+
 
 
 
@@ -49,24 +55,33 @@ function decodeJWT(token: string): any {
 
 // Fonction pour mapper le rôle du backend vers le type UserRole
 function mapRoleToUserRole(role: string): UserRole {
-    if (!role) return 'eleve';
+    if (!role) return 'STUDENT';
 
     const normalizedRole = role.toUpperCase();
     const roleMap: Record<string, UserRole> = {
-        'FOUNDER': 'fondateur',
-        'DIRECTOR': 'directeur',
-        'SECRETARY': 'secretaire',
-        'SUPERVISOR': 'surveillant',
-        'CENSOR': 'censeur',
-        'ACCOUNTANT': 'comptable',
-        'STUDENT': 'eleve',
-        'PARENT': 'parent',
+        'FOUNDER': 'FOUNDER',
+        'DIRECTOR': 'DIRECTOR',
+        'SECRETARY': 'SECRETARY',
+        'SURVEILLANT': 'SURVEILLANT',
+        'CENSEUR': 'CENSEUR',
+        'ACCOUNTANT': 'ACCOUNTANT',
+        'TEACHER': 'TEACHER',
+        'MAITRE': 'MAITRE',
+        'STUDENT': 'STUDENT',
+        'PARENT': 'PARENT',
+        // Legacy French support
+        'FONDATEUR': 'FOUNDER',
+        'DIRECTEUR': 'DIRECTOR',
+        'SECRETAIRE': 'SECRETARY',
+        'COMPTABLE': 'ACCOUNTANT',
+        'PROFESSEUR': 'TEACHER',
+        'ELEVE': 'STUDENT',
     };
 
     const mappedRole = roleMap[normalizedRole];
     if (!mappedRole) {
-        console.warn(`⚠️ Unknown role "${role}" mapped to default "eleve"`);
-        return 'eleve';
+        console.warn(`⚠️ Unknown role "${role}" mapped to default "STUDENT"`);
+        return 'STUDENT';
     }
     return mappedRole;
 }
@@ -91,8 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     schoolRole: decoded.schoolRole,
                     platformRole: decoded.platformRole,
                     schoolId: decoded.schoolId,
+                    schoolName: decoded.schoolName, // Added missing schoolName
                     gender: decoded.gender,
                     mustChangePassword: decoded.mustChangePassword,
+                    directorType: decoded.directorType,
                 };
                 setUser(userData);
             }
@@ -114,8 +131,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 schoolRole: decoded.schoolRole,
                 platformRole: decoded.platformRole,
                 schoolId: decoded.schoolId,
+                schoolName: decoded.schoolName,
                 gender: decoded.gender,
                 mustChangePassword: decoded.mustChangePassword,
+                directorType: decoded.directorType,
             };
             console.log('👤 User data:', userData);
             setUser(userData);
@@ -124,7 +143,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const logout = () => {
         localStorage.removeItem('access_token');
-        sessionStorage.removeItem('hasShownWelcome'); // Clear welcome toast flag
+        if (user) {
+            sessionStorage.removeItem(`hasShownWelcome_${user.id}`);
+        }
         setUser(null);
         // Redirect to landing page
         window.location.href = '/';

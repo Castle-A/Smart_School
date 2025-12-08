@@ -1,4 +1,4 @@
-import { Accessibility, Eye, Keyboard, Volume2 } from 'lucide-react';
+import { Eye, Keyboard, Volume2 } from 'lucide-react';
 import { useState } from 'react';
 
 const AccessibilitySection = () => {
@@ -17,15 +17,15 @@ const AccessibilitySection = () => {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-3xl font-bold text-white">Accessibilité</h2>
-                <p className="text-gray-400 mt-1">Options pour améliorer votre expérience</p>
+                <h2 className="text-3xl font-bold text-slate-900">Accessibilité</h2>
+                <p className="text-slate-600 mt-1">Options pour améliorer votre expérience</p>
             </div>
 
             {/* Options visuelles */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="bg-white backdrop-blur-sm border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                     <Eye className="text-blue-400" size={24} />
-                    <h3 className="text-lg font-semibold text-white">Options visuelles</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">Options visuelles</h3>
                 </div>
                 <div className="space-y-3">
                     <AccessibilityToggle
@@ -44,10 +44,10 @@ const AccessibilitySection = () => {
             </div>
 
             {/* Options de navigation */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="bg-white backdrop-blur-sm border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                     <Keyboard className="text-emerald-400" size={24} />
-                    <h3 className="text-lg font-semibold text-white">Navigation</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">Navigation</h3>
                 </div>
                 <div className="space-y-3">
                     <AccessibilityToggle
@@ -66,10 +66,10 @@ const AccessibilitySection = () => {
             </div>
 
             {/* Options audio */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="bg-white backdrop-blur-sm border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                     <Volume2 className="text-purple-400" size={24} />
-                    <h3 className="text-lg font-semibold text-white">Audio</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">Audio</h3>
                 </div>
                 <div className="space-y-3">
                     <AccessibilityToggle
@@ -98,10 +98,10 @@ const AccessibilityToggle: React.FC<AccessibilityToggleProps> = ({
     onChange
 }) => {
     return (
-        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-white rounded-lg">
             <div>
-                <p className="text-white font-medium">{label}</p>
-                <p className="text-sm text-gray-400">{description}</p>
+                <p className="text-slate-900 font-medium">{label}</p>
+                <p className="text-sm text-slate-600">{description}</p>
             </div>
             <button
                 onClick={onChange}

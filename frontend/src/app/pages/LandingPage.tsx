@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
     GraduationCap,
@@ -107,15 +107,15 @@ export default function LandingPage() {
                             <span className="text-2xl font-bold text-white">{t('app.name')}</span>
                         </div>
                         <div className="hidden md:flex items-center gap-8">
-                            <a href="#features" className="text-white/80 hover:text-white transition">{t('home.nav.features')}</a>
-                            <a href="#pricing" className="text-white/80 hover:text-white transition">{t('home.nav.pricing')}</a>
-                            <a href="#contact" className="text-white/80 hover:text-white transition">{t('home.nav.contact')}</a>
+                            <a href="#features" className="px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all">{t('home.nav.features')}</a>
+                            <a href="#pricing" className="px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all">{t('home.nav.pricing')}</a>
+                            <a href="#contact" className="px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all">{t('home.nav.contact')}</a>
 
                             <LanguageSelector />
 
                             <button
                                 onClick={() => navigate('/login')}
-                                className="px-4 py-2 text-white/80 hover:text-white transition"
+                                className="px-4 py-2 text-white/80 hover:text-white transition-all hover:shadow-lg hover:shadow-white/30 rounded-lg"
                             >
                                 {t('home.nav.login')}
                             </button>
@@ -180,7 +180,7 @@ export default function LandingPage() {
                         </button>
                         <button
                             onClick={() => navigate('/login')}
-                            className="px-8 py-4 bg-white/10 backdrop-blur-lg text-white rounded-2xl font-semibold border border-white/20 hover:bg-white/20 transition-all"
+                            className="px-8 py-4 bg-white/10 backdrop-blur-lg text-white rounded-2xl font-semibold border border-white/20 hover:bg-white/20 hover:shadow-xl hover:shadow-white/40 transition-all"
                         >
                             {t('home.hero.demo')}
                         </button>
@@ -338,8 +338,9 @@ export default function LandingPage() {
                         <div>
                             <h4 className="text-white font-semibold mb-4">{t('home.footer.legal')}</h4>
                             <ul className="space-y-2 text-white/60">
-                                <li><a href="#" className="hover:text-white transition">{t('home.footer.links.privacy')}</a></li>
-                                <li><a href="#" className="hover:text-white transition">{t('home.footer.links.terms')}</a></li>
+                                <li><Link to="/terms" className="hover:text-white transition">Conditions Générales d'Utilisation</Link></li>
+                                <li><Link to="/privacy" className="hover:text-white transition">Politique de Confidentialité</Link></li>
+                                <li><Link to="/legal-notice" className="hover:text-white transition">Mentions Légales</Link></li>
                             </ul>
                         </div>
                     </div>

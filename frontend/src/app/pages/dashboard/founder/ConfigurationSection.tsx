@@ -7,7 +7,7 @@ const ConfigurationSection = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Abonnement */}
-                <div className="bg-gradient-to-br from-indigo-900/50 to-purple-900/50 backdrop-blur-sm border border-indigo-500/30 rounded-xl p-6 relative overflow-hidden">
+                <div className="bg-gradient-to-br from-indigo-900/50 to-indigo-800/50 backdrop-blur-sm border border-indigo-500/30 rounded-xl p-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-10">
                         <CreditCard size={120} />
                     </div>
@@ -52,63 +52,63 @@ const ConfigurationSection = () => {
                 {/* Paramètres & Sécurité */}
                 <div className="space-y-6">
                     {/* Paramètres École */}
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
                         <div className="flex items-center gap-3 mb-4">
-                            <Settings className="text-gray-400" size={20} />
+                            <Settings className="text-slate-600" size={20} />
                             <h3 className="text-lg font-semibold text-white">Paramètres de l'école</h3>
                         </div>
                         <div className="space-y-2">
-                            <button className="w-full flex justify-between items-center p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors text-left group">
+                            <button className="w-full flex justify-between items-center p-3 bg-white/10 rounded-lg hover:bg-white/20 transition-colors text-left group">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-purple-500/20 rounded-lg text-purple-400 group-hover:bg-purple-500/30 transition-colors">
+                                    <div className="p-2 bg-indigo-500/20 rounded-lg text-indigo-400 group-hover:bg-indigo-500/30 transition-colors">
                                         <Palette size={18} />
                                     </div>
                                     <div>
-                                        <span className="text-gray-200 block text-sm font-medium">Identité Visuelle</span>
-                                        <span className="text-gray-500 text-xs">Logo, Couleurs, Thème</span>
+                                        <span className="text-white block text-sm font-medium">Identité Visuelle</span>
+                                        <span className="text-slate-500 text-xs">Logo, Couleurs, Thème</span>
                                     </div>
                                 </div>
-                                <Settings size={16} className="text-gray-500 group-hover:text-white transition-colors" />
+                                <Settings size={16} className="text-slate-400 group-hover:text-white transition-colors" />
                             </button>
 
-                            <button className="w-full flex justify-between items-center p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors text-left group">
+                            <button className="w-full flex justify-between items-center p-3 bg-white/10 rounded-lg hover:bg-white/20 transition-colors text-left group">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400 group-hover:bg-blue-500/30 transition-colors">
                                         <FileText size={18} />
                                     </div>
                                     <div>
-                                        <span className="text-gray-200 block text-sm font-medium">Documents Académiques</span>
-                                        <span className="text-gray-500 text-xs">Bulletins, Certificats, Attestations</span>
+                                        <span className="text-white block text-sm font-medium">Documents Académiques</span>
+                                        <span className="text-slate-500 text-xs">Bulletins, Certificats, Attestations</span>
                                     </div>
                                 </div>
-                                <Settings size={16} className="text-gray-500 group-hover:text-white transition-colors" />
+                                <Settings size={16} className="text-slate-400 group-hover:text-white transition-colors" />
                             </button>
                         </div>
                     </div>
 
                     {/* Sécurité */}
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
                         <div className="flex items-center gap-3 mb-4">
                             <Shield className="text-emerald-400" size={20} />
                             <h3 className="text-lg font-semibold text-white">Sécurité & Données</h3>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                            <div className="p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                                <div className="flex items-center gap-2 mb-2 text-gray-400">
+                            <div className="p-3 bg-white/10 rounded-lg border border-white/5 hover:bg-white/20 transition-colors cursor-pointer">
+                                <div className="flex items-center gap-2 mb-2 text-slate-600">
                                     <History size={16} />
                                     <span className="text-xs">Connexions</span>
                                 </div>
                                 <p className="text-white font-medium text-sm">Voir l'historique</p>
                             </div>
-                            <div className="p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                                <div className="flex items-center gap-2 mb-2 text-gray-400">
+                            <div className="p-3 bg-white/10 rounded-lg border border-white/5 hover:bg-white/20 transition-colors cursor-pointer">
+                                <div className="flex items-center gap-2 mb-2 text-slate-600">
                                     <Lock size={16} />
                                     <span className="text-xs">Mot de passe</span>
                                 </div>
                                 <p className="text-white font-medium text-sm">Politique de sécurité</p>
                             </div>
-                            <div className="col-span-2 p-3 bg-white/5 rounded-lg border border-white/5 flex justify-between items-center hover:bg-white/10 transition-colors cursor-pointer">
-                                <div className="flex items-center gap-2 text-gray-400">
+                            <div className="col-span-2 p-3 bg-white/10 rounded-lg border border-white/5 flex justify-between items-center hover:bg-white/20 transition-colors cursor-pointer">
+                                <div className="flex items-center gap-2 text-slate-600">
                                     <Database size={16} />
                                     <span className="text-xs">Export RGPD</span>
                                 </div>

@@ -1,10 +1,11 @@
 export type UserRole =
-    | "fondateur"
-    | "directeur"
-    | "secretaire"
-    | "surveillant"
-    | "censeur"
-    | "comptable"
-    | "professeur"
-    | "eleve"
-    | "parent";
+    | "FOUNDER"
+    | "DIRECTOR"
+    | "SECRETARY"
+    | "SURVEILLANT"
+    | "CENSEUR"
+    | "ACCOUNTANT"
+    | "TEACHER"
+    | "MAITRE"
+    | "STUDENT"
+    | "PARENT";

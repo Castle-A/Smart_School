@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../../shared/contexts/AuthContext';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import type { MenuItemId } from '../../layouts/DashboardLayout';
-import OverviewSection from './founder/OverviewSection';
-import AdministrationSection from './founder/AdministrationSection';
-import VieScolaireSection from './founder/VieScolaireSection';
-import ProgrammeScolaireSection from './founder/ProgrammeScolaireSection';
-import CommunicationSection from './founder/CommunicationSection';
+import DirectorOverviewSection from './director/DirectorOverviewSection';
+import DirectorAdministrationSection from './director/DirectorAdministrationSection';
+import DirectorSchoolLifeSection from './director/DirectorSchoolLifeSection';
+import DirectorCurriculumSection from './director/DirectorCurriculumSection';
+import DirectorCommunicationSection from './director/DirectorCommunicationSection';
 import ConfigurationSection from './founder/ConfigurationSection';
 import SettingsPage from './founder/SettingsPage';
 import WelcomeToast from '../../../shared/components/WelcomeToast';
@@ -17,31 +17,31 @@ const DirectorDashboard = () => {
     const [showWelcome, setShowWelcome] = useState(false);
 
     useEffect(() => {
-        const hasShownWelcome = sessionStorage.getItem('hasShownWelcome');
-        if (!hasShownWelcome && user) {
+        const hasSeenWelcome = sessionStorage.getItem('welcomeShown');
+        if (!hasSeenWelcome) {
             setShowWelcome(true);
-            sessionStorage.setItem('hasShownWelcome', 'true');
+            sessionStorage.setItem('welcomeShown', 'true');
         }
-    }, [user]);
+    }, []);
 
     const renderContent = () => {
         switch (activeSection) {
             case 'vue_ensemble':
-                return <OverviewSection />;
+                return <DirectorOverviewSection />;
             case 'administration':
-                return <AdministrationSection />;
+                return <DirectorAdministrationSection />;
             case 'vie_scolaire':
-                return <VieScolaireSection />;
+                return <DirectorSchoolLifeSection />;
             case 'programme_scolaire':
-                return <ProgrammeScolaireSection />;
+                return <DirectorCurriculumSection />;
             case 'communication':
-                return <CommunicationSection />;
+                return <DirectorCommunicationSection />;
             case 'configuration':
                 return <ConfigurationSection />;
             case 'settings':
                 return <SettingsPage onBackToDashboard={() => setActiveSection('vue_ensemble')} />;
             default:
-                return <OverviewSection />;
+                return <DirectorOverviewSection />;
         }
     };
 
@@ -51,13 +51,14 @@ const DirectorDashboard = () => {
         <>
             {showWelcome && (
                 <WelcomeToast
-                    userName={`${user.firstName} ${user.lastName}`}
+                    firstName={user.firstName}
+                    lastName={user.lastName}
                     gender={user.gender}
                     onClose={() => setShowWelcome(false)}
                 />
             )}
             <DashboardLayout
-                role="directeur"
+                role="DIRECTOR"
                 userName={`${user.firstName} ${user.lastName}`}
                 userEmail={user.email}
                 onLogout={logout}

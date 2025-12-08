@@ -6,6 +6,7 @@ import SupervisorDashboard from '@app/pages/dashboard/SupervisorDashboard';
 import CensorDashboard from '@app/pages/dashboard/CensorDashboard';
 import AccountantDashboard from '@app/pages/dashboard/AccountantDashboard';
 import TeacherDashboard from '@app/pages/dashboard/TeacherDashboard';
+import ParentDashboard from '@app/pages/dashboard/ParentDashboard';
 
 export default function DashboardWrapper() {
     const { user } = useAuth();
@@ -16,24 +17,24 @@ export default function DashboardWrapper() {
 
     // Route to appropriate dashboard based on user role
     switch (user.role) {
-        case 'fondateur':
+        case 'FOUNDER':
             return <FounderDashboard />;
-        case 'directeur':
+        case 'DIRECTOR':
             return <DirectorDashboard />;
-        case 'secretaire':
+        case 'SECRETARY':
             return <SecretaryDashboard />;
-        case 'surveillant':
+        case 'SURVEILLANT':
             return <SupervisorDashboard />;
-        case 'censeur':
+        case 'CENSEUR':
             return <CensorDashboard />;
-        case 'comptable':
+        case 'ACCOUNTANT':
             return <AccountantDashboard />;
-        case 'professeur':
+        case 'TEACHER':
+        case 'MAITRE':
             return <TeacherDashboard />;
-        case 'eleve':
-        case 'parent':
-            // TODO: Implement Student and Parent dashboards
-            return <div className="p-8 text-white">Dashboard en construction</div>;
+        case 'STUDENT':
+        case 'PARENT':
+            return <ParentDashboard />;
         default:
             return <FounderDashboard />;
     }

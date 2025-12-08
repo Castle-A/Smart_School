@@ -1,18 +1,27 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from '../../interface/auth/auth.controller';
 import { ProfileController } from '../../interface/auth/profile.controller';
 import { PrismaAuthRepository } from '../../infrastructure/auth/prisma-auth.repository';
 import { JwtStrategy } from './jwt.strategy';
+import { AnalyticsModule } from '../analytics/analytics.module';
 
 @Module({
     imports: [
+        forwardRef(() => AnalyticsModule),
         PassportModule,
-        JwtModule.register({
-            secret: 'SECRET_KEY_TO_CHANGE', // TODO: Env var
-            signOptions: { expiresIn: '60m' },
+        JwtModule.registerAsync({
+            imports: [ConfigModule],
+            useFactory: async (configService: ConfigService) => ({
+                secret: configService.get<string>('JWT_SECRET') || 'fallback_secret_key',
+                signOptions: {
+                    expiresIn: '1h'
+                },
+            }),
+            inject: [ConfigService],
         }),
     ],
     controllers: [AuthController, ProfileController],
@@ -24,6 +33,6 @@ import { JwtStrategy } from './jwt.strategy';
             useClass: PrismaAuthRepository,
         },
     ],
-    exports: [AuthService],
+    exports: [AuthService, 'IAuthRepository'],
 })
 export class AuthModule { }

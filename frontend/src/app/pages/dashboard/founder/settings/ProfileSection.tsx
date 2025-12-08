@@ -19,8 +19,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ onDirtyChange }) => {
 
     const [initialData] = useState(formData);
 
-    const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
-
     const handleChange = (field: string, value: string) => {
         const newData = { ...formData, [field]: value };
         setFormData(newData);
@@ -62,13 +60,13 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ onDirtyChange }) => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-3xl font-bold text-white">Profil</h2>
-                    <p className="text-gray-400 mt-1">Gérez vos informations personnelles</p>
+                    <h2 className="text-3xl font-bold text-slate-900">Profil</h2>
+                    <p className="text-slate-600 mt-1">Gérez vos informations personnelles</p>
                 </div>
                 {!isEditing ? (
                     <button
                         onClick={() => setIsEditing(true)}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-slate-900 rounded-lg transition-colors flex items-center gap-2"
                     >
                         <User size={18} />
                         Modifier le profil
@@ -77,14 +75,14 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ onDirtyChange }) => {
                     <div className="flex gap-3">
                         <button
                             onClick={handleCancel}
-                            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors flex items-center gap-2"
+                            className="px-4 py-2 bg-slate-50 hover:bg-white/20 text-slate-900 rounded-lg transition-colors flex items-center gap-2"
                         >
                             <X size={18} />
                             Annuler
                         </button>
                         <button
                             onClick={handleSave}
-                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-slate-900 rounded-lg transition-colors flex items-center gap-2"
                         >
                             <Save size={18} />
                             Enregistrer
@@ -96,11 +94,11 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ onDirtyChange }) => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Photo de profil */}
                 <div className="lg:col-span-1">
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">Photo de profil</h3>
+                    <div className="bg-white backdrop-blur-sm border border-slate-200 rounded-xl p-6">
+                        <h3 className="text-lg font-semibold text-slate-900 mb-4">Photo de profil</h3>
                         <div className="flex flex-col items-center">
                             <div className="relative group">
-                                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-4xl font-bold overflow-hidden">
+                                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-slate-900 text-4xl font-bold overflow-hidden">
                                     {formData.profilePhoto ? (
                                         <img src={formData.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
                                     ) : (
@@ -109,7 +107,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ onDirtyChange }) => {
                                 </div>
                                 {isEditing && (
                                     <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                                        <Camera size={32} className="text-white" />
+                                        <Camera size={32} className="text-slate-900" />
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -119,7 +117,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ onDirtyChange }) => {
                                     </label>
                                 )}
                             </div>
-                            <p className="text-sm text-gray-400 mt-4 text-center">
+                            <p className="text-sm text-slate-600 mt-4 text-center">
                                 {isEditing ? 'Cliquez pour changer la photo' : 'Photo de profil'}
                             </p>
                         </div>
@@ -128,71 +126,71 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ onDirtyChange }) => {
 
                 {/* Informations personnelles */}
                 <div className="lg:col-span-2">
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-                        <h3 className="text-lg font-semibold text-white mb-6">Informations personnelles</h3>
+                    <div className="bg-white backdrop-blur-sm border border-slate-200 rounded-xl p-6">
+                        <h3 className="text-lg font-semibold text-slate-900 mb-6">Informations personnelles</h3>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Prénom</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Prénom</label>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
                                     <input
                                         type="text"
                                         value={formData.firstName}
                                         onChange={(e) => handleChange('firstName', e.target.value)}
                                         disabled={!isEditing}
-                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder-gray-500 focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Nom de famille</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Nom de famille</label>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
                                     <input
                                         type="text"
                                         value={formData.lastName}
                                         onChange={(e) => handleChange('lastName', e.target.value)}
                                         disabled={!isEditing}
-                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder-gray-500 focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Adresse email</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Adresse email</label>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
                                     <input
                                         type="email"
                                         value={formData.email}
                                         onChange={(e) => handleChange('email', e.target.value)}
                                         disabled={!isEditing}
-                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder-gray-500 focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Numéro de téléphone</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Numéro de téléphone</label>
                                 <div className="relative">
-                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
                                     <input
                                         type="tel"
                                         value={formData.phone}
                                         onChange={(e) => handleChange('phone', e.target.value)}
                                         disabled={!isEditing}
                                         placeholder="+225 XX XX XX XX XX"
-                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder-gray-500 focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Rôle</label>
-                                <div className="px-4 py-3 bg-white/5 border border-white/10 rounded-lg">
-                                    <span className="text-white capitalize">{user?.role || 'Fondateur'}</span>
-                                    <span className="ml-2 text-xs text-gray-500">(non modifiable)</span>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Rôle</label>
+                                <div className="px-4 py-3 bg-white border border-slate-200 rounded-lg">
+                                    <span className="text-slate-900 capitalize">{user?.role || 'Fondateur'}</span>
+                                    <span className="ml-2 text-xs text-slate-500">(non modifiable)</span>
                                 </div>
                             </div>
                         </div>

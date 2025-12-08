@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, type FC, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../shared/contexts/AuthContext";
 import {
     Users,
     DollarSign,
@@ -8,7 +9,6 @@ import {
     MessageSquare,
     Settings,
     GraduationCap,
-    Search,
     ChevronLeft,
     ChevronRight,
     LogOut,
@@ -23,6 +23,7 @@ import {
     ArrowLeft
 } from "lucide-react";
 import "./DashboardLayout.css";
+import { useAnalytics } from '../../shared/hooks/useAnalytics';
 
 import type { UserRole } from "../../shared/types/roles";
 
@@ -61,7 +62,7 @@ const MENU_ICONS: Record<MenuItemId, any> = {
 };
 
 const MENU_BY_ROLE: Record<UserRole, MenuItemId[]> = {
-    fondateur: [
+    FOUNDER: [
         "vue_ensemble",
         "administration",
         "vie_scolaire",
@@ -70,45 +71,53 @@ const MENU_BY_ROLE: Record<UserRole, MenuItemId[]> = {
         "communication",
         "configuration",
     ],
-    directeur: [
+    DIRECTOR: [
+        "vue_ensemble",
         "administration",
         "vie_scolaire",
         "programme_scolaire",
         "communication",
         "configuration",
     ],
-    secretaire: [
+    SECRETARY: [
         "administration",
         "vie_scolaire",
         "programme_scolaire",
         "communication",
     ],
-    surveillant: [
+    SURVEILLANT: [
         "administration",
         "vie_scolaire",
         "programme_scolaire",
         "communication",
     ],
-    censeur: [
+    CENSEUR: [
+        "vue_ensemble",
         "administration",
         "vie_scolaire",
         "programme_scolaire",
         "communication",
     ],
-    comptable: [
+    ACCOUNTANT: [
         "administration",
         "programme_scolaire",
         "comptabilite",
         "communication",
     ],
-    professeur: [
+    TEACHER: [
         "vue_ensemble",
         "vie_scolaire",
         "programme_scolaire",
         "communication",
     ],
-    eleve: ["vie_scolaire", "programme_scolaire"],
-    parent: ["vie_scolaire", "programme_scolaire"],
+    MAITRE: [
+        "vue_ensemble",
+        "vie_scolaire",
+        "programme_scolaire",
+        "communication",
+    ],
+    STUDENT: ["vie_scolaire", "programme_scolaire"],
+    PARENT: ["vie_scolaire", "programme_scolaire"],
 };
 
 // Settings menu configuration
@@ -125,9 +134,11 @@ interface DashboardLayoutProps {
     role: UserRole;
     userName?: string;
     userEmail?: string;
+    schoolName?: string;
     children?: ReactNode;
     onMenuClick?: (item: MenuItemId) => void;
     onLogout?: () => void;
+    activeSection?: MenuItemId | 'settings';
     // Settings mode props
     isSettingsMode?: boolean;
     activeSettingsSection?: string;
@@ -140,9 +151,11 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
     role,
     userName = "Utilisateur",
     userEmail = "user@smartschool.com",
+    schoolName,
     children,
     onMenuClick,
     onLogout,
+    activeSection,
     isSettingsMode = false,
     activeSettingsSection = 'profil',
     onSettingsSectionChange,
@@ -151,11 +164,46 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
 }) => {
     const { t, i18n } = useTranslation();
     const menuItems = MENU_BY_ROLE[role];
+    const { trackPageView, trackClick } = useAnalytics();
+    const { user } = useAuth(); // Create direct access to user
+    const token = localStorage.getItem('access_token');
+    const location = window.location;
+
+    // State for school info
+    const [schoolInfo, setSchoolInfo] = useState<{ name: string; logo: string | null }>({
+        name: schoolName || user?.schoolName || 'Mon École',
+        logo: null
+    });
+
+    // Track Page Views
+    useEffect(() => {
+        trackPageView(location.pathname);
+    }, [location.pathname, trackPageView]);
+
+    // Track Clicks for Heatmap
+    useEffect(() => {
+        const handleClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.closest('button') || target.closest('a')) {
+                let elementId = target.id;
+                if (!elementId && typeof target.className === 'string') {
+                    elementId = target.className;
+                }
+                if (!elementId) {
+                    elementId = target.innerText || 'unknown-element';
+                }
+                trackClick(elementId.substring(0, 50));
+            }
+        };
+
+        document.addEventListener('click', handleClick);
+        return () => document.removeEventListener('click', handleClick);
+    }, [trackClick]);
 
     const [activeItem, setActiveItem] = useState<MenuItemId | null>(
         menuItems[0] ?? null
     );
-    const [searchQuery, setSearchQuery] = useState("");
+
     // Initialize collapsed state based on screen width
     const [isCollapsed, setIsCollapsed] = useState(window.innerWidth < 768);
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -164,10 +212,18 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
     const profileMenuRef = useRef<HTMLDivElement>(null);
     const langMenuRef = useRef<HTMLDivElement>(null);
 
+    // Synchronize activeItem with activeSection prop
+    useEffect(() => {
+        if (activeSection && activeSection !== 'settings') {
+            setActiveItem(activeSection as MenuItemId);
+        }
+    }, [activeSection]);
+
     useEffect(() => {
         setActiveItem(menuItems[0] ?? null);
     }, [role, menuItems]);
 
+    // Cleanup Event Listeners for Dropdowns
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
@@ -192,6 +248,48 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
             window.removeEventListener('resize', handleResize);
         };
     }, []);
+
+    // Fetch School Info Effect
+    useEffect(() => {
+        const fetchSchoolInfo = async () => {
+            if (!token) {
+                // console.warn('[DashboardLayout] No access token found');
+                return;
+            }
+
+            try {
+                // Get user data (which includes school info)
+                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+                const response = await fetch(`${apiUrl}/profile/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    // console.error('[DashboardLayout] Failed to fetch user profile');
+                    // Fallback to props if fetch fails
+                    setSchoolInfo(prev => ({ ...prev, name: schoolName || prev.name }));
+                    return;
+                }
+
+                const userData = await response.json();
+
+                if (userData.school) {
+                    setSchoolInfo({
+                        name: userData.school.name,
+                        logo: userData.school.logo
+                    });
+                }
+            } catch (error) {
+                console.error('[DashboardLayout] Error fetching school info:', error);
+            }
+        };
+
+        fetchSchoolInfo();
+    }, [token, schoolName]);
 
     const handleClick = (item: MenuItemId) => {
         setActiveItem(item);
@@ -240,26 +338,27 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
                 </div>
 
                 {!isCollapsed && (
-                    <div className="search-box">
-                        <div style={{ position: 'relative' }}>
-                            <Search
-                                size={16}
-                                style={{
-                                    position: 'absolute',
-                                    left: '12px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    color: 'rgba(255, 255, 255, 0.4)',
-                                }}
-                            />
-                            <input
-                                type="text"
-                                className="search-input"
-                                placeholder="Rechercher..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                style={{ paddingLeft: '36px' }}
-                            />
+                    <div className="px-4 py-2 mb-4">
+                        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
+                            {schoolInfo?.logo ? (
+                                <img
+                                    src={schoolInfo.logo}
+                                    alt={schoolInfo.name}
+                                    className="w-10 h-10 rounded-lg object-cover bg-white"
+                                />
+                            ) : (
+                                <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                    <School size={20} />
+                                </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-sm font-bold text-white truncate">
+                                    {schoolName || schoolInfo?.name || 'Chargement...'}
+                                </h3>
+                                <p className="text-xs text-gray-400 truncate">
+                                    Année 2024-2025
+                                </p>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -307,16 +406,17 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
                 </nav>
 
                 {/* Back to Dashboard button (only shown in settings mode) */}
-                {isSettingsMode && !isCollapsed && (
+                {isSettingsMode && (
                     <div style={{ padding: '0 8px', marginTop: 'auto' }}>
                         <button
                             onClick={onBackToDashboard}
-                            className="w-full flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white border border-white/10"
+                            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white border border-white/10`}
+                            title={isCollapsed ? 'Retour au dashboard' : undefined}
                         >
                             <ArrowLeft size={20} />
-                            <span className="text-sm font-medium">Retour au dashboard</span>
+                            {!isCollapsed && <span className="text-sm font-medium">Retour au dashboard</span>}
                         </button>
-                        {hasUnsavedChanges && (
+                        {hasUnsavedChanges && !isCollapsed && (
                             <div className="mt-2 flex items-center gap-2 text-xs text-yellow-400 px-2">
                                 <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
                                 <span>Modifications non sauvegardées</span>
@@ -326,7 +426,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
                 )}
 
                 {/* SIDEBAR FOOTER WITH LANGUAGE, SUPPORT AND PROFILE */}
-                <div className="sidebar-footer" style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div className="sidebar-footer" style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
 
                     {/* Language Selector */}
                     <div className="language-selector" style={{ padding: '0 8px', position: 'relative' }} ref={langMenuRef}>
@@ -335,7 +435,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
                             title="Changer la langue"
                             onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
                         >
-                            <Globe size={20} />
+                            <Globe size={18} />
                             {!isCollapsed && <span className="text-sm font-medium">{i18n.language === 'fr' ? 'Français' : i18n.language === 'en' ? 'English' : i18n.language === 'es' ? 'Español' : 'Deutsch'}</span>}
                         </button>
 
@@ -365,7 +465,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
                             className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors text-gray-400 hover:text-white"
                             title="Contacter le support"
                         >
-                            <LifeBuoy size={20} />
+                            <LifeBuoy size={18} />
                             {!isCollapsed && <span className="text-sm font-medium">Support</span>}
                         </button>
                     </div>

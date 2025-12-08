@@ -1,149 +1,104 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Mail, Phone, Briefcase, ArrowLeft, Check, X } from 'lucide-react';
+import api from '../../shared/api/api';
+import { User, Mail, Briefcase, ArrowLeft, Shield, Building2, Smartphone } from 'lucide-react';
+import PhoneInput from '../../shared/components/PhoneInput';
+import PermissionsChecklist from '../../shared/components/PermissionsChecklist';
+import SuccessCredentialsModal from '../../shared/components/SuccessCredentialsModal';
 
-type MemberRole = 'directeur' | 'secretaire' | 'surveillant' | 'censeur' | 'comptable';
-
-interface RolePermissions {
-    role: MemberRole;
-    label: string;
-    permissions: string[];
-    sections: string[];
-}
-
-const ROLE_PERMISSIONS: Record<MemberRole, RolePermissions> = {
-    directeur: {
-        role: 'directeur',
-        label: 'Directeur',
-        permissions: [
-            'Voir toutes les classes, élèves, profs',
-            'Gérer les élèves (transferts, discipline)',
-            'Voir bulletins et notes',
-            'Droits optionnels (selon délégation)'
-        ],
-        sections: ['Vue d\'ensemble', 'Administration', 'Vie scolaire', 'Programme scolaire', 'Communication', 'Configuration']
-    },
-    secretaire: {
-        role: 'secretaire',
-        label: 'Secrétaire',
-        permissions: [
-            'Créer/modifier fiches élèves',
-            'Lier parents',
-            'Imprimer attestations/certificats',
-            'Envoi messages administratifs'
-        ],
-        sections: ['Vue d\'ensemble', 'Administration', 'Vie scolaire', 'Communication']
-    },
-    surveillant: {
-        role: 'surveillant',
-        label: 'Surveillant',
-        permissions: [
-            'Saisir présences/absences/retards',
-            'Noter incidents mineurs',
-            'Voir résumés discipline'
-        ],
-        sections: ['Vue d\'ensemble', 'Vie scolaire', 'Communication']
-    },
-    censeur: {
-        role: 'censeur',
-        label: 'Censeur',
-        permissions: [
-            'Enregistrer sanctions',
-            'Suivi pédagogique et discipline',
-            'Voir notes et bulletins',
-            'Corriger présences'
-        ],
-        sections: ['Vue d\'ensemble', 'Vie scolaire', 'Programme scolaire', 'Communication']
-    },
-    comptable: {
-        role: 'comptable',
-        label: 'Comptable',
-        permissions: [
-            'Gestion complète finance',
-            'Paiements et reçus',
-            'Relances parents',
-            'Paie des enseignants (Premium)'
-        ],
-        sections: ['Vue d\'ensemble', 'Comptabilité', 'Communication']
-    }
-};
+type MemberRole = 'DIRECTOR' | 'SECRETARY' | 'SURVEILLANT' | 'CENSEUR' | 'ACCOUNTANT' | 'TEACHER';
 
 const CreateMemberPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const preSelectedRole = (location.state as any)?.role?.toLowerCase() || '';
+    const preSelectedRole = (location.state as any)?.role?.toUpperCase();
 
+    // Initialize with valid defaults to avoid "Select..." states
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
-        gender: '',
+        gender: 'HOMME', // Default valid value
         phone: '',
         email: '',
-        role: preSelectedRole as MemberRole | '',
-        loginMethod: 'email' as 'email' | 'phone'
+        role: (preSelectedRole as MemberRole) || 'DIRECTOR', // Default valid value
+        directorType: 'PRIMARY_PRESCHOOL', // Default valid value
+        loginMethod: 'email',
     });
 
-    const [showCredentials, setShowCredentials] = useState(false);
+    const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+    const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
     const [generatedCredentials, setGeneratedCredentials] = useState({
         identifier: '',
-        password: ''
+        password: '',
     });
+    const [isLoading, setIsLoading] = useState(false);
 
-    const generatePassword = () => {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-        let password = '';
-        for (let i = 0; i < 8; i++) {
-            password += chars.charAt(Math.floor(Math.random() * chars.length));
+    const handleChange = (field: string, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            [field]: value,
+        }));
+
+        if (field === 'role') {
+            setSelectedPermissions([]);
         }
-        return password;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
 
         try {
-            const token = localStorage.getItem('access_token');
-            if (!token) {
-                console.error('No token found');
-                return;
+            // Nettoyer les champs optionnels inutiles (mais garder loginMethod)
+            const payload = {
+                ...formData,
+                permissionIds: selectedPermissions,
+            };
+
+            // Nettoyage conditionnel
+            if (!['DIRECTOR', 'SECRETARY'].includes(formData.role)) {
+                delete (payload as any).directorType;
             }
 
-            const response = await fetch('http://localhost:3000/members/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    ...formData,
-                    schoolId: 'current-school-id' // This will be handled by backend from token
-                })
-            });
+            console.log('Create member payload:', payload);
 
-            if (!response.ok) {
-                throw new Error('Failed to create member');
-            }
+            const response = await api.post('/members/create', payload);
+            const data = response.data;
 
-            const data = await response.json();
-            console.log('Member created:', data);
-
-            // Show credentials popup with returned data
             setGeneratedCredentials({
                 identifier: data.credentials.identifier,
-                password: data.credentials.tempPassword
+                password: data.credentials.tempPassword,
             });
-            setShowCredentials(true);
-        } catch (error) {
-            console.error('Error creating member:', error);
-            alert('Erreur lors de la création du membre');
+            setIsSuccessModalOpen(true);
+        } catch (error: any) {
+            console.error('Error creating member:', error.response?.data || error);
+            const errorMessage = error.response?.data?.message || error.message || 'Erreur inconnue';
+            alert(`Erreur lors de la création du membre: ${errorMessage}`);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleChange = (field: string, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+    const handleReset = () => {
+        setIsSuccessModalOpen(false);
+        setFormData({
+            firstName: '',
+            lastName: '',
+            gender: 'HOMME',
+            phone: '',
+            email: '',
+            role: 'DIRECTOR',
+            directorType: 'PRIMARY_PRESCHOOL',
+            loginMethod: 'email',
+        });
+        setSelectedPermissions([]);
     };
 
-    const selectedRolePermissions = formData.role ? ROLE_PERMISSIONS[formData.role] : null;
+    // Logic to determine if permissions should be shown
+    const requiresDirectorType = ['DIRECTOR', 'SECRETARY'].includes(formData.role);
+    const shouldShowPermissions =
+        ['SURVEILLANT', 'CENSEUR', 'ACCOUNTANT'].includes(formData.role) ||
+        (requiresDirectorType && formData.directorType !== '');
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] p-8">
@@ -152,249 +107,240 @@ const CreateMemberPage = () => {
                 <div className="flex items-center gap-4 mb-8">
                     <button
                         onClick={() => navigate('/app/dashboard')}
-                        className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white"
+                        className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white"
                     >
                         <ArrowLeft size={24} />
                     </button>
                     <div>
                         <h1 className="text-3xl font-bold text-white">Nouveau Membre</h1>
-                        <p className="text-gray-400 mt-1">Créer un nouveau membre de l'administration</p>
+                        <p className="text-white/70 mt-1">
+                            Créer un nouveau membre de l'administration
+                        </p>
                     </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Personal Information */}
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-                        <h2 className="text-xl font-semibold text-white mb-6">Informations personnelles</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Informations personnelles */}
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 relative z-20">
+                        <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                            <User className="text-indigo-400" size={24} />
+                            Informations personnelles
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Prénom *</label>
+                                <label className="block text-sm font-medium text-white/90 mb-2">
+                                    Prénom <span className="text-red-500">*</span>
+                                </label>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
                                     <input
                                         type="text"
                                         required
                                         value={formData.firstName}
-                                        onChange={(e) => handleChange('firstName', e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+                                        onChange={e => handleChange('firstName', e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
                                         placeholder="Jean"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Nom *</label>
+                                <label className="block text-sm font-medium text-white/90 mb-2">
+                                    Nom <span className="text-red-500">*</span>
+                                </label>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
                                     <input
                                         type="text"
                                         required
                                         value={formData.lastName}
-                                        onChange={(e) => handleChange('lastName', e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+                                        onChange={e => handleChange('lastName', e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
                                         placeholder="Dupont"
                                     />
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Genre *</label>
-                                <select
+                            <div className="relative z-20">
+                                <PhoneInput
+                                    value={formData.phone}
+                                    onChange={value => handleChange('phone', value)}
+                                    label="Numéro de téléphone"
                                     required
-                                    value={formData.gender}
-                                    onChange={(e) => handleChange('gender', e.target.value)}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-slate-800 [&>option]:text-white"
-                                >
-                                    <option value="" disabled hidden>Sélectionner</option>
-                                    <option value="M">Masculin</option>
-                                    <option value="F">Féminin</option>
-                                </select>
+                                />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Numéro de téléphone *</label>
+                                <label className="block text-sm font-medium text-white/90 mb-2">
+                                    Email
+                                </label>
                                 <div className="relative">
-                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
                                     <input
-                                        type="tel"
-                                        required
-                                        value={formData.phone}
-                                        onChange={(e) => handleChange('phone', e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
-                                        placeholder="+225 XX XX XX XX XX"
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={e => handleChange('email', e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
+                                        placeholder="jean.dupont@smartschool.com"
                                     />
                                 </div>
                             </div>
 
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Email *</label>
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                    <input
-                                        type="email"
-                                        required
-                                        value={formData.email}
-                                        onChange={(e) => handleChange('email', e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
-                                        placeholder="jean.dupont@smartschool.com"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Role Selection */}
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-                        <h2 className="text-xl font-semibold text-white mb-6">Poste et permissions</h2>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Poste *</label>
-                            <div className="relative">
-                                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                <label className="block text-sm font-medium text-white/90 mb-2">
+                                    Genre <span className="text-red-500">*</span>
+                                </label>
                                 <select
                                     required
-                                    value={formData.role}
-                                    onChange={(e) => handleChange('role', e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-slate-800 [&>option]:text-white"
+                                    value={formData.gender}
+                                    onChange={e => handleChange('gender', e.target.value)}
+                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-slate-800 [&>option]:text-white transition-colors"
                                 >
-                                    <option value="" disabled hidden>Sélectionner un poste</option>
-                                    <option value="directeur">Directeur</option>
-                                    <option value="secretaire">Secrétaire</option>
-                                    <option value="surveillant">Surveillant</option>
-                                    <option value="censeur">Censeur</option>
-                                    <option value="comptable">Comptable</option>
+                                    <option value="HOMME">Masculin</option>
+                                    <option value="FEMME">Féminin</option>
+                                    <option value="DIVERS">Divers</option>
                                 </select>
                             </div>
                         </div>
-
-                        {/* Display permissions for selected role */}
-                        {selectedRolePermissions && (
-                            <div className="mt-6 space-y-4">
-                                <div>
-                                    <h3 className="text-sm font-medium text-gray-300 mb-3">Permissions</h3>
-                                    <div className="space-y-2">
-                                        {selectedRolePermissions.permissions.map((permission, index) => (
-                                            <div key={index} className="flex items-center gap-2 text-sm text-gray-400">
-                                                <Check size={16} className="text-emerald-400" />
-                                                <span>{permission}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-sm font-medium text-gray-300 mb-3">Sections accessibles</h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        {selectedRolePermissions.sections.map((section, index) => (
-                                            <span
-                                                key={index}
-                                                className="px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-xs font-medium"
-                                            >
-                                                {section}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
-                    {/* Login Method */}
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-                        <h2 className="text-xl font-semibold text-white mb-4">Méthode de connexion</h2>
-                        <div className="space-y-3">
-                            <label className="flex items-center gap-3 p-4 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
+                    {/* Poste et type */}
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 relative z-10">
+                        <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                            <Briefcase className="text-emerald-400" size={24} />
+                            Poste et permissions
+                        </h2>
+
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-white/90 mb-2">
+                                    Poste <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative">
+                                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
+                                    <select
+                                        required
+                                        value={formData.role}
+                                        onChange={e => handleChange('role', e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-slate-800 [&>option]:text-white appearance-none transition-colors"
+                                    >
+                                        <option value="DIRECTOR">Directeur</option>
+                                        <option value="CENSEUR">Censeur</option>
+                                        <option value="SURVEILLANT">Surveillant Général</option>
+                                        <option value="ACCOUNTANT">Comptable</option>
+                                        <option value="SECRETARY">Secrétaire</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Director Type Selection */}
+                            {requiresDirectorType && (
+                                <div className="mt-6 pt-6 border-t border-white/10">
+                                    <label className="block text-sm font-medium text-white/90 mb-2">
+                                        {formData.role === 'SECRETARY' ? 'Type de Secrétariat' : 'Type de Direction'} <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative">
+                                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
+                                        <select
+                                            required
+                                            value={formData.directorType}
+                                            onChange={e => handleChange('directorType', e.target.value)}
+                                            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-slate-800 [&>option]:text-white appearance-none transition-colors"
+                                        >
+                                            <option value="PRIMARY_PRESCHOOL">Primaire/Maternelle</option>
+                                            <option value="COLLEGE">Collège</option>
+                                            <option value="BOTH">Les Deux</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+
+                            {shouldShowPermissions && (
+                                <div className="mt-6 pt-6 border-t border-white/10">
+                                    <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                                        <Shield className="text-indigo-400" size={20} />
+                                        Configuration des permissions
+                                    </h3>
+                                    <PermissionsChecklist
+                                        role={formData.role}
+                                        directorType={formData.directorType}
+                                        selectedPermissions={selectedPermissions}
+                                        onChange={setSelectedPermissions}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Login Method Selection */}
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
+                        <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                            <Smartphone className="text-purple-400" size={24} />
+                            Méthode de connexion
+                        </h2>
+                        <p className="text-sm text-white/70 mb-4">
+                            Choisissez comment le membre se connectera à son compte
+                        </p>
+                        <div className="flex gap-4">
+                            <label className="flex-1 cursor-pointer">
                                 <input
                                     type="radio"
                                     name="loginMethod"
                                     value="email"
                                     checked={formData.loginMethod === 'email'}
-                                    onChange={(e) => handleChange('loginMethod', e.target.value)}
-                                    className="w-4 h-4"
+                                    onChange={e => handleChange('loginMethod', e.target.value)}
+                                    className="sr-only peer"
                                 />
-                                <div>
-                                    <p className="text-white font-medium">Email</p>
-                                    <p className="text-sm text-gray-400">L'utilisateur se connectera avec son email</p>
+                                <div className="p-4 bg-white/5 border-2 border-white/10 rounded-lg peer-checked:border-indigo-500 peer-checked:bg-indigo-500/10 transition-all hover:bg-white/10">
+                                    <div className="flex items-center gap-3">
+                                        <Mail className="text-indigo-400" size={20} />
+                                        <div>
+                                            <div className="font-medium text-white">Email</div>
+                                            <div className="text-xs text-white/70">Connexion par email</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </label>
-
-                            <label className="flex items-center gap-3 p-4 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
+                            <label className="flex-1 cursor-pointer">
                                 <input
                                     type="radio"
                                     name="loginMethod"
                                     value="phone"
                                     checked={formData.loginMethod === 'phone'}
-                                    onChange={(e) => handleChange('loginMethod', e.target.value)}
-                                    className="w-4 h-4"
+                                    onChange={e => handleChange('loginMethod', e.target.value)}
+                                    className="sr-only peer"
                                 />
-                                <div>
-                                    <p className="text-white font-medium">Numéro de téléphone</p>
-                                    <p className="text-sm text-gray-400">L'utilisateur se connectera avec son numéro</p>
+                                <div className="p-4 bg-white/5 border-2 border-white/10 rounded-lg peer-checked:border-purple-500 peer-checked:bg-purple-500/10 transition-all hover:bg-white/10">
+                                    <div className="flex items-center gap-3">
+                                        <Smartphone className="text-purple-400" size={20} />
+                                        <div>
+                                            <div className="font-medium text-white">Numéro de téléphone</div>
+                                            <div className="text-xs text-white/70">Connexion par téléphone</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </label>
                         </div>
                     </div>
 
-                    {/* Submit Button */}
-                    <div className="flex gap-4">
-                        <button
-                            type="button"
-                            onClick={() => navigate('/app/dashboard')}
-                            className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
-                        >
-                            Annuler
-                        </button>
+                    <div className="flex justify-end pt-4">
                         <button
                             type="submit"
-                            className="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium"
+                            disabled={isLoading}
+                            className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20"
                         >
-                            Créer le membre
+                            {isLoading ? 'Création en cours...' : 'Créer le membre'}
                         </button>
                     </div>
                 </form>
             </div>
 
-            {/* Credentials Popup */}
-            {showCredentials && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-[#1a1f37] border border-white/10 rounded-xl p-8 max-w-md w-full">
-                        <div className="text-center mb-6">
-                            <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Check size={32} className="text-emerald-400" />
-                            </div>
-                            <h2 className="text-2xl font-bold text-white mb-2">Membre créé avec succès !</h2>
-                            <p className="text-gray-400">Voici les identifiants de connexion temporaires</p>
-                        </div>
-
-                        <div className="space-y-4 mb-6">
-                            <div className="bg-white/5 rounded-lg p-4">
-                                <p className="text-sm text-gray-400 mb-1">Identifiant</p>
-                                <p className="text-white font-mono font-medium">{generatedCredentials.identifier}</p>
-                            </div>
-
-                            <div className="bg-white/5 rounded-lg p-4">
-                                <p className="text-sm text-gray-400 mb-1">Mot de passe temporaire</p>
-                                <p className="text-white font-mono font-medium text-lg">{generatedCredentials.password}</p>
-                            </div>
-                        </div>
-
-                        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
-                            <p className="text-yellow-400 text-sm">
-                                ⚠️ L'utilisateur devra changer son mot de passe lors de sa première connexion
-                            </p>
-                        </div>
-
-                        <button
-                            onClick={() => {
-                                setShowCredentials(false);
-                                navigate('/app/dashboard');
-                            }}
-                            className="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium"
-                        >
-                            Retour à l'Administration
-                        </button>
-                    </div>
-                </div>
-            )}
+            <SuccessCredentialsModal
+                isOpen={isSuccessModalOpen}
+                onClose={() => navigate('/app/dashboard?section=administration')}
+                onReset={handleReset}
+                credentials={generatedCredentials}
+            />
         </div>
     );
 };

@@ -3,7 +3,7 @@
   grid-template-columns: 260px 1fr;
   min-height: 100vh;
   background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-  color: #f1f5f9;
+  color: #ffffff;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   transition: grid-template-columns 0.3s ease;
 }
@@ -17,6 +17,7 @@
   background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(20px);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -49,7 +50,7 @@
 .logo-icon {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -62,7 +63,7 @@
   font-size: 18px;
   font-weight: 700;
   white-space: nowrap;
-  background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -85,6 +86,7 @@
 .menu-toggle:hover {
   background: rgba(255, 255, 255, 0.1);
   color: white;
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .sidebar.collapsed .sidebar-header {
@@ -107,7 +109,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  color: white;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 13px;
   outline: none;
   transition: all 0.2s;
@@ -115,7 +117,8 @@
 
 .search-input:focus {
   background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(139, 92, 246, 0.5);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 .nav-menu {
@@ -152,9 +155,10 @@
 }
 
 .nav-item.active {
-  background: linear-gradient(90deg, rgba(124, 58, 237, 0.5) 0%, rgba(124, 58, 237, 0.1) 100%);
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.3) 0%, rgba(99, 102, 241, 0.1) 100%);
   color: white;
-  border-left: 3px solid #8b5cf6;
+  border-left: 3px solid #6366f1;
+  font-weight: 600;
 }
 
 .nav-icon {
@@ -182,13 +186,15 @@
   padding: 8px;
   border-radius: 8px;
   cursor: pointer;
-  /* Removed hover background - only avatar has hover effect */
+  transition: background 0.2s;
 }
+
+/* Removed rectangular hover background - only circular halo remains */
 
 .user-avatar {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -206,7 +212,7 @@
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  background: linear-gradient(45deg, #6366f1, #8b5cf6, #ec4899, #6366f1);
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6, #10b981, #3b82f6);
   background-size: 300% 300%;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -253,7 +259,7 @@
 
 .user-email {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.6);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -288,9 +294,9 @@
     top: 0;
     bottom: 0;
     width: 260px;
-    background: rgba(15, 23, 42, 0.98);
+    background: rgba(15, 23, 42, 0.95);
     z-index: 1000;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
     transform: translateX(0);
     transition: transform 0.3s ease;
   }
@@ -305,9 +311,10 @@
     top: 20px;
     left: 20px;
     z-index: 1001;
-    background: rgba(99, 102, 241, 0.9);
+    background: rgba(15, 23, 42, 0.9);
     border-radius: 8px;
     padding: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
   .main-content {

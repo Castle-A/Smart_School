@@ -30,6 +30,7 @@ export class ProfileController {
                                 address: true,
                                 phone: true,
                                 email: true,
+                                logo: true,
                                 cycles: true,
                                 subscriptionPlan: true,
                                 subscriptionStatus: true,

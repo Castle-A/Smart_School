@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../../shared/contexts/AuthContext';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import type { MenuItemId } from '../../layouts/DashboardLayout';
@@ -21,18 +22,25 @@ type SettingsSectionId = 'profil' | 'securite' | 'notifications' | 'apparence' |
 
 const FounderDashboard = () => {
     const { user, logout } = useAuth();
+    const location = useLocation();
     const [activeSection, setActiveSection] = useState<MenuItemId | 'settings'>('vue_ensemble');
     const [activeSettingsSection, setActiveSettingsSection] = useState<SettingsSectionId>('profil');
     const [showWelcome, setShowWelcome] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     useEffect(() => {
-        const hasShownWelcome = sessionStorage.getItem('hasShownWelcome');
-        if (!hasShownWelcome && user) {
-            setShowWelcome(true);
-            sessionStorage.setItem('hasShownWelcome', 'true');
+        // Check for activeTab in location state
+        if (location.state && (location.state as any).activeTab) {
+            setActiveSection((location.state as any).activeTab);
+            // Clear state to prevent sticking on refresh (optional, but good practice)
+            window.history.replaceState({}, document.title);
         }
-    }, [user]);
+
+        // Always show welcome modal on mount
+        if (user) {
+            setShowWelcome(true);
+        }
+    }, [user, location.state]);
 
     const handleBackToDashboard = () => {
         if (hasUnsavedChanges) {
@@ -45,14 +53,14 @@ const FounderDashboard = () => {
         setHasUnsavedChanges(false);
     };
 
-    const handleSettingsSectionChange = (section: SettingsSectionId) => {
+    const handleSettingsSectionChange = (section: string) => {
         if (hasUnsavedChanges) {
             const confirmed = window.confirm(
                 'Vous avez des modifications non sauvegardées. Voulez-vous vraiment quitter cette section ?'
             );
             if (!confirmed) return;
         }
-        setActiveSettingsSection(section);
+        setActiveSettingsSection(section as SettingsSectionId);
         setHasUnsavedChanges(false);
     };
 
@@ -110,15 +118,17 @@ const FounderDashboard = () => {
         <>
             {showWelcome && (
                 <WelcomeToast
-                    userName={`${user.firstName} ${user.lastName}`}
+                    firstName={user.firstName}
+                    lastName={user.lastName}
                     gender={user.gender}
                     onClose={() => setShowWelcome(false)}
                 />
             )}
             <DashboardLayout
-                role="fondateur"
+                role="FOUNDER"
                 userName={`${user.firstName} ${user.lastName}`}
                 userEmail={user.email}
+                schoolName={user.schoolName}
                 onLogout={logout}
                 onMenuClick={(item) => setActiveSection(item)}
                 isSettingsMode={activeSection === 'settings'}

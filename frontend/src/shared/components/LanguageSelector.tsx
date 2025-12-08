@@ -48,7 +48,13 @@ export default function LanguageSelector() {
                 aria-label="Select language"
             >
                 <Globe className="w-3.5 h-3.5 text-white/80" />
-                <span className="text-lg">{currentLanguage.flag}</span>
+                <img
+                    src={`https://flagcdn.com/w40/${currentLanguage.code}.png`}
+                    srcSet={`https://flagcdn.com/w80/${currentLanguage.code}.png 2x`}
+                    width="20"
+                    alt={currentLanguage.name}
+                    className="rounded-sm object-cover"
+                />
                 <span className="text-white/90 font-medium text-sm hidden sm:inline">{currentLanguage.code.toUpperCase()}</span>
             </button>
 
@@ -61,7 +67,13 @@ export default function LanguageSelector() {
                             className={`w-full flex items-center gap-3 px-3 py-2 hover:bg-indigo-50 transition-colors ${currentLanguage.code === language.code ? 'bg-indigo-50 border-l-4 border-indigo-600' : ''
                                 }`}
                         >
-                            <span className="text-lg">{language.flag}</span>
+                            <img
+                                src={`https://flagcdn.com/w40/${language.code}.png`}
+                                srcSet={`https://flagcdn.com/w80/${language.code}.png 2x`}
+                                width="20"
+                                alt={language.name}
+                                className="rounded-sm object-cover"
+                            />
                             <span className="text-gray-800 font-medium text-sm">{language.name}</span>
                             {currentLanguage.code === language.code && (
                                 <span className="ml-auto text-indigo-600 text-sm">✓</span>

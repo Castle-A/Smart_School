@@ -24,7 +24,7 @@ export default function WelcomeModal({ isOpen, onClose, role, userName, schoolNa
     };
 
     const handleDontShowAgain = () => {
-        localStorage.setItem(`welcome_modal_seen_${role}`, 'true');
+        sessionStorage.setItem(`welcome_modal_seen_${role}`, 'true');
         handleClose();
     };
 
@@ -83,10 +83,10 @@ export default function WelcomeModal({ isOpen, onClose, role, userName, schoolNa
                         initial={{ scale: 0.9, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-lg bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden"
+                        className="relative w-full max-w-lg bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
                     >
                         {/* Decorative background elements */}
-                        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-purple-500/20 to-blue-500/20 blur-2xl" />
+                        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 blur-2xl" />
 
                         <div className="relative p-8">
                             <button
@@ -111,7 +111,7 @@ export default function WelcomeModal({ isOpen, onClose, role, userName, schoolNa
 
                                 <button
                                     onClick={handleClose}
-                                    className="group w-full bg-white text-purple-900 font-bold py-3 px-6 rounded-xl hover:bg-white/90 transition-all flex items-center justify-center gap-2 mb-4"
+                                    className="group w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 mb-4 shadow-lg shadow-indigo-500/20"
                                 >
                                     {content.cta}
                                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

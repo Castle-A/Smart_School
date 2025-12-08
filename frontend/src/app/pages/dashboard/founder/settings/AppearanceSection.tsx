@@ -7,7 +7,6 @@ const AppearanceSection = () => {
     const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('dark');
     const [accentColor, setAccentColor] = useState('#6366f1');
     const [fontSize, setFontSize] = useState('medium');
-    const [density, setDensity] = useState('comfortable');
 
     const changeLanguage = (lng: string) => {
         i18n.changeLanguage(lng);
@@ -17,15 +16,15 @@ const AppearanceSection = () => {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-3xl font-bold text-white">Apparence</h2>
-                <p className="text-gray-400 mt-1">Personnalisez l'interface selon vos préférences</p>
+                <h2 className="text-3xl font-bold text-slate-900">Apparence</h2>
+                <p className="text-slate-600 mt-1">Personnalisez l'interface selon vos préférences</p>
             </div>
 
             {/* Thème */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="bg-white backdrop-blur-sm border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                     <Palette className="text-purple-400" size={24} />
-                    <h3 className="text-lg font-semibold text-white">Thème</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">Thème</h3>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                     <ThemeOption
@@ -50,8 +49,8 @@ const AppearanceSection = () => {
             </div>
 
             {/* Couleur d'accentuation */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Couleur d'accentuation</h3>
+            <div className="bg-white backdrop-blur-sm border border-slate-200 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Couleur d'accentuation</h3>
                 <div className="grid grid-cols-6 gap-3">
                     {['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'].map(color => (
                         <button
@@ -66,10 +65,10 @@ const AppearanceSection = () => {
             </div>
 
             {/* Taille de police */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="bg-white backdrop-blur-sm border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                     <Type className="text-blue-400" size={24} />
-                    <h3 className="text-lg font-semibold text-white">Taille de police</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">Taille de police</h3>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                     <SizeOption label="Petit" active={fontSize === 'small'} onClick={() => setFontSize('small')} />
@@ -79,10 +78,10 @@ const AppearanceSection = () => {
             </div>
 
             {/* Langue */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="bg-white backdrop-blur-sm border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                     <Globe className="text-emerald-400" size={24} />
-                    <h3 className="text-lg font-semibold text-white">Langue de l'interface</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">Langue de l'interface</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     {[
@@ -95,8 +94,8 @@ const AppearanceSection = () => {
                             key={lang.code}
                             onClick={() => changeLanguage(lang.code)}
                             className={`p-4 rounded-lg border transition-colors ${i18n.language === lang.code
-                                    ? 'bg-indigo-600 border-indigo-500 text-white'
-                                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                                ? 'bg-indigo-600 border-indigo-500 text-slate-900'
+                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                                 }`}
                         >
                             {lang.label}
@@ -120,8 +119,8 @@ const ThemeOption: React.FC<ThemeOptionProps> = ({ icon, label, active, onClick 
         <button
             onClick={onClick}
             className={`p-4 rounded-lg border transition-colors ${active
-                    ? 'bg-indigo-600 border-indigo-500 text-white'
-                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                ? 'bg-indigo-600 border-indigo-500 text-slate-900'
+                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
         >
             <div className="flex flex-col items-center gap-2">
@@ -143,8 +142,8 @@ const SizeOption: React.FC<SizeOptionProps> = ({ label, active, onClick }) => {
         <button
             onClick={onClick}
             className={`p-4 rounded-lg border transition-colors ${active
-                    ? 'bg-indigo-600 border-indigo-500 text-white'
-                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                ? 'bg-indigo-600 border-indigo-500 text-slate-900'
+                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
         >
             <span className="text-sm font-medium">{label}</span>

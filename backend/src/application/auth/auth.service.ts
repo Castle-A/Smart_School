@@ -3,20 +3,45 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import type { IAuthRepository } from '../../domain/auth/user.entity';
 import { User } from '../../domain/auth/user.entity';
+import { AnalyticsService } from '../analytics/analytics.service';
+import { DIRECTOR_PERMISSIONS } from '../../shared/constants/permissions.constants';
 
 @Injectable()
 export class AuthService {
     constructor(
         @Inject('IAuthRepository') private readonly authRepository: IAuthRepository,
         private readonly jwtService: JwtService,
+        private readonly analyticsService: AnalyticsService,
     ) { }
 
-    async validateUser(email: string, pass: string): Promise<any> {
-        const user = await this.authRepository.findByEmail(email);
-        if (user && user.password && (await bcrypt.compare(pass, user.password))) {
+    // ... validateUser remains the same ...
+
+    async validateUser(identifier: string, pass: string): Promise<any> {
+        console.log(`[DEBUG] validateUser called for: ${identifier}`);
+        const user = await this.authRepository.findByIdentifier(identifier);
+
+        if (!user) {
+            console.log('[DEBUG] User not found by identifier');
+            return null;
+        }
+
+        console.log(`[DEBUG] User found: ${user.id}, Active: ${user.isActive}, Deleted: ${user.deletedAt}`);
+
+        if (!user.password) {
+            console.log('[DEBUG] User has no password');
+            return null;
+        }
+
+        const isMatch = await bcrypt.compare(pass, user.password);
+        console.log(`[DEBUG] Password check: InputLen=${pass.length}, HashLen=${user.password.length}, MATCH=${isMatch}`);
+
+        // Check if user exists, has password, is NOT deleted, and is ACTIVE
+        if (!user.deletedAt && user.isActive && isMatch) {
             const { password, ...result } = user;
             return result;
         }
+
+        console.log('[DEBUG] Validation failed due to flags or mismatch');
         return null;
     }
 
@@ -27,12 +52,28 @@ export class AuthService {
             role: user.role, // Legacy
             schoolRole: user.schoolRole,
             schoolId: user.schoolId,
+            schoolName: user.schoolName,
             platformRole: user.platformRole,
             gender: user.gender,
             firstName: user.firstName,
             lastName: user.lastName,
+            permissions: user.permissions,
+            directorType: user.directorType,
             mustChangePassword: user.mustChangePassword,
         };
+
+        // Track Login Event
+        try {
+            await this.analyticsService.trackEvent({
+                type: 'LOGIN',
+                userId: user.id,
+                schoolId: user.schoolId,
+                metadata: { role: user.role, schoolRole: user.schoolRole },
+            });
+        } catch (error) {
+            console.error('Failed to track login event:', error);
+        }
+
         return {
             access_token: this.jwtService.sign(payload),
             mustChangePassword: user.mustChangePassword,
@@ -52,6 +93,11 @@ export class AuthService {
         schoolEmail?: string;
         schoolCycles?: string[];
     }) {
+        const existingUser = await this.authRepository.findByIdentifier(data.email);
+        if (existingUser) {
+            throw new UnauthorizedException('Un utilisateur avec cet email existe déjà.');
+        }
+
         const hashedPassword = await bcrypt.hash(data.password, 10);
 
         // Use Prisma transaction to create School, User, and SchoolUser atomically
@@ -77,6 +123,8 @@ export class AuthService {
                     gender: data.gender,
                     phone: data.phone,
                     mustChangePassword: false, // Founder creates their own password
+                    termsAcceptedAt: new Date(), // Record Terms acceptance
+                    termsVersion: '2025-01', // Current Terms version
                 },
             });
 
@@ -90,21 +138,24 @@ export class AuthService {
             });
 
             // Create founder permissions (full access)
-            const founderPermissions = [
-                'calendar.manage',
-                'finance.view',
-                'finance.manage',
-                'students.manage',
-                'staff.manage',
-                'settings.manage',
-            ];
+            // Create founder permissions (Use ALL Director permissions as base for Founder)
+            const founderPermissions = DIRECTOR_PERMISSIONS.map(p => p.code);
 
-            await prisma.permission.createMany({
-                data: founderPermissions.map(code => ({
-                    code,
-                    schoolUserId: schoolUser.id,
-                })),
-            });
+            // Assign permissions to founder
+            for (const code of founderPermissions) {
+                const permissionDef = await prisma.permissionDefinition.findUnique({
+                    where: { code }
+                });
+
+                if (permissionDef) {
+                    await prisma.rolePermission.create({
+                        data: {
+                            schoolUserId: schoolUser.id,
+                            permissionDefinitionId: permissionDef.id,
+                        },
+                    });
+                }
+            }
 
             return { user, school, schoolUser };
         });
@@ -112,17 +163,24 @@ export class AuthService {
         return new User(result.user);
     }
 
-    async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    async changePassword(userId: string, currentPassword: string | undefined, newPassword: string) {
         const user = await this.authRepository.findById(userId);
 
         if (!user || !user.password) {
             throw new UnauthorizedException('User not found');
         }
 
-        // Vérifier l'ancien mot de passe
-        const isValid = await bcrypt.compare(currentPassword, user.password);
-        if (!isValid) {
-            throw new UnauthorizedException('Current password is incorrect');
+        // Si l'utilisateur doit changer son mot de passe (première connexion après réinitialisation),
+        // on ne vérifie pas l'ancien mot de passe
+        if (!user.mustChangePassword) {
+            // Vérifier l'ancien mot de passe uniquement si ce n'est pas une première connexion
+            if (!currentPassword) {
+                throw new UnauthorizedException('Current password is required');
+            }
+            const isValid = await bcrypt.compare(currentPassword, user.password);
+            if (!isValid) {
+                throw new UnauthorizedException('Current password is incorrect');
+            }
         }
 
         // Hasher le nouveau mot de passe

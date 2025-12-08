@@ -19,17 +19,17 @@ const NotificationsSection = () => {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-3xl font-bold text-white">Notifications</h2>
-                <p className="text-gray-400 mt-1">Gérez vos préférences de notifications</p>
+                <h2 className="text-3xl font-bold text-slate-900">Notifications</h2>
+                <p className="text-slate-600 mt-1">Gérez vos préférences de notifications</p>
             </div>
 
             {/* Notifications de sécurité */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="bg-white backdrop-blur-sm border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                     <Bell className="text-red-400" size={24} />
-                    <h3 className="text-lg font-semibold text-white">Notifications de sécurité</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">Notifications de sécurité</h3>
                 </div>
-                <p className="text-sm text-gray-400 mb-4">
+                <p className="text-sm text-slate-600 mb-4">
                     Ces notifications sont toujours actives pour votre sécurité
                 </p>
                 <div className="space-y-3">
@@ -52,10 +52,10 @@ const NotificationsSection = () => {
             </div>
 
             {/* Notifications système */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="bg-white backdrop-blur-sm border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                     <Smartphone className="text-blue-400" size={24} />
-                    <h3 className="text-lg font-semibold text-white">Notifications système</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">Notifications système</h3>
                 </div>
                 <div className="space-y-3">
                     <NotificationToggle
@@ -76,10 +76,10 @@ const NotificationsSection = () => {
             </div>
 
             {/* Notifications métier */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="bg-white backdrop-blur-sm border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                     <Bell className="text-emerald-400" size={24} />
-                    <h3 className="text-lg font-semibold text-white">Notifications métier</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">Notifications métier</h3>
                 </div>
                 <div className="space-y-3">
                     <NotificationToggle
@@ -120,15 +120,15 @@ const NotificationToggle: React.FC<NotificationToggleProps> = ({
     locked
 }) => {
     return (
-        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-white rounded-lg">
             <div className="flex items-center gap-3">
-                <div className="text-gray-400">{icon}</div>
+                <div className="text-slate-600">{icon}</div>
                 <div>
-                    <p className="text-white font-medium flex items-center gap-2">
+                    <p className="text-slate-900 font-medium flex items-center gap-2">
                         {label}
                         {locked && <span className="text-xs text-yellow-400">(Obligatoire)</span>}
                     </p>
-                    <p className="text-sm text-gray-400">{description}</p>
+                    <p className="text-sm text-slate-600">{description}</p>
                 </div>
             </div>
             <button

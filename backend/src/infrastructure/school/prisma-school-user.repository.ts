@@ -21,47 +21,73 @@ export class PrismaSchoolUserRepository implements ISchoolUserRepository {
     async findByUserId(userId: string): Promise<SchoolUser[]> {
         const schoolUsers = await this.prisma.schoolUser.findMany({
             where: { userId },
-            include: { permissions: true },
+            include: {
+                rolePermissions: {
+                    include: {
+                        permissionDefinition: true
+                    }
+                }
+            },
         });
         return schoolUsers.map(su => new SchoolUser({
             ...su,
-            permissions: su.permissions.map(p => p.code),
+            permissions: su.rolePermissions.map(rp => rp.permissionDefinition.code),
         }));
     }
 
     async findBySchoolId(schoolId: string): Promise<SchoolUser[]> {
         const schoolUsers = await this.prisma.schoolUser.findMany({
             where: { schoolId },
-            include: { permissions: true, user: true },
+            include: {
+                rolePermissions: {
+                    include: {
+                        permissionDefinition: true
+                    }
+                },
+                user: true
+            },
         });
         return schoolUsers.map(su => new SchoolUser({
             ...su,
-            permissions: su.permissions.map(p => p.code),
+            permissions: su.rolePermissions.map(rp => rp.permissionDefinition.code),
         }));
     }
 
-    async addPermission(schoolUserId: string, permission: string): Promise<void> {
-        await this.prisma.permission.create({
-            data: {
-                code: permission,
-                schoolUserId,
-            },
+    async addPermission(schoolUserId: string, permissionCode: string): Promise<void> {
+        const permissionDef = await this.prisma.permissionDefinition.findUnique({
+            where: { code: permissionCode }
         });
+
+        if (permissionDef) {
+            await this.prisma.rolePermission.create({
+                data: {
+                    schoolUserId,
+                    permissionDefinitionId: permissionDef.id,
+                },
+            });
+        }
     }
 
-    async removePermission(schoolUserId: string, permission: string): Promise<void> {
-        await this.prisma.permission.deleteMany({
-            where: {
-                schoolUserId,
-                code: permission,
-            },
+    async removePermission(schoolUserId: string, permissionCode: string): Promise<void> {
+        const permissionDef = await this.prisma.permissionDefinition.findUnique({
+            where: { code: permissionCode }
         });
+
+        if (permissionDef) {
+            await this.prisma.rolePermission.deleteMany({
+                where: {
+                    schoolUserId,
+                    permissionDefinitionId: permissionDef.id,
+                },
+            });
+        }
     }
 
     async getPermissions(schoolUserId: string): Promise<string[]> {
-        const permissions = await this.prisma.permission.findMany({
+        const rolePermissions = await this.prisma.rolePermission.findMany({
             where: { schoolUserId },
+            include: { permissionDefinition: true }
         });
-        return permissions.map(p => p.code);
+        return rolePermissions.map(rp => rp.permissionDefinition.code);
     }
 }

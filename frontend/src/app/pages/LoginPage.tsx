@@ -60,16 +60,17 @@ export default function LoginPage() {
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-white/90 mb-2 text-sm font-medium">Email</label>
+                            <label className="block text-white/90 mb-2 text-sm font-medium">Email ou numéro de téléphone</label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
                                 <input
-                                    type="email"
+                                    type="text"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full bg-white/10 border border-white/20 rounded-xl px-10 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
-                                    placeholder="votre@email.com"
+                                    placeholder="Email ou numéro de téléphone"
                                     required
+                                    autoComplete="username"
                                 />
                             </div>
                         </div>
@@ -85,6 +86,7 @@ export default function LoginPage() {
                                     className="w-full bg-white/10 border border-white/20 rounded-xl px-10 pr-12 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
                                     placeholder="••••••••"
                                     required
+                                    autoComplete="current-password"
                                 />
                                 <button
                                     type="button"

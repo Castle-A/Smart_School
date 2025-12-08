@@ -9,7 +9,7 @@ datasource db {
 
 model User {
   id                String       @id @default(uuid())
-  email             String       @unique
+  email             String?      @unique
   password          String
   firstName         String
   lastName          String
@@ -17,7 +17,11 @@ model User {
   phone             String?
   profilePicture    String?
   mustChangePassword Boolean     @default(true)
+  isActive          Boolean      @default(true)
+  loginMethod       String?      @default("email") // email, phone
   platformRole      String?      // SUPPORT_TECH, SUPER_ADMIN_PLATFORM
+  termsAcceptedAt   DateTime?    // When user accepted Terms of Service
+  termsVersion      String?      // Version of Terms accepted (e.g., "2025-01")
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
   
@@ -25,6 +29,13 @@ model User {
   sentMessages      Message[]    @relation("Sender")
   receivedMessages  Message[]    @relation("Receiver")
   notifications     Notification[]
+  teacherProfile    Teacher?     @relation("TeacherAccount")
+  analyticsEvents   AnalyticsEvent[]
+  deletedAt         DateTime?
+  
+  sentRequests      AdminRequest[] @relation("SentRequests")
+  resolvedRequests  AdminRequest[] @relation("ResolvedRequests")
+  authoredComments  StudentComment[]
 }
 
 model SupportLog {
@@ -34,6 +45,31 @@ model SupportLog {
   action      String
   details     String?  // Stored as JSON string if needed, or use Json type if supported by DB
   createdAt   DateTime @default(now())
+  
+  @@index([supportId])
+  @@index([schoolId])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String
+  schoolId    String?
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, PASSWORD_RESET, etc.
+  entity      String   // Teacher, Student, Payment, User, etc.
+  entityId    String?
+  oldValue    String?  // JSON
+  newValue    String?  // JSON
+  ipAddress   String?
+  userAgent   String?
+  metadata    String?  // Additional context as JSON
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([schoolId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
 }
 
 model School {
@@ -42,6 +78,7 @@ model School {
   address     String?
   phone       String?
   email       String?
+  logo        String?      // URL or path to school logo
   cycles      String?      // Comma-separated: MATERNELLE_I,MATERNELLE_II,PRIMAIRE_1,PRIMAIRE_2
   plan        String       @default("BASIC")
   subscriptionPlan   String?  @default("BASIC")
@@ -57,6 +94,40 @@ model School {
   events      CalendarEvent[]
   payments    Payment[]
   payrolls    Payroll[]
+  teachers    Teacher[]
+  adminRequests AdminRequest[]
+  analyticsEvents AnalyticsEvent[]
+}
+
+model Teacher {
+  id           String   @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String?   @unique
+  phone        String
+  gender       String
+  contractType String
+  hireDate     DateTime
+  matricule    String?   @unique
+  subjects     Subject[]
+  title        String?   // MAITRE, MAITRESSE, PROFESSEUR, EDUCATEUR
+  diploma      String?   // CEAP, CAP, BAPES, CAPES, LICENCE, MASTER, DOCTORAT, AUTRE
+  specialty    String?   // Ex: "Mathématiques", "Lettres Modernes"
+  photoUrl     String?
+  deletedAt    DateTime?
+  
+  schoolId     String
+  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  
+  userId       String?  @unique
+  user         User?    @relation("TeacherAccount", fields: [userId], references: [id], onDelete: SetNull)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([schoolId])
+  @@index([userId])
+  @@index([deletedAt])
 }
 
 model SchoolUser {
@@ -68,21 +139,53 @@ model SchoolUser {
   user      User     @relation(fields: [userId], references: [id])
   school    School   @relation(fields: [schoolId], references: [id])
 
-  permissions Permission[]
+  rolePermissions RolePermission[]
 
   // Relations specific to roles
   teacherClasses Class[] @relation("ClassTeacher")
-  teacherSubjects Subject[] @relation("SubjectTeacher")
+
   payrolls      Payroll[]
+  deletedAt     DateTime?
+  
+  directorType String? // PRIMARY_PRESCHOOL, COLLEGE, BOTH (for DIRECTOR and SECRETARY)
+  
+  teachingClasses Class[] @relation("ClassTeachers")
   
   @@unique([userId, schoolId])
 }
 
-model Permission {
-  id           String     @id @default(uuid())
-  code         String     // ex: "calendar.manage", "finance.view"
-  schoolUserId String
-  schoolUser   SchoolUser @relation(fields: [schoolUserId], references: [id], onDelete: Cascade)
+model PermissionDefinition {
+  id          String   @id @default(uuid())
+  code        String   @unique // ex: "students.manage", "finance.view"
+  name        String   // Nom affiché
+  description String?  // Description de la permission
+  category    String   // "students", "finance", "discipline", etc.
+  role        String   // SECRETARY, SURVEILLANT, CENSEUR, ACCOUNTANT, DIRECTOR
+  directorType String? // PRIMARY_PRESCHOOL, COLLEGE, BOTH (for DIRECTOR and SECRETARY only)
+  isDefault   Boolean  @default(false) // Si true, cochée par défaut pour ce rôle
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  rolePermissions RolePermission[]
+  
+  @@index([role])
+  @@index([category])
+  @@index([directorType])
+}
+
+model RolePermission {
+  id                     String               @id @default(uuid())
+  schoolUserId           String
+  permissionDefinitionId String
+  
+  schoolUser             SchoolUser           @relation(fields: [schoolUserId], references: [id], onDelete: Cascade)
+  permissionDefinition   PermissionDefinition @relation(fields: [permissionDefinitionId], references: [id], onDelete: Cascade)
+  
+  createdAt              DateTime             @default(now())
+  
+  @@unique([schoolUserId, permissionDefinitionId])
+  @@index([schoolUserId])
+  @@index([permissionDefinitionId])
 }
 
 model Student {
@@ -94,6 +197,12 @@ model Student {
   gender    String
   address   String?
   
+  // Parent Info
+  parentName  String?
+  parentPhone String?
+  
+  status      String   @default("PENDING") // ACTIVE, PENDING, ARCHIVED
+  
   schoolId  String
   school    School   @relation(fields: [schoolId], references: [id])
   
@@ -103,34 +212,62 @@ model Student {
   grades    Grade[]
   attendances Attendance[]
   payments  Payment[]
+  comments  StudentComment[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 }
 
 model Class {
-  id        String   @id @default(uuid())
-  name      String
-  level     String
+  id            String      @id @default(uuid())
+  name          String
+  cycle         String
+  level         String
+  series        String?
+  room          String?
+  capacity      Int         @default(0)
   
-  schoolId  String
-  school    School   @relation(fields: [schoolId], references: [id])
+  schoolId      String
+  school        School      @relation(fields: [schoolId], references: [id])
   
   mainTeacherId String?
   mainTeacher   SchoolUser? @relation("ClassTeacher", fields: [mainTeacherId], references: [id])
   
-  students  Student[]
-  subjects  Subject[]
+  students      Student[]
+  classSubjects ClassSubject[]
+  teachers      SchoolUser[] @relation("ClassTeachers")
+  
+  deletedAt     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
 
 model Subject {
   id        String   @id @default(uuid())
   name      String
-  coefficient Int    @default(1)
+  coefficient Float  @default(1)
+  cycle       String @default("PRIMAIRE")
   
   schoolId  String
   school    School   @relation(fields: [schoolId], references: [id])
   
-  classes   Class[]
-  teachers  SchoolUser[] @relation("SubjectTeacher")
+  classSubjects ClassSubject[]
+  teachers  Teacher[]
   grades    Grade[]
+  deletedAt DateTime?
+}
+
+model ClassSubject {
+  id          String   @id @default(uuid())
+  classId     String
+  subjectId   String
+  coefficient Float    @default(1)
+  
+  class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, subjectId])
 }
 
 model Grade {
@@ -225,4 +362,63 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@index([userId, isRead])
+}
+
+model AnalyticsEvent {
+  id          String   @id @default(uuid())
+  type        String   // LOGIN, PAGE_VIEW, CLICK, ERROR, SYSTEM, ETC.
+  userId      String?
+  schoolId    String?
+  metadata    String?  // JSON string
+  timestamp   DateTime @default(now())
+  ipAddress   String?
+  userAgent   String?
+
+  user        User?    @relation(fields: [userId], references: [id])
+  school      School?  @relation(fields: [schoolId], references: [id])
+
+  @@index([type])
+  @@index([userId])
+  @@index([timestamp])
+}
+
+model AdminRequest {
+  id          String   @id @default(uuid())
+  type        String   // DELETE_TEACHER, UPDATE_TEACHER, CLASS_ASSEMBLY, SCHOOL_LIFE_COMMENT
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  data        String   // JSON payload
+  
+  requesterId String
+  requester   User     @relation("SentRequests", fields: [requesterId], references: [id])
+  
+  resolverId  String?
+  resolver    User?    @relation("ResolvedRequests", fields: [resolverId], references: [id])
+  
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id])
+  
+  adminComment String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([status])
+  @@index([type])
+}
+
+model StudentComment {
+  id        String   @id @default(uuid())
+  content   String
+  
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId])
 }

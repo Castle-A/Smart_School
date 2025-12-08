@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+import { useAuth } from '../contexts/AuthContext';
+
 interface SidebarProps {
     isOpen: boolean;
     setIsOpen: (isOpen: boolean) => void;
@@ -18,6 +20,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user } = useAuth();
 
     const menuItems = [
         { icon: LayoutDashboard, label: "Vue d'ensemble", path: '/dashboard/founder' },
@@ -42,9 +45,10 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         <motion.span
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="font-bold text-lg tracking-wide whitespace-nowrap"
+                            className="font-bold text-lg tracking-wide whitespace-nowrap truncate max-w-[180px]"
+                            title={user?.schoolName || 'SmartSchool'}
                         >
-                            SmartSchool
+                            {user?.schoolName || 'SmartSchool'}
                         </motion.span>
                     )}
                 </div>

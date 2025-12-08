@@ -95,4 +95,50 @@ export class SchoolService {
             }
         }
     }
+
+    async getSchoolInfo(schoolId: string) {
+        const school = await this.schoolRepository['prisma'].school.findUnique({
+            where: { id: schoolId },
+            select: {
+                id: true,
+                name: true,
+                logo: true,
+                address: true,
+                phone: true,
+                email: true,
+            },
+        });
+
+        if (!school) {
+            throw new Error('School not found');
+        }
+
+        return school;
+    }
+
+    async updateSchoolLogo(schoolId: string, logoUrl: string, userId: string) {
+        // Verify user is founder of this school
+        const schoolUser = await this.schoolUserRepository['prisma'].schoolUser.findFirst({
+            where: {
+                userId,
+                schoolId,
+                role: 'FOUNDER',
+            },
+        });
+
+        if (!schoolUser) {
+            throw new Error('Only founder can update school logo');
+        }
+
+        const updatedSchool = await this.schoolRepository['prisma'].school.update({
+            where: { id: schoolId },
+            data: { logo: logoUrl },
+        });
+
+        return {
+            id: updatedSchool.id,
+            name: updatedSchool.name,
+            logo: updatedSchool.logo,
+        };
+    }
 }

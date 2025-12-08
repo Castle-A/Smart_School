@@ -14,6 +14,9 @@ export class PrismaAuthRepository implements IAuthRepository {
         const schoolRole = schoolUser?.role;
         const schoolId = schoolUser?.schoolId;
 
+        // Extract permissions
+        const permissions = schoolUser?.rolePermissions?.map((rp: any) => rp.permissionDefinition.code) || [];
+
         return new User({
             ...prismaUser,
             gender: prismaUser.gender ?? undefined,
@@ -21,14 +24,58 @@ export class PrismaAuthRepository implements IAuthRepository {
             role: schoolRole, // Legacy support
             schoolRole: schoolRole,
             schoolId: schoolId,
+            schoolName: schoolUser?.school?.name,
+            directorType: schoolUser?.directorType,
+            permissions: permissions,
             platformRole: prismaUser.platformRole ?? undefined,
+            deletedAt: prismaUser.deletedAt ?? undefined,
         });
     }
 
     async findByEmail(email: string): Promise<User | null> {
         const user = await this.prisma.user.findUnique({
             where: { email },
-            include: { schoolUsers: true }
+            include: {
+                schoolUsers: {
+                    include: {
+                        school: {
+                            select: { name: true }
+                        },
+                        rolePermissions: {
+                            include: {
+                                permissionDefinition: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        if (!user) return null;
+        return this.toDomain(user);
+    }
+
+    async findByIdentifier(identifier: string): Promise<User | null> {
+        const user = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: identifier },
+                    { phone: identifier }
+                ]
+            },
+            include: {
+                schoolUsers: {
+                    include: {
+                        school: {
+                            select: { name: true }
+                        },
+                        rolePermissions: {
+                            include: {
+                                permissionDefinition: true
+                            }
+                        }
+                    }
+                }
+            }
         });
         if (!user) return null;
         return this.toDomain(user);

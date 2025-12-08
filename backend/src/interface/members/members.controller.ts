@@ -1,46 +1,57 @@
 import { Controller, Post, Get, Body, UseGuards, Request, Delete, Patch, Param } from '@nestjs/common';
 import { MembersService } from '../../application/members/members.service';
 import { JwtAuthGuard } from '../../application/auth/jwt-auth.guard';
+import { CreateMemberDto } from '../../application/members/dto/create-member.dto';
+import { UpdateMemberDto } from '../../application/members/dto/update-member.dto';
+import { CustomLogger } from '../../shared/logger/custom-logger.service';
 
 @Controller('members')
 @UseGuards(JwtAuthGuard)
 export class MembersController {
+    private readonly logger = new CustomLogger();
+
     constructor(private membersService: MembersService) { }
 
     @Post('create')
-    async createMember(@Body() body: any, @Request() req: any) {
+    async createMember(@Body() createMemberDto: CreateMemberDto, @Request() req: any) {
         try {
-            console.log('👥 Creating new member:', body);
+            this.logger.log(`Creating new member: ${createMemberDto.email}`, 'MembersController');
 
             // Generate random 8-character password
             const tempPassword = this.generatePassword();
 
+            const loginMethod = createMemberDto.loginMethod || 'email';
+
             const member = await this.membersService.createMember(
                 {
-                    email: body.email,
-                    phone: body.phone,
-                    firstName: body.firstName,
-                    lastName: body.lastName,
-                    gender: body.gender,
-                    role: body.role,
-                    loginMethod: body.loginMethod,
-                    schoolId: req.user.schoolId, // Get school ID from authenticated user
+                    email: createMemberDto.email || '',
+                    phone: createMemberDto.phone,
+                    firstName: createMemberDto.firstName,
+                    lastName: createMemberDto.lastName,
+                    gender: createMemberDto.gender,
+                    role: createMemberDto.role,
+                    loginMethod: loginMethod,
+                    schoolId: req.user.schoolId,
+                    directorType: createMemberDto.directorType,
+                    permissionIds: createMemberDto.permissionIds, // Passer les permissions au service
                 },
                 tempPassword
             );
 
-            console.log('✅ Member created successfully:', member.id);
+            this.logger.log(`Member created successfully: ${member.id}`, 'MembersController');
 
             // Return member info and temporary credentials
+            const identifier = loginMethod === 'phone' ? createMemberDto.phone : createMemberDto.email;
+
             return {
                 member,
                 credentials: {
-                    identifier: body.loginMethod === 'email' ? body.email : body.phone,
+                    identifier,
                     tempPassword,
                 },
             };
         } catch (error) {
-            console.error('❌ Error creating member:', error);
+            this.logger.error(`Error creating member: ${error.message}`, error.stack, 'MembersController');
             throw error;
         }
     }
@@ -51,7 +62,7 @@ export class MembersController {
             const members = await this.membersService.getMembersBySchool(req.user.schoolId);
             return members;
         } catch (error) {
-            console.error('❌ Error fetching members:', error);
+            this.logger.error(`Error fetching members: ${error.message}`, error.stack, 'MembersController');
             throw error;
         }
     }
@@ -59,22 +70,46 @@ export class MembersController {
     @Post(':id/reset-password')
     async resetPassword(@Param('id') id: string, @Request() req: any) {
         try {
+            this.logger.log(`Resetting password for member: ${id}`, 'MembersController');
             const tempPassword = this.generatePassword();
             await this.membersService.resetMemberPassword(id, tempPassword, req.user.schoolId);
             return { message: 'Password reset successfully', tempPassword };
         } catch (error) {
-            console.error('❌ Error resetting password:', error);
+            this.logger.error(`Error resetting password: ${error.message}`, error.stack, 'MembersController');
             throw error;
         }
     }
 
-    @Patch(':id/status')
-    async updateStatus(@Param('id') id: string, @Body() body: { status: string }, @Request() req: any) {
+    @Patch(':id/toggle-status')
+    async toggleStatus(@Param('id') id: string, @Request() req: any) {
         try {
-            await this.membersService.updateMemberStatus(id, body.status, req.user.schoolId);
-            return { message: 'Status updated successfully' };
+            const result = await this.membersService.toggleMemberStatus(id, req.user.schoolId);
+            return result;
         } catch (error) {
-            console.error('❌ Error updating status:', error);
+            this.logger.error(`Error toggling status: ${error.message}`, error.stack, 'MembersController');
+            throw error;
+        }
+    }
+
+    @Patch(':id/permissions')
+    async updatePermissions(@Param('id') id: string, @Body() body: { permissionIds: string[], directorType?: string }, @Request() req: any) {
+        try {
+            this.logger.log(`Updating permissions for member: ${id}`, 'MembersController');
+            await this.membersService.updateMemberPermissions(id, body.permissionIds, req.user.schoolId, body.directorType);
+            return { message: 'Permissions updated successfully' };
+        } catch (error) {
+            this.logger.error(`Error updating permissions: ${error.message}`, error.stack, 'MembersController');
+            throw error;
+        }
+    }
+
+    @Get(':id/permissions')
+    async getMemberPermissions(@Param('id') id: string, @Request() req: any) {
+        try {
+            const permissions = await this.membersService.getMemberPermissions(id, req.user.schoolId);
+            return permissions;
+        } catch (error) {
+            this.logger.error(`Error fetching member permissions: ${error.message}`, error.stack, 'MembersController');
             throw error;
         }
     }
@@ -82,10 +117,11 @@ export class MembersController {
     @Delete(':id')
     async deleteMember(@Param('id') id: string, @Request() req: any) {
         try {
+            this.logger.log(`Deleting member: ${id}`, 'MembersController');
             await this.membersService.deleteMember(id, req.user.schoolId);
             return { message: 'Member deleted successfully' };
         } catch (error) {
-            console.error('❌ Error deleting member:', error);
+            this.logger.error(`Error deleting member: ${error.message}`, error.stack, 'MembersController');
             throw error;
         }
     }
