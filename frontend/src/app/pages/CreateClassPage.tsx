@@ -28,7 +28,7 @@ const LEVELS = {
 };
 
 const SERIES = {
-    PREMIER_CYCLE: ['A', 'B', 'C', 'D', 'E', 'F'],
+    PREMIER_CYCLE: ['A', 'B', 'C', 'D'],
     SECOND_CYCLE: ['A1', 'A2', 'B1', 'B2', 'C', 'D', 'G1', 'G2', 'G3'],
 };
 
@@ -232,7 +232,9 @@ const CreateClassPage = () => {
 
                                         <option value="">Sélectionner une série</option>
                                         {availableSeries?.map(s => (
-                                            <option key={s} value={s}>{s}</option>
+                                            <option key={s} value={s}>
+                                                {formData.cycle === 'SECOND_CYCLE' ? `Série ${s}` : s}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>

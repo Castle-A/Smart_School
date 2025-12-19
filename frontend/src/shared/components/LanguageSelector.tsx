@@ -4,15 +4,16 @@ import { Globe } from 'lucide-react';
 
 interface Language {
     code: string;
+    countryCode: string; // Used for flagcdn (e.g., 'en' -> 'gb')
     name: string;
     flag: string;
 }
 
 const languages: Language[] = [
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'en', name: 'English', flag: '🇬🇧' },
-    { code: 'es', name: 'Español', flag: '🇪🇸' },
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+    { code: 'fr', countryCode: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'en', countryCode: 'gb', name: 'English', flag: '🇬🇧' },
+    { code: 'es', countryCode: 'es', name: 'Español', flag: '🇪🇸' },
+    { code: 'de', countryCode: 'de', name: 'Deutsch', flag: '🇩🇪' },
 ];
 
 export default function LanguageSelector() {
@@ -49,8 +50,8 @@ export default function LanguageSelector() {
             >
                 <Globe className="w-3.5 h-3.5 text-white/80" />
                 <img
-                    src={`https://flagcdn.com/w40/${currentLanguage.code}.png`}
-                    srcSet={`https://flagcdn.com/w80/${currentLanguage.code}.png 2x`}
+                    src={`https://flagcdn.com/w40/${currentLanguage.countryCode}.png`}
+                    srcSet={`https://flagcdn.com/w80/${currentLanguage.countryCode}.png 2x`}
                     width="20"
                     alt={currentLanguage.name}
                     className="rounded-sm object-cover"
@@ -68,8 +69,8 @@ export default function LanguageSelector() {
                                 }`}
                         >
                             <img
-                                src={`https://flagcdn.com/w40/${language.code}.png`}
-                                srcSet={`https://flagcdn.com/w80/${language.code}.png 2x`}
+                                src={`https://flagcdn.com/w40/${language.countryCode}.png`}
+                                srcSet={`https://flagcdn.com/w80/${language.countryCode}.png 2x`}
                                 width="20"
                                 alt={language.name}
                                 className="rounded-sm object-cover"

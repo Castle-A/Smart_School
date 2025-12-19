@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { getDefaultPermissionsForRole, RoleType } from '../../shared/constants/permissions.constants';
-import * as bcrypt from 'bcrypt';
+import { PasswordUtil } from '../../shared/utils/password.util';
 
 export interface CreateMemberDto {
     email?: string;
@@ -19,6 +19,57 @@ export interface CreateMemberDto {
 @Injectable()
 export class MembersService {
     constructor(private prisma: PrismaService) { }
+
+    private async validateRoleConstraints(schoolId: string, role: string, directorType?: string) {
+        // Rôles uniques stricts
+        if (['CENSOR', 'SUPERVISOR', 'ACCOUNTANT'].includes(role)) {
+            const count = await this.prisma.schoolUser.count({
+                where: {
+                    schoolId,
+                    role,
+                    deletedAt: null
+                }
+            });
+            if (count > 0) {
+                throw new ConflictException(`Un seul membre avec le rôle ${role} est autorisé par école.`);
+            }
+        }
+
+        // Rôles avec types (Directeur / Secrétaire)
+        if (['DIRECTOR', 'SECRETARY'].includes(role)) {
+            const existingUsers = await this.prisma.schoolUser.findMany({
+                where: {
+                    schoolId,
+                    role,
+                    deletedAt: null
+                },
+                select: { directorType: true }
+            });
+
+            if (existingUsers.length > 0) {
+                // Si on essaie de créer un 'BOTH', c'est interdit s'il y a déjà quelqu'un
+                if (directorType === 'BOTH') {
+                    throw new ConflictException(`Un membre de type BOTH ne peut être créé s'il existe déjà d'autres membres de ce rôle.`);
+                }
+
+                // Vérifier les conflits existants
+                const hasBoth = existingUsers.some(u => u.directorType === 'BOTH');
+                if (hasBoth) {
+                    throw new ConflictException(`Impossible de créer ce membre car un membre de type BOTH existe déjà.`);
+                }
+
+                const hasSameType = existingUsers.some(u => u.directorType === directorType);
+                if (hasSameType) {
+                    throw new ConflictException(`Un membre de type ${directorType} existe déjà pour ce rôle.`);
+                }
+
+                // Si on a déjà 2 membres (ex: PRIMARY et COLLEGE), on ne peut plus en ajouter
+                if (existingUsers.length >= 2) {
+                    throw new ConflictException(`Le nombre maximum de membres pour ce rôle est atteint (un par cycle).`);
+                }
+            }
+        }
+    }
 
     async createMember(dto: CreateMemberDto, tempPassword: string) {
         // Check if user already exists
@@ -43,8 +94,11 @@ export class MembersService {
             throw new BadRequestException('Type de directeur invalide pour le secrétaire');
         }
 
-        // Hash the temporary password
-        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+        // Validation des contraintes de rôle (Unicité, Cycles)
+        await this.validateRoleConstraints(dto.schoolId, dto.role, dto.directorType);
+
+        // Hashage du mot de passe temporaire
+        const hashedPassword = await PasswordUtil.hash(tempPassword);
 
         // Use transaction to create User, SchoolUser, and RolePermissions
         const result = await this.prisma.$transaction(async (prisma) => {
@@ -67,7 +121,7 @@ export class MembersService {
                 data: {
                     userId: user.id,
                     schoolId: dto.schoolId,
-                    role: dto.role.toUpperCase() === 'CENSEUR' ? 'CENSOR' : dto.role.toUpperCase(),
+                    role: dto.role.toUpperCase(),
                     directorType: dto.directorType,
                 },
             });
@@ -124,7 +178,7 @@ export class MembersService {
                 schoolId,
                 deletedAt: null,
                 role: {
-                    in: ['DIRECTOR', 'SECRETARY', 'SURVEILLANT', 'CENSEUR', 'CENSOR', 'ACCOUNTANT'],
+                    in: ['DIRECTOR', 'SECRETARY', 'SUPERVISOR', 'CENSOR', 'ACCOUNTANT'],
                 },
             },
             include: {
@@ -178,7 +232,7 @@ export class MembersService {
             throw new NotFoundException('Member not found in this school');
         }
 
-        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+        const hashedPassword = await PasswordUtil.hash(tempPassword);
         await this.prisma.user.update({
             where: { id: userId },
             data: {
@@ -318,6 +372,18 @@ export class MembersService {
                     data: { deletedAt: new Date(), isActive: false }
                 });
             }
+        });
+    }
+    async updateMemberSalary(userId: string, schoolId: string, monthlySalary: number) {
+        const schoolUser = await this.prisma.schoolUser.findFirst({
+            where: { userId, schoolId, deletedAt: null },
+        });
+
+        if (!schoolUser) throw new NotFoundException('Member not found in this school');
+
+        return this.prisma.schoolUser.update({
+            where: { id: schoolUser.id },
+            data: { monthlySalary }
         });
     }
 }

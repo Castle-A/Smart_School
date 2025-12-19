@@ -49,10 +49,10 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
         'communication.manage',
         'communication.view',
         'classes.view',
-        'teachers.view',
+        'teachers.view', // Ensures access to Teachers List
         'subjects.view'
     ],
-    'SURVEILLANT': [
+    'SUPERVISOR': [
         'school-life.manage',
         'school-life.view',
         'curriculum.view',
@@ -61,7 +61,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
         'students.view',
         'classes.view'
     ],
-    'CENSEUR': [
+    'CENSOR': [
         'school-life.manage',
         'school-life.view',
         'curriculum.view',
@@ -80,14 +80,6 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
         'communication.view'
     ],
     'TEACHER': [
-        'school-life.manage', // For their own classes
-        'school-life.view',
-        'curriculum.manage', // For their own subjects
-        'curriculum.view',
-        'communication.manage',
-        'communication.view'
-    ],
-    'MAITRE': [
         'school-life.manage', // For their own classes
         'school-life.view',
         'curriculum.manage', // For their own subjects

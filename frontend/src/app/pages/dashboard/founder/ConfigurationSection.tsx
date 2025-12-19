@@ -1,122 +1,107 @@
-import { CreditCard, Shield, Settings, History, Lock, Database, Palette, FileText, CheckSquare } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Settings, Palette, BookOpen, DollarSign, Bell, Loader2 } from 'lucide-react';
+import { schoolConfigService } from '../../../../shared/api/school-config.service';
+import type { SchoolConfig, UpdateSchoolConfigDto } from '../../../../shared/api/school-config.service';
+import { IdentityConfig } from './config/IdentityConfig';
+import { AcademicConfig } from './config/AcademicConfig';
+import { FinanceConfig } from './config/FinanceConfig';
+import { NotificationConfig } from './config/NotificationConfig';
+import { toastEvents } from '../../../../shared/utils/toast-events';
+import AcademicYearManager from '../components/AcademicYearManager';
+
+type ConfigTab = 'identity' | 'academic' | 'finance' | 'notifications' | 'years';
 
 const ConfigurationSection = () => {
+    const [activeTab, setActiveTab] = useState<ConfigTab>('identity');
+    const [config, setConfig] = useState<SchoolConfig | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const fetchConfig = async () => {
+        try {
+            const data = await schoolConfigService.getConfig();
+            setConfig(data);
+        } catch (error) {
+            console.error('Failed to fetch config', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchConfig();
+    }, []);
+
+    const handleUpdate = async (dto: UpdateSchoolConfigDto) => {
+        try {
+            const updated = await schoolConfigService.updateConfig(dto);
+            setConfig(updated);
+            toastEvents.emit('success', 'Configuration mise à jour avec succès');
+        } catch (error) {
+            toastEvents.emit('error', 'Échec de la mise à jour de la configuration');
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px]">
+                <Loader2 className="animate-spin text-white mb-4" size={48} />
+                <p className="text-slate-400">Chargement de la configuration...</p>
+            </div>
+        );
+    }
+
+    if (!config) return null;
+
+    const tabs = [
+        { id: 'identity', label: 'Identité & Branding', icon: Palette },
+        { id: 'academic', label: 'Académique', icon: BookOpen },
+        { id: 'finance', label: 'Finance', icon: DollarSign },
+        { id: 'notifications', label: 'Notifications', icon: Bell },
+        { id: 'years', label: 'Années Scolaires', icon: Settings },
+    ];
+
     return (
         <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Configuration & Abonnement</h2>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h2 className="text-2xl font-bold text-white">Configuration de l'Établissement</h2>
+            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Abonnement */}
-                <div className="bg-gradient-to-br from-indigo-900/50 to-indigo-800/50 backdrop-blur-sm border border-indigo-500/30 rounded-xl p-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <CreditCard size={120} />
-                    </div>
+            {/* Navigation par onglets */}
+            <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as ConfigTab)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all whitespace-nowrap ${activeTab === tab.id
+                            ? 'bg-indigo-600 text-white shadow-lg'
+                            : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                            }`}
+                    >
+                        <tab.icon size={18} />
+                        <span className="text-sm font-medium">{tab.label}</span>
+                    </button>
+                ))}
+            </div>
 
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-6">
-                            <CreditCard className="text-indigo-400" size={24} />
-                            <h3 className="text-xl font-semibold text-white">Mon Abonnement</h3>
-                        </div>
-
-                        <div className="mb-6">
-                            <p className="text-sm text-indigo-200 mb-1">Plan Actuel</p>
-                            <div className="flex items-baseline gap-2">
-                                <h4 className="text-3xl font-bold text-white">PREMIUM</h4>
-                                <span className="text-sm text-indigo-300">/ an</span>
-                            </div>
-                            <p className="text-xs text-indigo-300 mt-2 flex items-center gap-1">
-                                <CheckSquare size={12} /> Renouvellement le 15 Septembre 2025
-                            </p>
-                        </div>
-
-                        <div className="space-y-3 mb-6">
-                            {['Gestion multi-cycles', 'Support prioritaire 24/7', 'Stockage illimité', 'Module SMS inclus'].map((feature, idx) => (
-                                <div key={idx} className="flex items-center gap-2 text-sm text-indigo-100">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-                                    {feature}
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="flex gap-3">
-                            <button className="flex-1 py-2 bg-white text-indigo-900 font-semibold rounded-lg hover:bg-indigo-50 transition-colors shadow-lg">
-                                Changer de plan
-                            </button>
-                            <button className="px-4 py-2 bg-indigo-800/50 text-white rounded-lg hover:bg-indigo-800 transition-colors border border-indigo-500/30">
-                                Factures
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Paramètres & Sécurité */}
-                <div className="space-y-6">
-                    {/* Paramètres École */}
+            {/* Contenu de l'onglet actif */}
+            <div className="mt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                {activeTab === 'identity' && (
+                    <IdentityConfig config={config} onUpdate={handleUpdate} />
+                )}
+                {activeTab === 'academic' && (
+                    <AcademicConfig config={config} onUpdate={handleUpdate} />
+                )}
+                {activeTab === 'finance' && (
+                    <FinanceConfig config={config} onUpdate={handleUpdate} />
+                )}
+                {activeTab === 'notifications' && (
+                    <NotificationConfig config={config} onUpdate={handleUpdate} />
+                )}
+                {activeTab === 'years' && (
                     <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                            <Settings className="text-slate-600" size={20} />
-                            <h3 className="text-lg font-semibold text-white">Paramètres de l'école</h3>
-                        </div>
-                        <div className="space-y-2">
-                            <button className="w-full flex justify-between items-center p-3 bg-white/10 rounded-lg hover:bg-white/20 transition-colors text-left group">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-indigo-500/20 rounded-lg text-indigo-400 group-hover:bg-indigo-500/30 transition-colors">
-                                        <Palette size={18} />
-                                    </div>
-                                    <div>
-                                        <span className="text-white block text-sm font-medium">Identité Visuelle</span>
-                                        <span className="text-slate-500 text-xs">Logo, Couleurs, Thème</span>
-                                    </div>
-                                </div>
-                                <Settings size={16} className="text-slate-400 group-hover:text-white transition-colors" />
-                            </button>
-
-                            <button className="w-full flex justify-between items-center p-3 bg-white/10 rounded-lg hover:bg-white/20 transition-colors text-left group">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400 group-hover:bg-blue-500/30 transition-colors">
-                                        <FileText size={18} />
-                                    </div>
-                                    <div>
-                                        <span className="text-white block text-sm font-medium">Documents Académiques</span>
-                                        <span className="text-slate-500 text-xs">Bulletins, Certificats, Attestations</span>
-                                    </div>
-                                </div>
-                                <Settings size={16} className="text-slate-400 group-hover:text-white transition-colors" />
-                            </button>
-                        </div>
+                        <AcademicYearManager />
                     </div>
-
-                    {/* Sécurité */}
-                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                            <Shield className="text-emerald-400" size={20} />
-                            <h3 className="text-lg font-semibold text-white">Sécurité & Données</h3>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="p-3 bg-white/10 rounded-lg border border-white/5 hover:bg-white/20 transition-colors cursor-pointer">
-                                <div className="flex items-center gap-2 mb-2 text-slate-600">
-                                    <History size={16} />
-                                    <span className="text-xs">Connexions</span>
-                                </div>
-                                <p className="text-white font-medium text-sm">Voir l'historique</p>
-                            </div>
-                            <div className="p-3 bg-white/10 rounded-lg border border-white/5 hover:bg-white/20 transition-colors cursor-pointer">
-                                <div className="flex items-center gap-2 mb-2 text-slate-600">
-                                    <Lock size={16} />
-                                    <span className="text-xs">Mot de passe</span>
-                                </div>
-                                <p className="text-white font-medium text-sm">Politique de sécurité</p>
-                            </div>
-                            <div className="col-span-2 p-3 bg-white/10 rounded-lg border border-white/5 flex justify-between items-center hover:bg-white/20 transition-colors cursor-pointer">
-                                <div className="flex items-center gap-2 text-slate-600">
-                                    <Database size={16} />
-                                    <span className="text-xs">Export RGPD</span>
-                                </div>
-                                <button className="text-xs text-indigo-400 hover:text-indigo-300">Télécharger les données</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                )}
             </div>
         </div>
     );

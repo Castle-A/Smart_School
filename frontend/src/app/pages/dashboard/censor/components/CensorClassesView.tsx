@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, School, Check, X, AlertCircle } from 'lucide-react';
+import { Plus, School, Check, X, AlertCircle, Edit2, Trash2, ShieldAlert } from 'lucide-react';
+import SearchFilterBar from '../../../../../shared/components/SearchFilterBar';
 import api from '../../../../../shared/api/api';
 import { useAuth } from '../../../../../shared/contexts/AuthContext';
+import { adminRequestService } from '../../../../../shared/api/admin-requests.service';
+// Import EditClassModal - we can reuse the Director's component
+import EditClassModal from '../../director/components/EditClassModal';
 
 interface ClassData {
     id: string;
@@ -45,14 +49,22 @@ const LEVELS: Record<string, string[]> = {
 };
 
 const SERIES: Record<string, string[]> = {
-    PREMIER_CYCLE: [], // Usually no series in college, maybe A/B but typically standard. Leaving empty or allow custom if needed. Check CreateClassPage for parity. User said "Nom, cycle, serie, salle, prof".
+    PREMIER_CYCLE: ['A', 'B', 'C', 'D'],
     SECOND_CYCLE: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'Ti'], // Standard series
 };
 
 const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
-    const { user } = useAuth();
+    const { } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+    // Edit & Delete States
+    const [editClassId, setEditClassId] = useState<string | null>(null);
+    const [classToDelete, setClassToDelete] = useState<ClassData | null>(null);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [deleteSuccess, setDeleteSuccess] = useState(false);
+    const [pendingDeletionIds, setPendingDeletionIds] = useState<Set<string>>(new Set());
+
     const [teachers, setTeachers] = useState<Teacher[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -73,6 +85,28 @@ const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
         }
     }, [isAddModalOpen]);
 
+    useEffect(() => {
+        fetchPendingDeletions();
+    }, []);
+
+    const fetchPendingDeletions = async () => {
+        try {
+            const res = await adminRequestService.getMyRequests(false); // Active requests
+            const pendingIds = new Set<string>();
+            res.data.forEach(req => {
+                if (req.type === 'DELETE_CLASS' && req.status === 'PENDING') {
+                    const data = typeof req.data === 'string' ? JSON.parse(req.data) : req.data;
+                    if (data.classId) {
+                        pendingIds.add(data.classId);
+                    }
+                }
+            });
+            setPendingDeletionIds(pendingIds);
+        } catch (err) {
+            console.error('Error fetching pending deletions:', err);
+        }
+    };
+
     const fetchTeachers = async () => {
         try {
             const response = await api.get('/teachers');
@@ -92,6 +126,31 @@ const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
         });
         setIsAddModalOpen(true);
         setError(null);
+    };
+
+    const handleRequestDelete = async () => {
+        if (!classToDelete) return;
+        setDeleteLoading(true);
+        try {
+            // Create Admin Request for Director to verify
+            await adminRequestService.create('DELETE_CLASS', {
+                classId: classToDelete.id,
+                name: classToDelete.name
+            });
+            setDeleteSuccess(true);
+            // Refresh pending list
+            fetchPendingDeletions();
+            setTimeout(() => {
+                setClassToDelete(null);
+                setDeleteSuccess(false);
+            }, 2000);
+        } catch (err) {
+            console.error('Error requesting delete:', err);
+            // Could show error toast
+            alert("Erreur lors de l'envoi de la demande");
+        } finally {
+            setDeleteLoading(false);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -124,8 +183,7 @@ const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
                 level: formData.level,
                 series: formData.series,
                 room: formData.room,
-                mainTeacherId: formData.mainTeacherId ? parseInt(formData.mainTeacherId) : undefined,
-                schoolId: user?.schoolId
+                mainTeacherId: formData.mainTeacherId ? parseInt(formData.mainTeacherId) : undefined
             };
 
             await api.post('/classes', payload);
@@ -139,30 +197,80 @@ const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
         }
     };
 
-    const filteredClasses = classes.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (c.mainTeacher && `${c.mainTeacher.firstName} ${c.mainTeacher.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    const [filterCycle, setFilterCycle] = useState('ALL');
+    const [filterLevel, setFilterLevel] = useState('ALL');
+    const [showFilter, setShowFilter] = useState(false);
+
+    const filteredClasses = classes.filter(c => {
+        const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (c.mainTeacher && `${c.mainTeacher.firstName} ${c.mainTeacher.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()));
+
+        const matchesCycle = filterCycle === 'ALL' || c.cycle === filterCycle;
+        // Level matching might be tricky if backend doesn't return 'level' in ClassData explicitly, 
+        // but looking at interface ClassData, it has optional 'level'. Assuming it's populated.
+        // If not, we might need to infer from name, but interface says it has `level`.
+        const matchesLevel = filterLevel === 'ALL' || c.level === filterLevel;
+
+        return matchesSearch && matchesCycle && matchesLevel;
+    });
+
+    const uniqueLevels = Array.from(new Set(classes.map(c => c.level).filter(Boolean)));
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10">
-                <div>
-                    <h3 className="text-xl font-bold text-white">Gestion des Classes</h3>
-                    <p className="text-gray-400 text-sm">Collège et Lycée</p>
-                </div>
-                <div className="flex gap-3">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Rechercher..."
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500"
-                        />
+            <SearchFilterBar
+                onSearch={setSearchTerm}
+                placeholder="Rechercher..."
+                isFilterEnabled={true}
+                isFilterOpen={showFilter}
+                onFilterClick={() => setShowFilter(!showFilter)}
+                filterContent={
+                    <div className="p-4 space-y-4 w-64">
+                        <div>
+                            <label className="text-xs font-medium text-gray-400 block mb-1.5 uppercase tracking-wider">Cycle</label>
+                            <select
+                                value={filterCycle}
+                                onChange={(e) => {
+                                    setFilterCycle(e.target.value);
+                                    setFilterLevel('ALL'); // Reset level when cycle changes
+                                }}
+                                className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 appearance-none"
+                            >
+                                <option value="ALL">Tous les cycles</option>
+                                <option value="PREMIER_CYCLE">Collège</option>
+                                <option value="SECOND_CYCLE">Lycée</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="text-xs font-medium text-gray-400 block mb-1.5 uppercase tracking-wider">Niveau</label>
+                            <select
+                                value={filterLevel}
+                                onChange={(e) => setFilterLevel(e.target.value)}
+                                className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 appearance-none"
+                            >
+                                <option value="ALL">Tous les niveaux</option>
+                                {uniqueLevels.map(l => (
+                                    <option key={l} value={String(l)}>{l}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="pt-2 border-t border-white/5 flex justify-end">
+                            <button
+                                onClick={() => {
+                                    setFilterCycle('ALL');
+                                    setFilterLevel('ALL');
+                                    setShowFilter(false);
+                                }}
+                                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                            >
+                                Réinitialiser
+                            </button>
+                        </div>
                     </div>
-                    {/* Censor can create classes for College (which includes Lycee in this context) */}
+                }
+                actions={
                     <button
                         onClick={handleOpenAddModal}
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors shadow-lg shadow-indigo-500/20"
@@ -170,17 +278,42 @@ const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
                         <Plus size={18} />
                         <span className="hidden md:inline">Nouvelle Classe</span>
                     </button>
-                </div>
-            </div>
+                }
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredClasses.map((cls) => (
                     <div key={cls.id} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-colors group relative">
-                        {/* Censor Action: Request Delete? Or just View? 
-                            User didn't specify Censor actions on classes, just creation.
-                            Usually Censor manages classes. I'll leave basic view or maybe Edit if they created it?
-                            For now, minimal View.
-                        */}
+                        <div className="absolute top-14 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setEditClassId(cls.id);
+                                }}
+                                className="p-1.5 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500 hover:text-white transition-colors"
+                                title="Modifier la classe"
+                            >
+                                <Edit2 size={16} />
+                            </button>
+                            {pendingDeletionIds.has(cls.id) ? (
+                                <div className="p-1.5 bg-yellow-500/20 text-yellow-500 rounded-lg cursor-not-allowed" title="Suppression en attente">
+                                    <ShieldAlert size={16} />
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setClassToDelete(cls);
+                                    }}
+                                    className="p-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
+                                    title="Demander la suppression"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            )}
+                        </div>
                         <div className="flex justify-between items-start mb-3">
                             <div className="p-2 bg-indigo-500/20 rounded-lg text-indigo-400">
                                 <School size={20} />
@@ -261,7 +394,9 @@ const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
                                     >
                                         <option value="">Aucune</option>
                                         {SERIES[formData.cycle]?.map(s => (
-                                            <option key={s} value={s}>Série {s}</option>
+                                            <option key={s} value={s}>
+                                                {formData.cycle === 'SECOND_CYCLE' ? `Série ${s}` : s}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
@@ -313,6 +448,73 @@ const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* EDIT MODAL */}
+            {editClassId && (
+                <EditClassModal
+                    classId={editClassId}
+                    onClose={() => setEditClassId(null)}
+                    onUpdate={onRefresh}
+                />
+            )}
+
+            {/* DELETE CONFIRMATION MODAL */}
+            {classToDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="bg-[#1e293b] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                        {deleteSuccess ? (
+                            <div className="text-center py-6">
+                                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Check size={32} className="text-green-500" />
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2">Demande envoyée</h3>
+                                <p className="text-gray-400">Le Directeur a reçu votre demande de suppression.</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="p-3 bg-red-500/20 rounded-xl">
+                                        <ShieldAlert className="w-8 h-8 text-red-500" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white">Supprimer cette classe ?</h3>
+                                        <p className="text-gray-400 text-sm">Action requérant approbation</p>
+                                    </div>
+                                </div>
+
+                                <p className="text-gray-300 mb-8 leading-relaxed">
+                                    Vous êtes sur le point de demander la suppression de la classe <span className="text-white font-bold">{classToDelete.name}</span>.
+                                    <br /><br />
+                                    Cette action n'est pas immédiate : une demande sera envoyée au Directeur pour validation.
+                                </p>
+
+                                <div className="flex justify-end gap-3">
+                                    <button
+                                        onClick={() => setClassToDelete(null)}
+                                        className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors"
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button
+                                        onClick={handleRequestDelete}
+                                        disabled={deleteLoading}
+                                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                                    >
+                                        {deleteLoading ? (
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <>
+                                                <Trash2 size={18} />
+                                                Confirmer la demande
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}

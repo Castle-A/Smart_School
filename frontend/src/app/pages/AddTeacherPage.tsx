@@ -1,13 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Check, Upload, Camera, User, Briefcase, CheckCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Upload, Camera, User, Briefcase, CheckCircle, Loader2, Clock } from 'lucide-react';
 import api from '../../shared/api/api';
 import Avatar from '../../shared/components/Avatar';
 import PhoneInput from '../../shared/components/PhoneInput';
 import { useAuth } from '../../shared/contexts/AuthContext';
 
 interface TeacherFormData {
-    // Étape 1 - Personnel
+    // Ã‰tape 1 - Personnel
     firstName: string;
     lastName: string;
     gender: 'HOMME' | 'FEMME' | 'DIVERS' | '';
@@ -17,7 +17,7 @@ interface TeacherFormData {
     phone: string;
     email: string;
 
-    // Étape 2 - Professionnel
+    // Ã‰tape 2 - Professionnel
     diploma: 'CEAP' | 'CAP' | 'BAPES' | 'CAPES' | 'LICENCE' | 'MASTER' | 'DOCTORAT' | 'AUTRE' | '';
     contractType: 'CDI' | 'CDD' | 'TEMPS_PARTIEL' | 'VACATAIRE' | 'STAGIAIRE' | '';
     hireDate: string;
@@ -88,7 +88,7 @@ export default function AddTeacherPage() {
             });
         } catch (err) {
             console.error("Failed to fetch teacher", err);
-            alert("Impossible de charger les données de l'enseignant.");
+            alert("Impossible de charger les donnÃ©es de l'enseignant.");
             navigate('/app/dashboard');
         } finally {
             setIsLoading(false);
@@ -121,7 +121,7 @@ export default function AddTeacherPage() {
 
     const [errors, setErrors] = useState<Partial<Record<keyof TeacherFormData, string>>>({});
 
-    // Validation en temps réel
+    // Validation en temps rÃ©el
     const validateField = (name: keyof TeacherFormData, value: any): string => {
         switch (name) {
             case 'cycle':
@@ -132,8 +132,8 @@ export default function AddTeacherPage() {
                 if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Email invalide';
                 return '';
             case 'phone':
-                if (!value) return 'Téléphone requis';
-                if (!/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/.test(value)) return 'Téléphone invalide';
+                if (!value) return 'TÃ©lÃ©phone requis';
+                if (!/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/.test(value)) return 'TÃ©lÃ©phone invalide';
                 return '';
             case 'firstName':
             case 'lastName':
@@ -155,12 +155,12 @@ export default function AddTeacherPage() {
                 if (!value) return 'Date d\'embauche requise';
                 return '';
             case 'matricule':
-                if (value && value.length < 3) return 'Matricule trop court (min 3 caractères)';
+                if (value && value.length < 3) return 'Matricule trop court (min 3 caractÃ¨res)';
                 return '';
             case 'subjects':
                 // Only required for PROFESSEUR
                 const isProfessor = formData.title === 'PROFESSEUR';
-                if (isProfessor && (!value || value.length === 0)) return 'Au moins une matière requise';
+                if (isProfessor && (!value || value.length === 0)) return 'Au moins une matiÃ¨re requise';
                 return '';
             default:
                 return '';
@@ -230,13 +230,23 @@ export default function AddTeacherPage() {
         });
     };
 
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const handleModalClose = () => {
+        setShowSuccessModal(false);
+        navigate('/app/dashboard', {
+            state: {
+                section: 'administration',
+                view: 'teachers',
+            }
+        });
+    };
+
     const handleSubmit = async () => {
-        console.log('🔵 Starting submission...', formData);
+        console.log('ðŸ”µ Starting submission...', formData);
         setIsSubmitting(true);
         try {
-            // Filter out fields not in DTO (cycle, photoPreview)
             // Filter out fields not in DTO (cycle, photoPreview)
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { cycle, photoPreview, ...rawData } = formData;
@@ -253,10 +263,15 @@ export default function AddTeacherPage() {
             let response;
             if (isEditMode && id) {
                 response = await api.patch(`/teachers/${id}`, payload);
-                console.log('🟢 Teacher updated:', response.data);
+                console.log('ðŸŸ¢ Teacher updated:', response.data);
             } else {
                 response = await api.post('/teachers', payload);
-                console.log('🟢 Teacher created:', response.data);
+                console.log('ðŸŸ¢ Teacher created:', response.data);
+            }
+
+            if (response.data.status === 'PENDING_APPROVAL') {
+                setShowSuccessModal(true);
+                return;
             }
 
             // Retour au dashboard section Administration
@@ -269,7 +284,7 @@ export default function AddTeacherPage() {
                 }
             });
         } catch (error: any) {
-            console.error('🔴 Error saving teacher:', error);
+            console.error('ðŸ”´ Error saving teacher:', error);
             alert(`Erreur lors de la sauvegarde: ${error.response?.data?.message || error.message}`);
         } finally {
             setIsSubmitting(false);
@@ -331,10 +346,10 @@ export default function AddTeacherPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Prénom */}
+                {/* PrÃ©nom */}
                 <div>
                     <label className="block text-white/90 mb-2 text-sm font-medium">
-                        Prénom <span className="text-red-400">*</span>
+                        PrÃ©nom <span className="text-red-400">*</span>
                     </label>
                     <input
                         type="text"
@@ -372,13 +387,24 @@ export default function AddTeacherPage() {
                     <select
                         value={formData.title}
                         onChange={(e) => handleChange('title', e.target.value)}
-                        className={`w-full px-4 py-3 bg-white/10 border ${errors.title ? 'border-red-500' : 'border-white/10'} rounded-lg text-white focus:outline-none focus:border-indigo-500 transition-colors appearance-none`}
+                        disabled={user?.directorType === 'COLLEGE'} // Lock for College Director
+                        className={`w-full px-4 py-3 bg-white/10 border ${errors.title ? 'border-red-500' : 'border-white/10'} rounded-lg text-white focus:outline-none focus:border-indigo-500 transition-colors appearance-none ${user?.directorType === 'COLLEGE' ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                        <option value="" className="bg-slate-800 text-gray-400">Sélectionner un titre</option>
-                        <option value="MAITRE" className="bg-slate-800">Maître (Primaire)</option>
-                        <option value="MAITRESSE" className="bg-slate-800">Maîtresse (Maternelle/Primaire)</option>
-                        <option value="EDUCATEUR" className="bg-slate-800">Éducateur / Aide-Maternelle</option>
-                        <option value="PROFESSEUR" className="bg-slate-800">Professeur (Secondaire)</option>
+                        <option value="" className="bg-slate-800 text-gray-400">SÃ©lectionner un titre</option>
+
+                        {/* Options valid for Primary/Maternelle */}
+                        {['MATERNELLE_PRIMAIRE', 'BOTH', undefined, ''].includes(user?.directorType) && formData.cycle !== 'COLLEGE' && (
+                            <>
+                                <option value="MAITRE" className="bg-slate-800">MaÃ®tre (Primaire)</option>
+                                <option value="MAITRESSE" className="bg-slate-800">MaÃ®tresse (Maternelle/Primaire)</option>
+                                <option value="EDUCATEUR" className="bg-slate-800">Ã‰ducateur / Aide-Maternelle</option>
+                            </>
+                        )}
+
+                        {/* Options valid for College/Secondary */}
+                        {(['COLLEGE', 'BOTH'].includes(user?.directorType || '') || formData.cycle === 'COLLEGE') && (
+                            <option value="PROFESSEUR" className="bg-slate-800">Professeur (Secondaire)</option>
+                        )}
                     </select>
                     {errors.title && <p className="text-red-400 text-sm mt-1">{errors.title}</p>}
                 </div>
@@ -412,10 +438,10 @@ export default function AddTeacherPage() {
 
 
 
-            {/* Téléphone */}
+            {/* TÃ©lÃ©phone */}
             <div>
                 <label className="block text-white/90 mb-2 text-sm font-medium">
-                    Téléphone Personnel <span className="text-red-400">*</span>
+                    TÃ©lÃ©phone Personnel <span className="text-red-400">*</span>
                 </label>
                 <PhoneInput
                     value={formData.phone}
@@ -449,7 +475,7 @@ export default function AddTeacherPage() {
                     <Briefcase className="w-8 h-8 text-emerald-400" />
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2">Informations Professionnelles</h3>
-                <p className="text-gray-400">Détails du contrat et affectation</p>
+                <p className="text-gray-400">DÃ©tails du contrat et affectation</p>
             </div>
 
             {/* Choix du Cycle (Uniquement si type de direction 'BOTH') */}
@@ -461,7 +487,7 @@ export default function AddTeacherPage() {
                     <div className="grid grid-cols-2 gap-4">
                         {[
                             { value: 'MATERNELLE_PRIMAIRE', label: 'Maternelle / Primaire' },
-                            { value: 'COLLEGE', label: 'Collège / Lycée' }
+                            { value: 'COLLEGE', label: 'CollÃ¨ge / LycÃ©e' }
                         ].map((option) => (
                             <button
                                 key={option.value}
@@ -496,30 +522,30 @@ export default function AddTeacherPage() {
                 </label>
                 <div className="px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 font-medium flex justify-between items-center">
                     <span>
-                        {formData.title === 'MAITRE' && 'Maître (Enseignement Primaire)'}
-                        {formData.title === 'MAITRESSE' && 'Maîtresse (Enseignement Primaire)'}
+                        {formData.title === 'MAITRE' && 'MaÃ®tre (Enseignement Primaire)'}
+                        {formData.title === 'MAITRESSE' && 'MaÃ®tresse (Enseignement Primaire)'}
                         {formData.title === 'PROFESSEUR' && 'Professeur (Enseignement Secondaire)'}
-                        {formData.title === 'EDUCATEUR' && 'Éducateur (Vie Scolaire)'}
+                        {formData.title === 'EDUCATEUR' && 'Ã‰ducateur (Vie Scolaire)'}
                     </span>
                     <span className="text-xs bg-emerald-500/20 px-2 py-1 rounded">
-                        {formData.cycle === 'MATERNELLE_PRIMAIRE' ? 'Cycle Primaire' : formData.cycle === 'COLLEGE' ? 'Secondaire' : 'Non défini'}
+                        {formData.cycle === 'MATERNELLE_PRIMAIRE' ? 'Cycle Primaire' : formData.cycle === 'COLLEGE' ? 'Secondaire' : 'Non dÃ©fini'}
                     </span>
                 </div>
             </div>
 
-            {/* Diplôme & Spécialité */}
+            {/* DiplÃ´me & SpÃ©cialitÃ© */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Diplôme */}
+                {/* DiplÃ´me */}
                 <div>
                     <label className="block text-white/90 mb-2 text-sm font-medium">
-                        Diplôme / Certification
+                        DiplÃ´me / Certification
                     </label>
                     <select
                         value={formData.diploma}
                         onChange={(e) => handleChange('diploma', e.target.value)}
                         className={`w-full px-4 py-3 bg-white/10 border ${errors.diploma ? 'border-red-500' : 'border-white/10'} rounded-lg text-white focus:outline-none focus:border-emerald-500 transition-colors appearance-none`}
                     >
-                        <option value="" className="bg-slate-800 text-gray-400">Sélectionner un diplôme</option>
+                        <option value="" className="bg-slate-800 text-gray-400">SÃ©lectionner un diplÃ´me</option>
                         {/* Primary Diplomas - Only for Primary */}
                         {['MATERNELLE_PRIMAIRE', ''].includes(formData.cycle || '') && formData.title !== 'PROFESSEUR' && (
                             <>
@@ -528,13 +554,13 @@ export default function AddTeacherPage() {
                             </>
                         )}
                         {/* College/Lycee Diplomas - Shared or College specific */}
-                        <option value="LICENCE" className="bg-slate-800">Licence (Académique/AME)</option>
-                        <option value="MASTER" className="bg-slate-800">Master (Académique/AME)</option>
+                        <option value="LICENCE" className="bg-slate-800">Licence (AcadÃ©mique/AME)</option>
+                        <option value="MASTER" className="bg-slate-800">Master (AcadÃ©mique/AME)</option>
 
                         {(formData.cycle === 'COLLEGE' || formData.title === 'PROFESSEUR') && (
                             <>
-                                <option value="BAPES" className="bg-slate-800">BAPES (Collège)</option>
-                                <option value="CAPES" className="bg-slate-800">CAPES (Lycée)</option>
+                                <option value="BAPES" className="bg-slate-800">BAPES (CollÃ¨ge)</option>
+                                <option value="CAPES" className="bg-slate-800">CAPES (LycÃ©e)</option>
                             </>
                         )}
 
@@ -543,10 +569,10 @@ export default function AddTeacherPage() {
                     </select>
                 </div>
 
-                {/* Spécialité (Optionnel ou pour Profs) */}
+                {/* SpÃ©cialitÃ© (Optionnel ou pour Profs) */}
                 <div>
                     <label className="block text-white/90 mb-2 text-sm font-medium">
-                        Spécialité (Optionnel)
+                        SpÃ©cialitÃ© (Optionnel)
                     </label>
                     <input
                         type="text"
@@ -606,7 +632,7 @@ export default function AddTeacherPage() {
                 {/* Matricule */}
                 <div>
                     <label className="block text-white/90 mb-2 text-sm font-medium">
-                        Numéro de Matricule
+                        NumÃ©ro de Matricule
                     </label>
                     <input
                         type="text"
@@ -619,11 +645,11 @@ export default function AddTeacherPage() {
                 </div>
             </div>
 
-            {/* Matières (Only for PROFESSEUR) */}
+            {/* MatiÃ¨res (Only for PROFESSEUR) */}
             {(formData.title === 'PROFESSEUR') && (
                 <div>
                     <label className="block text-white/90 mb-2 text-sm font-medium">
-                        Matière(s) Principale(s) <span className="text-red-400">*</span>
+                        MatiÃ¨re(s) Principale(s) <span className="text-red-400">*</span>
                     </label>
 
                     {(() => {
@@ -650,12 +676,12 @@ export default function AddTeacherPage() {
 
                         return (
                             <>
-                                <p className="text-xs text-gray-400 mb-3">Sélectionnez les matières enseignées ({uniqueSubjects.length} disponibles pour ce cycle)</p>
+                                <p className="text-xs text-gray-400 mb-3">SÃ©lectionnez les matiÃ¨res enseignÃ©es ({uniqueSubjects.length} disponibles pour ce cycle)</p>
                                 {uniqueSubjects.length === 0 ? (
                                     <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-500 text-sm text-center">
                                         {formData.cycle === 'COLLEGE'
-                                            ? "Aucune matière secondaire trouvée. Demandez au Censeur d'en ajouter."
-                                            : "Aucune matière trouvée pour ce cycle."
+                                            ? "Aucune matiÃ¨re secondaire trouvÃ©e. Demandez au Censeur d'en ajouter."
+                                            : "Aucune matiÃ¨re trouvÃ©e pour ce cycle."
                                         }
                                     </div>
                                 ) : (
@@ -680,7 +706,7 @@ export default function AddTeacherPage() {
                     })()}
 
                     {formData.subjects.length > 0 && (
-                        <p className="text-sm text-emerald-400 mt-2">{formData.subjects.length} matière(s) sélectionnée(s)</p>
+                        <p className="text-sm text-emerald-400 mt-2">{formData.subjects.length} matiÃ¨re(s) sÃ©lectionnÃ©e(s)</p>
                     )}
                     {errors.subjects && <p className="text-red-400 text-sm mt-1">{errors.subjects}</p>}
                 </div>
@@ -694,13 +720,13 @@ export default function AddTeacherPage() {
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-500/20 rounded-full mb-4">
                     <CheckCircle className="w-8 h-8 text-purple-400" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Récapitulatif</h3>
-                <p className="text-gray-400">Vérifiez les informations avant de valider</p>
+                <h3 className="text-2xl font-bold text-white mb-2">RÃ©capitulatif</h3>
+                <p className="text-gray-400">VÃ©rifiez les informations avant de valider</p>
             </div>
 
-            {/* Récapitulatif */}
+            {/* RÃ©capitulatif */}
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 space-y-6">
-                {/* Photo et Identité */}
+                {/* Photo et IdentitÃ© */}
                 <div className="flex items-center gap-4 pb-6 border-b border-white/10">
                     {formData.photoPreview ? (
                         <img src={formData.photoPreview} alt="Preview" className="w-20 h-20 rounded-full object-cover" />
@@ -709,7 +735,7 @@ export default function AddTeacherPage() {
                     )}
                     <div>
                         <h4 className="text-xl font-bold text-white">{formData.firstName} {formData.lastName}</h4>
-                        <p className="text-gray-400">{formData.gender === 'HOMME' ? 'Masculin' : formData.gender === 'FEMME' ? 'Féminin' : 'Divers'}</p>
+                        <p className="text-gray-400">{formData.gender === 'HOMME' ? 'Masculin' : formData.gender === 'FEMME' ? 'FÃ©minin' : 'Divers'}</p>
                     </div>
                 </div>
 
@@ -718,7 +744,7 @@ export default function AddTeacherPage() {
                     <h5 className="text-sm font-semibold text-white/70 uppercase mb-3">Informations Personnelles</h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                         <div>
-                            <span className="text-gray-400">Téléphone:</span>
+                            <span className="text-gray-400">TÃ©lÃ©phone:</span>
                             <span className="text-white ml-2">{formData.phone}</span>
                         </div>
                         <div>
@@ -738,7 +764,7 @@ export default function AddTeacherPage() {
                             {formData.specialty && <span className="text-gray-400 text-xs ml-2">({formData.specialty})</span>}
                         </div>
                         <div>
-                            <span className="text-gray-400">Diplôme:</span>
+                            <span className="text-gray-400">DiplÃ´me:</span>
                             <span className="text-white ml-2">{formData.diploma || '-'}</span>
                         </div>
                         <div>
@@ -756,10 +782,10 @@ export default function AddTeacherPage() {
                     </div>
                 </div>
 
-                {/* Matières */}
+                {/* MatiÃ¨res */}
                 {formData.subjects.length > 0 && (
                     <div>
-                        <h5 className="text-sm font-semibold text-white/70 uppercase mb-3">Matières ({formData.subjects.length})</h5>
+                        <h5 className="text-sm font-semibold text-white/70 uppercase mb-3">MatiÃ¨res ({formData.subjects.length})</h5>
                         <div className="flex flex-wrap gap-2">
                             {formData.subjects.map((subject) => (
                                 <span key={subject} className="px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-sm">
@@ -834,7 +860,7 @@ export default function AddTeacherPage() {
                                     className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/10"
                                 >
                                     <ArrowLeft size={18} />
-                                    Précédent
+                                    PrÃ©cÃ©dent
                                 </button>
                             )}
                             {currentStep < 3 ? (
@@ -862,13 +888,34 @@ export default function AddTeacherPage() {
                                     ) : (
                                         <Check size={18} />
                                     )}
-                                    {isSubmitting ? 'Chargement...' : (isEditMode ? 'Enregistrer les modifications' : 'Valider et Créer')}
+                                    {isSubmitting ? 'Chargement...' : (isEditMode ? 'Enregistrer les modifications' : 'Valider et CrÃ©er')}
                                 </button>
                             )}
                         </div>
                     </form>
                 </div>
             </div>
+
+            {/* Success Modal */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-[#1e293b] border border-white/10 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative text-center">
+                        <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Clock className="w-8 h-8 text-amber-400" />
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-2">Demande EnvoyÃ©e</h3>
+                        <p className="text-gray-400 mb-6">
+                            Votre demande de modification a Ã©tÃ© soumise au directeur pour validation.
+                        </p>
+                        <button
+                            onClick={handleModalClose}
+                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors shadow-lg shadow-indigo-500/20"
+                        >
+                            Compris
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

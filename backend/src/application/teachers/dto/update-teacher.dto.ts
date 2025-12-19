@@ -1,4 +1,5 @@
 import { IsEmail, IsString, IsEnum, IsDateString, IsOptional, IsArray, IsBoolean } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateTeacherDto {
     @IsString()
@@ -17,13 +18,14 @@ export class UpdateTeacherDto {
     @IsOptional()
     phone?: string;
 
-    @IsEnum(['homme', 'femme', 'divers'], {
-        message: 'Le genre doit être homme, femme ou divers'
+    @Transform(({ value }) => value?.toUpperCase())
+    @IsEnum(['HOMME', 'FEMME', 'DIVERS'], {
+        message: 'Le genre doit être HOMME, FEMME ou DIVERS'
     })
     @IsOptional()
     gender?: string;
 
-    @IsEnum(['PERMANENT', 'CONTRACTUAL', 'TEMPORARY'], {
+    @IsEnum(['CDI', 'CDD', 'TEMPS_PARTIEL', 'VACATAIRE', 'STAGIAIRE'], {
         message: 'Type de contrat invalide'
     })
     @IsOptional()

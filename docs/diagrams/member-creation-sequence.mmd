@@ -1,0 +1,15 @@
+sequenceDiagram
+    participant Admin as Directeur
+    participant F as Frontend
+    participant B as Backend
+    participant D as DB
+
+    Admin->>F: Remplir form "Nouveau Membre"
+    F->>B: POST /members (w/ Token)
+    B->>B: Check Permissions (Guard)
+    B->>D: Create User (if not exists)
+    B->>D: Create SchoolUser (Link User to School)
+    B->>D: Assign Role & Permissions
+    D-->>B: Success
+    B-->>F: Member Created
+    F->>F: Update List UI

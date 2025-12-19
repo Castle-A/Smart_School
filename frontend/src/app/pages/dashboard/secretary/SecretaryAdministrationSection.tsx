@@ -13,7 +13,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../../shared/contexts/AuthContext';
 import api from '../../../../shared/api/api';
-import StudentRegistrationModal from './components/StudentRegistrationModal';
+import StudentEnrollmentForm from './components/StudentEnrollmentForm';
+import PendingRegistrationsList from './components/PendingRegistrationsList';
+import StudentDepartureModal from './components/StudentDepartureModal';
 
 const SecretaryAdministrationSection = () => {
     const { user } = useAuth();
@@ -54,7 +56,7 @@ const SecretaryAdministrationSection = () => {
                     { id: 'registration', label: 'Inscriptions', icon: UserPlus },
                     { id: 'students', label: 'Dossiers Élèves', icon: Users },
                     { id: 'documents', label: 'Documents', icon: Printer },
-                    { id: 'teachers', label: 'Enseignants (RH)', icon: GraduationCap },
+                    { id: 'teachers', label: 'Corps Enseignant', icon: GraduationCap },
                 ].map((tab) => (
                     <button
                         key={tab.id}
@@ -79,14 +81,73 @@ const SecretaryAdministrationSection = () => {
 
 const RegistrationTab = ({ scope }: { scope?: string }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [classes, setClasses] = useState<any[]>([]);
+    const [loadingClasses, setLoadingClasses] = useState(false);
 
     // Logic to determine available cycles based on scope
     const isPrimary = scope === 'PRIMARY_PRESCHOOL' || !scope;
     const isCollege = scope === 'COLLEGE' || !scope;
 
+    useEffect(() => {
+        const fetchClasses = async () => {
+            setLoadingClasses(true);
+            try {
+                const res = await api.get('/classes');
+                if (Array.isArray(res.data)) {
+                    setClasses(processClasses(res.data));
+                }
+            } catch (error) {
+                console.error("Failed to fetch classes", error);
+            } finally {
+                setLoadingClasses(false);
+            }
+        };
+        fetchClasses();
+    }, [scope]); // Re-fetch or re-process if scope changes (though scope is usually static per user session)
+
+    const processClasses = (data: any[]) => {
+        // 1. Sort Order Definition
+        const LEVEL_ORDER: { [key: string]: number } = {
+            'MATERNELLE_PS': 1, 'PS': 1, 'Petite Section': 1,
+            'MATERNELLE_MS': 2, 'MS': 2, 'Moyenne Section': 2,
+            'MATERNELLE_GS': 3, 'GS': 3, 'Grande Section': 3,
+            'CI': 10,
+            'CP': 11,
+            'CE1': 12,
+            'CE2': 13,
+            'CM1': 14,
+            'CM2': 15,
+            '6eme': 20, '6ème': 20,
+            '5eme': 21, '5ème': 21,
+            '4eme': 22, '4ème': 22,
+            '3eme': 23, '3ème': 23,
+            '2nde': 30, 'Seconde': 30,
+            '1ere': 31, 'Première': 31,
+            'Tle': 32, 'Terminale': 32
+        };
+
+        // 2. Filter by Scope
+        // Scope 'PRIMARY_PRESCHOOL' -> levels < 20
+        // Scope 'COLLEGE' -> levels >= 20
+        // Else -> Show all
+        let filtered = data.filter(cls => {
+            const levelRank = LEVEL_ORDER[cls.level] || LEVEL_ORDER[cls.name] || 999;
+            if (scope === 'PRIMARY_PRESCHOOL') return levelRank < 20;
+            if (scope === 'COLLEGE') return levelRank >= 20;
+            return true;
+        });
+
+        // 3. Sort
+        return filtered.sort((a, b) => {
+            const rankA = LEVEL_ORDER[a.level] || LEVEL_ORDER[a.name] || 999;
+            const rankB = LEVEL_ORDER[b.level] || LEVEL_ORDER[b.name] || 999;
+            return rankA - rankB;
+        });
+    };
+
     return (
         <div className="space-y-6">
-            <StudentRegistrationModal
+            <StudentEnrollmentForm
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 scope={scope}
@@ -123,25 +184,12 @@ const RegistrationTab = ({ scope }: { scope?: string }) => {
                     </div>
 
                     <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">Dossiers en cours de traitement</h3>
-                        <div className="space-y-3">
-                            {[1, 2, 3].map((item) => (
-                                <div key={item} className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
-                                            JD
-                                        </div>
-                                        <div>
-                                            <p className="text-white font-medium">Jean Doumbia</p>
-                                            <p className="text-sm text-gray-400">6ème A • Dossier incomplet</p>
-                                        </div>
-                                    </div>
-                                    <span className="px-3 py-1 bg-amber-500/10 text-amber-400 text-xs rounded-full">
-                                        En attente pièces
-                                    </span>
-                                </div>
-                            ))}
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold text-white">Dossiers en cours de traitement</h3>
+                            <button className="text-xs text-indigo-400 hover:text-white transition-colors">Tout voir</button>
                         </div>
+
+                        <PendingRegistrationsList />
                     </div>
                 </div>
 
@@ -152,25 +200,39 @@ const RegistrationTab = ({ scope }: { scope?: string }) => {
                             <Users className="text-blue-400" size={20} />
                             <h4 className="text-white font-medium">Capacité Classes</h4>
                         </div>
-                        <div className="space-y-3 mt-4">
-                            <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                    <span className="text-gray-400">CP</span>
-                                    <span className="text-white">45 / 50</span>
-                                </div>
-                                <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                                    <div className="bg-emerald-500 h-full w-[90%]"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                    <span className="text-gray-400">6ème</span>
-                                    <span className="text-white">58 / 60</span>
-                                </div>
-                                <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                                    <div className="bg-red-500 h-full w-[96%]"></div>
-                                </div>
-                            </div>
+
+                        <div className="space-y-3 mt-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                            {loadingClasses ? (
+                                <p className="text-center text-sm text-gray-500">Chargement...</p>
+                            ) : classes.length === 0 ? (
+                                <p className="text-center text-sm text-gray-500">Aucune classe trouvée.</p>
+                            ) : (
+                                classes.map((cls: any) => {
+                                    const count = cls.students?.length || cls._count?.students || 0;
+                                    const capacity = cls.capacity || 0;
+                                    const percentage = capacity > 0 ? (count / capacity) * 100 : 0;
+
+                                    // Color logic: < 80% Green, < 95% Orange, >= 95% Red
+                                    let progressColor = 'bg-emerald-500';
+                                    if (percentage >= 95) progressColor = 'bg-red-500';
+                                    else if (percentage >= 80) progressColor = 'bg-amber-500';
+
+                                    return (
+                                        <div key={cls.id}>
+                                            <div className="flex justify-between text-sm mb-1">
+                                                <span className="text-gray-400">{cls.name}</span>
+                                                <span className="text-white">{count} / {capacity}</span>
+                                            </div>
+                                            <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`${progressColor} h-full transition-all duration-500`}
+                                                    style={{ width: `${Math.min(percentage, 100)}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
                         </div>
                     </div>
                 </div>
@@ -183,6 +245,10 @@ const StudentsTab = () => {
     const [students, setStudents] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Departure Modal State
+    const [selectedStudent, setSelectedStudent] = useState<any>(null);
+    const [isDepartureModalOpen, setIsDepartureModalOpen] = useState(false);
 
     useEffect(() => {
         fetchStudents();
@@ -200,6 +266,11 @@ const StudentsTab = () => {
         }
     };
 
+    const handleDepartureClick = (student: any) => {
+        setSelectedStudent(student);
+        setIsDepartureModalOpen(true);
+    };
+
     const filteredStudents = students.filter(student =>
         student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -208,6 +279,15 @@ const StudentsTab = () => {
 
     return (
         <div className="space-y-4">
+            {selectedStudent && (
+                <StudentDepartureModal
+                    isOpen={isDepartureModalOpen}
+                    onClose={() => setIsDepartureModalOpen(false)}
+                    student={selectedStudent}
+                    onSuccess={fetchStudents}
+                />
+            )}
+
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h3 className="text-lg font-semibold text-white">Base Élèves Validée ({filteredStudents.length})</h3>
                 <div className="flex gap-2 w-full sm:w-auto">
@@ -269,15 +349,23 @@ const StudentsTab = () => {
                                     <td className="p-4">
                                         <span className={`px-2 py-1 rounded-full text-xs ${student.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-400' :
                                             student.status === 'PENDING' ? 'bg-amber-500/10 text-amber-400' :
-                                                'bg-red-500/10 text-red-400'
+                                                'bg-red-500/10 text-red-500'
                                             }`}>
                                             {student.status === 'ACTIVE' ? 'Actif' : student.status === 'PENDING' ? 'En attente' : 'Inactif'}
                                         </span>
                                     </td>
-                                    <td className="p-4 text-right">
+                                    <td className="p-4 text-right flex justify-end gap-2">
                                         <button className="text-indigo-400 hover:text-indigo-300 font-medium text-xs">
                                             VOIR DOSSIER
                                         </button>
+                                        {student.status === 'ACTIVE' && (
+                                            <button
+                                                onClick={() => handleDepartureClick(student)}
+                                                className="text-red-400 hover:text-red-300 font-medium text-xs border border-red-500/30 px-2 py-1 rounded hover:bg-red-500/10"
+                                            >
+                                                SORTIE
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             ))
@@ -358,7 +446,7 @@ const TeachersTab = () => {
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-white">Corps Enseignant (RH)</h3>
+                <h3 className="text-lg font-semibold text-white">Corps Enseignant <span className="text-sm font-normal text-gray-400 ml-2">(Lecture Seule)</span></h3>
                 <div className="flex gap-2">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -379,7 +467,7 @@ const TeachersTab = () => {
                         <tr>
                             <th className="p-4">Identité</th>
                             <th className="p-4">Matricule</th>
-                            <th className="p-4">Statut Contrat</th>
+                            <th className="p-4">Affectation</th>
                             <th className="p-4">Contact</th>
                         </tr>
                     </thead>
@@ -404,9 +492,15 @@ const TeachersTab = () => {
                                         {teacher.matricule || '---'}
                                     </td>
                                     <td className="p-4">
-                                        <span className="px-2 py-1 bg-white/10 rounded text-xs text-gray-300 border border-white/10">
-                                            {teacher.contractType || 'Non spécifié'}
-                                        </span>
+                                        <div className="flex flex-col gap-1">
+                                            {teacher.mainClass ? (
+                                                <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded text-xs border border-indigo-500/30 w-fit">
+                                                    PP {teacher.mainClass}
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-600 text-xs italic">Pas de classe principale</span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="p-4">
                                         <p className="text-white">{teacher.phone}</p>

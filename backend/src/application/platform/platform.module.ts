@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PlatformController } from './platform.controller';
+import { PlatformController } from '../../interface/platform/platform.controller';
 import { PlatformService } from './platform.service';
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 import { AuditService } from '../../shared/services/audit.service';

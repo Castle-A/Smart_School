@@ -1,0 +1,25 @@
+graph TD
+    subgraph "API Layer (Controllers)"
+        Controllers[Contrôleurs NestJS]
+    end
+
+    subgraph "Application Layer"
+        Services[Services Applicatifs (ex: createSchool)]
+        UseCases[Cas d'Utilisation]
+    end
+
+    subgraph "Domain Layer"
+        Entities[Entités Métier]
+        Interfaces[Interfaces de Repository]
+    end
+
+    subgraph "Infrastructure Layer"
+        PrismaRepo[Implémentation Prisma Repository]
+        AuthStrat[Stratégies Auth (JWT)]
+    end
+
+    Controllers --> Services
+    Services --> Interfaces
+    Services --> Entities
+    PrismaRepo -.->|Implements| Interfaces
+    PrismaRepo -->|Uses| DB[(Base de données)]

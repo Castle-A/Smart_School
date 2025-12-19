@@ -6,6 +6,7 @@ import NotificationsSection from './settings/NotificationsSection';
 import AppearanceSection from './settings/AppearanceSection';
 import AccessibilitySection from './settings/AccessibilitySection';
 import AdvancedSection from './settings/AdvancedSection';
+import AcademicYearManager from '../../dashboard/components/AcademicYearManager';
 
 interface SettingsPageProps {
     onBackToDashboard?: () => void;
@@ -27,6 +28,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBackToDashboard }) => {
                 return <ProfileSection onDirtyChange={setHasUnsavedChanges} />;
             case 'securite':
                 return <SecuritySection />;
+            case 'annees_scolaires':
+                return <AcademicYearManager />;
             case 'notifications':
                 return <NotificationsSection />;
             case 'apparence':

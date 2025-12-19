@@ -1,0 +1,21 @@
+graph TD
+    Client[Navigateur Client (PC/Mobile)]
+    
+    subgraph "Cloud / Serveur"
+        LB[Load Balancer / Reverse Proxy]
+        
+        subgraph "Backend Container"
+            API[NestJS API Server]
+        end
+        
+        subgraph "Frontend Container"
+            Web[Serveur Fichiers Statiques (Vite/Nginx)]
+        end
+        
+        DB[(PostgreSQL/SQLite Volume)]
+    end
+    
+    Client -->|HTTPS / 443| LB
+    LB -->|/api/*| API
+    LB -->|/*| Web
+    API -->|TCP / 5432| DB

@@ -48,8 +48,8 @@ export const SECRETARY_PERMISSIONS: PermissionDefinition[] = [
     { code: 'reports.statistics', name: 'Générer statistiques', description: 'Créer rapports statistiques', category: PERMISSION_CATEGORIES.REPORTS, isDefault: false },
 ];
 
-// SURVEILLANT GÉNÉRAL (SURVEILLANT)
-export const SURVEILLANT_PERMISSIONS: PermissionDefinition[] = [
+// SURVEILLANT GÉNÉRAL (SUPERVISOR)
+export const SUPERVISOR_PERMISSIONS: PermissionDefinition[] = [
     { code: 'discipline.manage', name: 'Maintien de l\'Ordre', description: 'Superviser comportement élèves', category: PERMISSION_CATEGORIES.DISCIPLINE, isDefault: true },
     { code: 'attendance.record', name: 'Contrôle Assiduité', description: 'Marquer présences/absences', category: PERMISSION_CATEGORIES.DISCIPLINE, isDefault: true },
     { code: 'surveillance.general', name: 'Surveillance générale', description: 'Surveiller établissement', category: PERMISSION_CATEGORIES.DISCIPLINE, isDefault: true },
@@ -61,8 +61,8 @@ export const SURVEILLANT_PERMISSIONS: PermissionDefinition[] = [
     { code: 'reports.discipline', name: 'Rapports disciplinaires', description: 'Rédiger rapports incidents', category: PERMISSION_CATEGORIES.REPORTS, isDefault: false },
 ];
 
-// CENSEUR DES ÉTUDES (CENSEUR)
-export const CENSEUR_PERMISSIONS: PermissionDefinition[] = [
+// CENSEUR DES ÉTUDES (CENSOR)
+export const CENSOR_PERMISSIONS: PermissionDefinition[] = [
     // --- PEDAGOGIE ---
     { code: 'curriculum.manage', name: 'Pilotage des Programmes', description: 'Superviser programmes scolaires', category: PERMISSION_CATEGORIES.PEDAGOGY, isDefault: true },
     { code: 'exams.organize', name: 'Organisation Examens', description: 'Planifier évaluations et examens blancs', category: PERMISSION_CATEGORIES.PEDAGOGY, isDefault: true },
@@ -123,9 +123,8 @@ export const DIRECTOR_PERMISSIONS: PermissionDefinition[] = [
 export const PERMISSIONS_BY_ROLE = {
     DIRECTOR: DIRECTOR_PERMISSIONS,
     SECRETARY: SECRETARY_PERMISSIONS,
-    SURVEILLANT: SURVEILLANT_PERMISSIONS,
-    CENSEUR: CENSEUR_PERMISSIONS,
-    CENSOR: CENSEUR_PERMISSIONS, // Alias for English consistency
+    SUPERVISOR: SUPERVISOR_PERMISSIONS,
+    CENSOR: CENSOR_PERMISSIONS,
     ACCOUNTANT: ACCOUNTANT_PERMISSIONS,
 } as const;
 

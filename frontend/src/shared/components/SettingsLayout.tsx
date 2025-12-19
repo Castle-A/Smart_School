@@ -1,8 +1,8 @@
 import { type FC, type ReactNode } from 'react';
-import { ArrowLeft, User, Shield, Bell, Palette, Accessibility, Settings as SettingsIcon } from 'lucide-react';
+import { ArrowLeft, User, Shield, Bell, Palette, Accessibility, Settings as SettingsIcon, Calendar } from 'lucide-react';
 import './SettingsLayout.css';
 
-export type SettingsSectionId = 'profil' | 'securite' | 'notifications' | 'apparence' | 'accessibilite' | 'avance';
+export type SettingsSectionId = 'profil' | 'securite' | 'notifications' | 'apparence' | 'accessibilite' | 'avance' | 'annees_scolaires';
 
 interface SettingsLayoutProps {
     activeSection: SettingsSectionId;
@@ -15,6 +15,7 @@ interface SettingsLayoutProps {
 const SETTINGS_SECTIONS = [
     { id: 'profil' as SettingsSectionId, label: 'Profil', icon: User },
     { id: 'securite' as SettingsSectionId, label: 'Sécurité', icon: Shield },
+    { id: 'annees_scolaires' as SettingsSectionId, label: 'Années Scolaires', icon: Calendar },
     { id: 'notifications' as SettingsSectionId, label: 'Notifications', icon: Bell },
     { id: 'apparence' as SettingsSectionId, label: 'Apparence', icon: Palette },
     { id: 'accessibilite' as SettingsSectionId, label: 'Accessibilité', icon: Accessibility },

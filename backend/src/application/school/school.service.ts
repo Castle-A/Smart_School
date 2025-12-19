@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import type { ISchoolRepository, ISchoolUserRepository } from '../../domain/school/school.entity';
 import { School, SchoolUser } from '../../domain/school/school.entity';
+import { CursorPaginationQuery, CursorPaginationResult } from '../../shared/interfaces/cursor-pagination.interface';
 
 @Injectable()
 export class SchoolService {
@@ -69,8 +70,48 @@ export class SchoolService {
         return created;
     }
 
-    async getSchoolStaff(schoolId: string): Promise<SchoolUser[]> {
-        return this.schoolUserRepository.findBySchoolId(schoolId);
+    /**
+     * Récupère le personnel de l'école avec pagination par curseur (Master Performance).
+     * Support de la recherche textuelle et pagination optimisée O(1).
+     */
+    async getSchoolStaff(
+        schoolId: string,
+        query?: CursorPaginationQuery
+    ): Promise<CursorPaginationResult<SchoolUser>> {
+        const { take = 50, cursor, search } = query || {};
+
+        // Récupération avec +1 pour détecter s'il y a une page suivante
+        const members = await this.schoolUserRepository['prisma'].schoolUser.findMany({
+            take: take + 1,
+            skip: cursor ? 1 : 0,
+            cursor: cursor ? { id: cursor } : undefined,
+            where: {
+                schoolId,
+                deletedAt: null,
+                ...(search ? {
+                    user: {
+                        OR: [
+                            { firstName: { contains: search, mode: 'insensitive' } },
+                            { lastName: { contains: search, mode: 'insensitive' } },
+                            { email: { contains: search, mode: 'insensitive' } },
+                        ]
+                    }
+                } : {})
+            },
+            include: { user: true },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        const hasMore = members.length > take;
+        const data = hasMore ? members.slice(0, -1) : members;
+        const nextCursor = hasMore ? data[data.length - 1].id : undefined;
+
+        return {
+            data,
+            nextCursor,
+            hasMore,
+            count: data.length,
+        };
     }
 
     async getUserSchools(userId: string): Promise<SchoolUser[]> {

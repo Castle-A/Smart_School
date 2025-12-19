@@ -1,5 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ROLE_MAP, SUPER_ADMIN_ROLE } from '../config/roles.config';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -20,24 +21,11 @@ export class RolesGuard implements CanActivate {
         }
 
         // Platform roles have special access
-        if (user.platformRole === 'SUPER_ADMIN_PLATFORM') {
+        if (user.platformRole === SUPER_ADMIN_ROLE) {
             return true; // SuperAdmin can access everything
         }
 
-        // Map French roles to English if necessary
-        const roleMap: Record<string, string> = {
-            'FONDATEUR': 'FOUNDER',
-            'DIRECTEUR': 'DIRECTOR',
-            'SECRETAIRE': 'SECRETARY',
-            'SURVEILLANT': 'SUPERVISOR',
-            'CENSEUR': 'CENSOR',
-            'COMPTABLE': 'ACCOUNTANT',
-            'PROFESSEUR': 'TEACHER',
-            'ELEVE': 'STUDENT',
-            'PARENT': 'PARENT'
-        };
-
-        const userRole = roleMap[user.role] || user.role;
+        const userRole = ROLE_MAP[user.role] || user.role;
 
         // Check if user has any of the required roles
         const hasRole = requiredRoles.some(role => userRole === role);

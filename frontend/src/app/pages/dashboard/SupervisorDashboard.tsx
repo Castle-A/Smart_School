@@ -103,7 +103,7 @@ const SupervisorDashboard = () => {
                 />
             )}
             <DashboardLayout
-                role="SURVEILLANT"
+                role="SUPERVISOR"
                 userName={`${user.firstName} ${user.lastName}`}
                 userEmail={user.email}
                 onLogout={logout}

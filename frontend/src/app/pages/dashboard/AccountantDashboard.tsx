@@ -5,7 +5,8 @@ import type { MenuItemId } from '../../layouts/DashboardLayout';
 import AccountantAdministrationSection from './accountant/AccountantAdministrationSection';
 import AccountantCurriculumSection from './accountant/AccountantCurriculumSection';
 import AccountantCommunicationSection from './accountant/AccountantCommunicationSection';
-import ComptabiliteSection from './founder/ComptabiliteSection';
+import AccountantOverviewSection from './accountant/AccountantOverviewSection';
+import AccountantFinanceSection from './accountant/AccountantFinanceSection';
 import ProfileSection from './founder/settings/ProfileSection';
 import SecuritySection from './founder/settings/SecuritySection';
 import NotificationsSection from './founder/settings/NotificationsSection';
@@ -18,7 +19,7 @@ type SettingsSectionId = 'profil' | 'securite' | 'notifications' | 'apparence' |
 
 const AccountantDashboard = () => {
     const { user, logout } = useAuth();
-    const [activeSection, setActiveSection] = useState<MenuItemId | 'settings'>('comptabilite');
+    const [activeSection, setActiveSection] = useState<MenuItemId | 'settings'>('vue_ensemble');
     const [activeSettingsSection, setActiveSettingsSection] = useState<SettingsSectionId>('profil');
     const [showWelcome, setShowWelcome] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -80,16 +81,18 @@ const AccountantDashboard = () => {
         }
 
         switch (activeSection) {
+            case 'vue_ensemble':
+                return <AccountantOverviewSection />;
             case 'administration':
                 return <AccountantAdministrationSection />;
             case 'programme_scolaire':
                 return <AccountantCurriculumSection />;
             case 'comptabilite':
-                return <ComptabiliteSection />;
+                return <AccountantFinanceSection />;
             case 'communication':
                 return <AccountantCommunicationSection />;
             default:
-                return <ComptabiliteSection />;
+                return <AccountantOverviewSection />;
         }
     };
 

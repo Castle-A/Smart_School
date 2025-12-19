@@ -1,18 +1,22 @@
 import { Controller, Post, Get, Body, UseGuards, Request, Delete, Patch, Param } from '@nestjs/common';
 import { MembersService } from '../../application/members/members.service';
 import { JwtAuthGuard } from '../../application/auth/jwt-auth.guard';
+import { RolesGuard } from '../../shared/guards/roles.guard';
+import { SchoolAccessGuard } from '../../shared/guards/school-access.guard';
 import { CreateMemberDto } from '../../application/members/dto/create-member.dto';
 import { UpdateMemberDto } from '../../application/members/dto/update-member.dto';
 import { CustomLogger } from '../../shared/logger/custom-logger.service';
+import { Roles } from '../../shared/decorators/roles.decorator';
 
 @Controller('members')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, SchoolAccessGuard) // Rôles et Isolation pour la gestion des membres
 export class MembersController {
     private readonly logger = new CustomLogger();
 
     constructor(private membersService: MembersService) { }
 
     @Post('create')
+    @Roles('FOUNDER')
     async createMember(@Body() createMemberDto: CreateMemberDto, @Request() req: any) {
         try {
             this.logger.log(`Creating new member: ${createMemberDto.email}`, 'MembersController');
@@ -133,5 +137,10 @@ export class MembersController {
             password += chars.charAt(Math.floor(Math.random() * chars.length));
         }
         return password;
+    }
+    @Patch(':id/salary')
+    @Roles('DIRECTOR', 'ACCOUNTANT', 'FOUNDER')
+    updateSalary(@Request() req, @Param('id') id: string, @Body('monthlySalary') monthlySalary: number) {
+        return this.membersService.updateMemberSalary(id, req.user.schoolId, monthlySalary);
     }
 }

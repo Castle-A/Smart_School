@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, UseGuards, Request, Delete, Query, Patch } from '@nestjs/common';
 import { TeachersService } from '../../application/teachers/teachers.service';
 import { JwtAuthGuard } from '../../application/auth/jwt-auth.guard';
 import { SchoolAccessGuard } from '../../shared/guards/school-access.guard';
@@ -33,9 +33,10 @@ export class TeachersController {
      */
     @Get()
     @RequirePermissions('teachers.view')
-    async findAll(@Request() req: any) {
+    async findAll(@Request() req: any, @Query('simple') simple?: string) {
         const schoolId = req.user.schoolId;
-        return this.teachersService.getTeachers(schoolId);
+        const isSimple = simple === 'true';
+        return this.teachersService.getTeachers(schoolId, isSimple);
     }
 
     /**
@@ -53,7 +54,7 @@ export class TeachersController {
      * Only FOUNDER, DIRECTOR, and SECRETARY can update teachers
      */
     @Patch(':id')
-    @Roles('FOUNDER', 'DIRECTOR', 'SECRETARY', 'CENSOR', 'CENSEUR')
+    @Roles('FOUNDER', 'DIRECTOR', 'SECRETARY', 'CENSOR')
     @RequirePermissions('teachers.manage')
     async update(
         @Param('id') id: string,
@@ -63,7 +64,7 @@ export class TeachersController {
         const schoolId = req.user.schoolId;
         const userId = req.user.userId;
 
-        return this.teachersService.updateTeacher(id, schoolId, updateTeacherDto, userId, req.ip, req.headers['user-agent']);
+        return this.teachersService.updateTeacher(id, schoolId, updateTeacherDto, userId, req.ip, req.headers['user-agent'], req.user.role);
     }
 
     /**
@@ -78,5 +79,10 @@ export class TeachersController {
         const userId = req.user.userId;
 
         return this.teachersService.removeTeacher(id, schoolId, userId, req.ip, req.headers['user-agent']);
+    }
+    @Patch(':id/salary')
+    @Roles('DIRECTOR', 'ACCOUNTANT', 'FOUNDER')
+    updateSalary(@Request() req, @Param('id') id: string, @Body('hourlyRate') hourlyRate: number) {
+        return this.teachersService.updateSalary(id, req.user.schoolId, hourlyRate);
     }
 }

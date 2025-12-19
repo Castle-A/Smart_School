@@ -2,7 +2,7 @@ import { useAuth } from '../contexts/AuthContext';
 import FounderDashboard from '@app/pages/dashboard/FounderDashboard';
 import DirectorDashboard from '@app/pages/dashboard/DirectorDashboard';
 import SecretaryDashboard from '@app/pages/dashboard/SecretaryDashboard';
-import SupervisorDashboard from '@app/pages/dashboard/SupervisorDashboard';
+import SurveillantDashboard from '@app/pages/dashboard/SurveillantDashboard';
 import CensorDashboard from '@app/pages/dashboard/CensorDashboard';
 import AccountantDashboard from '@app/pages/dashboard/AccountantDashboard';
 import TeacherDashboard from '@app/pages/dashboard/TeacherDashboard';
@@ -23,14 +23,13 @@ export default function DashboardWrapper() {
             return <DirectorDashboard />;
         case 'SECRETARY':
             return <SecretaryDashboard />;
-        case 'SURVEILLANT':
-            return <SupervisorDashboard />;
-        case 'CENSEUR':
+        case 'SUPERVISOR':
+            return <SurveillantDashboard />;
+        case 'CENSOR':
             return <CensorDashboard />;
         case 'ACCOUNTANT':
             return <AccountantDashboard />;
         case 'TEACHER':
-        case 'MAITRE':
             return <TeacherDashboard />;
         case 'STUDENT':
         case 'PARENT':

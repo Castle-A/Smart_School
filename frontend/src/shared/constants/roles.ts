@@ -5,11 +5,10 @@
 export const ROLES = {
     FOUNDER: 'FOUNDER',
     DIRECTOR: 'DIRECTOR',
-    CENSEUR: 'CENSEUR',
-    SURVEILLANT: 'SURVEILLANT',
+    CENSOR: 'CENSOR',
+    SUPERVISOR: 'SUPERVISOR',
     SECRETARY: 'SECRETARY',
     TEACHER: 'TEACHER',
-    MAITRE: 'MAITRE',
     ACCOUNTANT: 'ACCOUNTANT',
     PARENT: 'PARENT',
 } as const;
@@ -23,11 +22,10 @@ export type Role = typeof ROLES[keyof typeof ROLES];
 export const ROLE_LABELS: Record<Role, string> = {
     [ROLES.FOUNDER]: 'Fondateur',
     [ROLES.DIRECTOR]: 'Directeur',
-    [ROLES.CENSEUR]: 'Censeur',
-    [ROLES.SURVEILLANT]: 'Surveillant',
+    [ROLES.CENSOR]: 'Censeur',
+    [ROLES.SUPERVISOR]: 'Surveillant Général',
     [ROLES.SECRETARY]: 'Secrétaire',
-    [ROLES.TEACHER]: 'Professeur',
-    [ROLES.MAITRE]: 'Maître/Maîtresse',
+    [ROLES.TEACHER]: 'Professeur / Maître',
     [ROLES.ACCOUNTANT]: 'Comptable',
     [ROLES.PARENT]: 'Parent',
 };

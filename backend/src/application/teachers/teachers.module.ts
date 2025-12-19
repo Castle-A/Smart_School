@@ -5,9 +5,10 @@ import { PrismaTeachersRepository } from '../../infrastructure/teachers/prisma-t
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 import { AuditService } from '../../shared/services/audit.service';
 import { MembersModule } from '../members/members.module';
+import { AdminRequestModule } from '../admin-requests/admin-requests.module';
 
 @Module({
-    imports: [PrismaModule, MembersModule],
+    imports: [PrismaModule, MembersModule, AdminRequestModule],
     controllers: [TeachersController],
     providers: [
         TeachersService,

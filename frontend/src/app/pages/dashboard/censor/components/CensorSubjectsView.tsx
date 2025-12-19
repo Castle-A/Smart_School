@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Plus, Trash2, Edit2, Search, Download, Layers, Filter, Check } from 'lucide-react';
+import { BookOpen, Plus, Trash2, Edit2, Download, Layers, Check } from 'lucide-react';
+import SearchFilterBar from '../../../../../shared/components/SearchFilterBar';
 import api from '../../../../../shared/api/api';
 import { BENIN_SUBJECTS_LIST } from '../../../../../shared/constants/benin-subjects.constants';
 import ImportSubjectsModal from './ImportSubjectsModal';
@@ -14,7 +15,6 @@ interface Subject {
 const CensorSubjectsView = () => {
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [isSearchExpanded, setIsSearchExpanded] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
@@ -90,122 +90,78 @@ const CensorSubjectsView = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
-                {/* Search & Filter Area */}
-                <div className="flex items-center gap-2 relative">
-                    <div className={`flex items-center transition-all duration-300 ease-in-out ${isSearchExpanded ? 'w-64 bg-white/5 border border-white/10 rounded-lg px-3 py-1' : 'w-10 overflow-hidden'}`}>
-                        <button
-                            onClick={() => setIsSearchExpanded(true)}
-                            className={`text-gray-400 hover:text-white transition-colors py-2 ${isSearchExpanded ? 'mr-2' : ''}`}
-                            title="Rechercher"
-                        >
-                            <Search size={20} />
-                        </button>
-
-                        {isSearchExpanded && (
-                            <input
-                                autoFocus
-                                type="text"
-                                placeholder="Rechercher..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                onBlur={() => {
-                                    if (!searchTerm) setIsSearchExpanded(false);
+            <SearchFilterBar
+                onSearch={setSearchTerm}
+                placeholder="Rechercher..."
+                isFilterEnabled={true}
+                isFilterOpen={isFilterMenuOpen}
+                onFilterClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+                filterContent={
+                    <div className="w-56 p-1">
+                        <div className="px-3 py-2 border-b border-white/5 bg-white/5 mb-1">
+                            <h4 className="text-xs font-semibold text-gray-300 uppercase tracking-wider">Filtrer par Cycle</h4>
+                        </div>
+                        {[
+                            { id: 'COLLEGE', label: 'Collège' },
+                            { id: 'LYCEE', label: 'Lycée Général' },
+                            { id: 'LYCEE_TECHNIQUE', label: 'Lycée Technique' }
+                        ].map((filter) => (
+                            <label key={filter.id} className="flex items-center justify-between px-3 py-2 hover:bg-white/5 rounded-lg cursor-pointer group transition-colors">
+                                <span className={`text-sm ${activeFilters.includes(filter.id) ? 'text-white font-medium' : 'text-gray-400 group-hover:text-gray-300'}`}>
+                                    {filter.label}
+                                </span>
+                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${activeFilters.includes(filter.id)
+                                    ? 'bg-indigo-500 border-indigo-500'
+                                    : 'border-gray-600 group-hover:border-gray-500 bg-transparent'
+                                    }`}>
+                                    {activeFilters.includes(filter.id) && <Check size={14} className="text-white" />}
+                                </div>
+                                <input
+                                    type="checkbox"
+                                    className="hidden"
+                                    checked={activeFilters.includes(filter.id)}
+                                    onChange={() => toggleFilter(filter.id)}
+                                />
+                            </label>
+                        ))}
+                        {activeFilters.length > 0 && (
+                            <button
+                                onClick={() => {
+                                    setActiveFilters([]);
+                                    setIsFilterMenuOpen(false);
                                 }}
-                                className="bg-transparent border-none outline-none text-white text-sm w-full h-full placeholder-gray-500"
-                            />
+                                className="w-full text-center text-xs text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 py-2 border-t border-white/5 transition-colors mt-1"
+                            >
+                                Effacer tout
+                            </button>
                         )}
                     </div>
-
-                    {/* Filter Dropdown */}
-                    <div className="relative">
+                }
+                actions={
+                    <>
                         <button
-                            onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
-                            className={`p-2 rounded-lg transition-colors relative ${activeFilters.length > 0 ? 'bg-indigo-500/20 text-indigo-400' : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                }`}
-                            title="Filtrer par cycle"
+                            onClick={() => setIsImportModalOpen(true)}
+                            className="hidden md:flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors whitespace-nowrap shadow-lg shadow-emerald-500/20"
                         >
-                            <Filter size={20} />
-                            {activeFilters.length > 0 && (
-                                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-indigo-500 ring-2 ring-[#0f172a]"></span>
-                            )}
+                            <Download size={18} />
+                            <span className="hidden sm:inline">Importer</span>
                         </button>
 
-                        {isFilterMenuOpen && (
-                            <div className="absolute top-full left-0 mt-2 w-56 bg-[#1e293b] border border-white/10 rounded-xl shadow-xl z-20 overflow-hidden">
-                                <div className="px-3 py-2 border-b border-white/5 bg-white/5">
-                                    <h4 className="text-xs font-semibold text-gray-300 uppercase tracking-wider">Filtrer par Cycle</h4>
-                                </div>
-                                <div className="p-1">
-                                    {[
-                                        { id: 'COLLEGE', label: 'Collège' },
-                                        { id: 'LYCEE', label: 'Lycée Général' },
-                                        { id: 'LYCEE_TECHNIQUE', label: 'Lycée Technique' }
-                                    ].map((filter) => (
-                                        <label key={filter.id} className="flex items-center justify-between px-3 py-2 hover:bg-white/5 rounded-lg cursor-pointer group transition-colors">
-                                            <span className={`text-sm ${activeFilters.includes(filter.id) ? 'text-white font-medium' : 'text-gray-400 group-hover:text-gray-300'}`}>
-                                                {filter.label}
-                                            </span>
-                                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${activeFilters.includes(filter.id)
-                                                    ? 'bg-indigo-500 border-indigo-500'
-                                                    : 'border-gray-600 group-hover:border-gray-500 bg-transparent'
-                                                }`}>
-                                                {activeFilters.includes(filter.id) && <Check size={14} className="text-white" />}
-                                            </div>
-                                            <input
-                                                type="checkbox"
-                                                className="hidden"
-                                                checked={activeFilters.includes(filter.id)}
-                                                onChange={() => toggleFilter(filter.id)}
-                                            />
-                                        </label>
-                                    ))}
-                                </div>
-                                {activeFilters.length > 0 && (
-                                    <button
-                                        onClick={() => {
-                                            setActiveFilters([]);
-                                            setIsFilterMenuOpen(false);
-                                        }}
-                                        className="w-full text-center text-xs text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 py-2 border-t border-white/5 transition-colors"
-                                    >
-                                        Effacer tout
-                                    </button>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                    {/* Backdrop for closing filter menu */}
-                    {isFilterMenuOpen && (
-                        <div className="fixed inset-0 z-10" onClick={() => setIsFilterMenuOpen(false)}></div>
-                    )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-                    <button
-                        onClick={() => setIsImportModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors whitespace-nowrap shadow-lg shadow-emerald-500/20"
-                    >
-                        <Download size={18} />
-                        <span className="hidden sm:inline">Importer du Catalogue</span>
-                        <span className="sm:hidden">Importer</span>
-                    </button>
-
-                    <button
-                        onClick={() => {
-                            setEditingSubject(null);
-                            setFormData({ name: '', coefficient: 2, cycle: 'COLLEGE' }); // Default to COLLEGE for Censor
-                            setIsAddModalOpen(true);
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors whitespace-nowrap shadow-lg shadow-indigo-500/20"
-                    >
-                        <Plus size={18} />
-                        <span className="hidden sm:inline">Nouvelle Matière</span>
-                        <span className="sm:hidden">Créer</span>
-                    </button>
-                </div>
-            </div>
+                        <button
+                            onClick={() => {
+                                setEditingSubject(null);
+                                setFormData({ name: '', coefficient: 2, cycle: 'COLLEGE' });
+                                setIsAddModalOpen(true);
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors whitespace-nowrap shadow-lg shadow-indigo-500/20"
+                        >
+                            <Plus size={18} />
+                            <span className="hidden sm:inline">Nouvelle Matière</span>
+                            <span className="sm:hidden">Créer</span>
+                        </button>
+                    </>
+                }
+            />
 
             {filtered.length === 0 ? (
                 <div className="text-center py-16 bg-white/5 border border-dashed border-white/10 rounded-2xl">

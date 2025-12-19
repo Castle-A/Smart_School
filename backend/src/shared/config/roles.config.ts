@@ -1,0 +1,13 @@
+export const ROLE_MAP: Record<string, string> = {
+    'FONDATEUR': 'FOUNDER',
+    'DIRECTEUR': 'DIRECTOR',
+    'SECRETAIRE': 'SECRETARY',
+    'SURVEILLANT': 'SUPERVISOR',
+    'CENSEUR': 'CENSOR',
+    'COMPTABLE': 'ACCOUNTANT',
+    'PROFESSEUR': 'TEACHER',
+    'ELEVE': 'STUDENT',
+    'PARENT': 'PARENT'
+};
+
+export const SUPER_ADMIN_ROLE = 'SUPER_ADMIN_PLATFORM';

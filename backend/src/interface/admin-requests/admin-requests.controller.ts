@@ -17,9 +17,33 @@ export class AdminRequestController {
         );
     }
 
+
+    @Get('my-requests')
+    async findMyRequests(@Request() req, @Query('archived') archived?: string) {
+        return this.adminRequestService.findMyRequests(
+            req.user.schoolId,
+            req.user.userId,
+            archived === 'true'
+        );
+    }
+
     @Get()
-    async findAll(@Request() req, @Query('status') status?: string) {
-        return this.adminRequestService.findAll(req.user.schoolId, status);
+    async findAll(@Request() req, @Query('status') status?: string, @Query('archived') archived?: string) {
+        return this.adminRequestService.findAll(
+            req.user.schoolId,
+            status,
+            archived === 'true'
+        );
+    }
+
+    @Patch(':id/archive')
+    async archive(@Param('id') id: string) {
+        return this.adminRequestService.archive(id);
+    }
+
+    @Patch('archive-all-processed')
+    async archiveAllProcessed(@Request() req) {
+        return this.adminRequestService.archiveAllProcessed(req.user.schoolId, req.user.userId);
     }
 
     @Patch(':id/resolve')

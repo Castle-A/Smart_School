@@ -1,0 +1,15 @@
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant D as DB
+
+    U->>F: Senter Email/Password
+    F->>B: POST /auth/login
+    B->>D: Find User by Email
+    D-->>B: User Found
+    B->>B: Validate Password (Bcrypt)
+    B->>B: Generate JWT Token
+    B-->>F: Return Access Token
+    F->>F: Store Token (LocalStorage/Cookie)
+    F-->>U: Redirect to Dashboard

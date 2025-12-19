@@ -1,71 +1,59 @@
-import { Users, Search } from 'lucide-react';
+import { useState } from 'react';
+import { Briefcase, Users, GraduationCap } from 'lucide-react';
+import AdminStaffList from './components/AdminStaffList';
+import TeacherFinancialList from './components/TeacherFinancialList';
+import StudentFinancialList from './components/StudentFinancialList';
 
-const AccountantAdministrationSection = () => {
+const AccountantAdministrationSection = ({ readOnly = false }: { readOnly?: boolean }) => {
+    const [activeTab, setActiveTab] = useState<'admin' | 'teachers' | 'students'>('admin');
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white">Administration (Consultation)</h2>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                    <input
-                        type="text"
-                        placeholder="Rechercher..."
-                        className="pl-10 pr-4 py-2 bg-white/10 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500 w-64"
-                    />
-                </div>
+                <h2 className="text-2xl font-bold text-white">Administration & RH</h2>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Listes Élèves */}
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                        <Users className="text-blue-400" size={24} />
-                        <h3 className="text-lg font-semibold text-white">Élèves</h3>
+            {/* Navigation Tabs */}
+            <div className="flex gap-2 border-b border-white/10 mb-6 overflow-x-auto">
+                <button
+                    onClick={() => setActiveTab('admin')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'admin' ? 'text-indigo-400' : 'text-gray-400 hover:text-white'}`}
+                >
+                    <div className="flex items-center gap-2">
+                        <Briefcase size={16} />
+                        Corps Administratif
                     </div>
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                            <span className="text-gray-300">Total Élèves</span>
-                            <span className="text-white font-bold">1,245</span>
-                        </div>
-                        <button className="w-full py-2 text-sm text-gray-300 hover:text-white border border-white/10 hover:bg-white/5 rounded-lg transition-colors">
-                            Voir la liste complète
-                        </button>
-                    </div>
-                </div>
+                    {activeTab === 'admin' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-500 rounded-t-full" />}
+                </button>
 
-                {/* Listes Parents */}
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                        <Users className="text-emerald-400" size={24} />
-                        <h3 className="text-lg font-semibold text-white">Parents</h3>
+                <button
+                    onClick={() => setActiveTab('teachers')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'teachers' ? 'text-indigo-400' : 'text-gray-400 hover:text-white'}`}
+                >
+                    <div className="flex items-center gap-2">
+                        <Users size={16} />
+                        Corps Enseignant
                     </div>
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                            <span className="text-gray-300">Total Parents</span>
-                            <span className="text-white font-bold">892</span>
-                        </div>
-                        <button className="w-full py-2 text-sm text-gray-300 hover:text-white border border-white/10 hover:bg-white/5 rounded-lg transition-colors">
-                            Voir la liste complète
-                        </button>
-                    </div>
-                </div>
+                    {activeTab === 'teachers' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-500 rounded-t-full" />}
+                </button>
 
-                {/* Listes Personnel */}
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                        <Users className="text-purple-400" size={24} />
-                        <h3 className="text-lg font-semibold text-white">Personnel</h3>
+                <button
+                    onClick={() => setActiveTab('students')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'students' ? 'text-indigo-400' : 'text-gray-400 hover:text-white'}`}
+                >
+                    <div className="flex items-center gap-2">
+                        <GraduationCap size={16} />
+                        Gestion des Élèves
                     </div>
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                            <span className="text-gray-300">Total Personnel</span>
-                            <span className="text-white font-bold">84</span>
-                        </div>
-                        <button className="w-full py-2 text-sm text-gray-300 hover:text-white border border-white/10 hover:bg-white/5 rounded-lg transition-colors">
-                            Voir la liste complète
-                        </button>
-                    </div>
-                </div>
+                    {activeTab === 'students' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-500 rounded-t-full" />}
+                </button>
+            </div>
+
+            {/* Content Area */}
+            <div className="min-h-[400px]">
+                {activeTab === 'admin' && <AdminStaffList readOnly={readOnly} />}
+                {activeTab === 'teachers' && <TeacherFinancialList readOnly={readOnly} />}
+                {activeTab === 'students' && <StudentFinancialList />}
             </div>
         </div>
     );

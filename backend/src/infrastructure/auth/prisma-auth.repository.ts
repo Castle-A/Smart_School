@@ -100,7 +100,15 @@ export class PrismaAuthRepository implements IAuthRepository {
     async update(id: string, user: Partial<User>): Promise<User> {
         const updated = await this.prisma.user.update({
             where: { id },
-            data: user,
+            data: {
+                password: user.password,
+                mustChangePassword: user.mustChangePassword,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                gender: user.gender,
+                phone: user.phone,
+            },
             include: { schoolUsers: true }
         });
         return this.toDomain(updated);

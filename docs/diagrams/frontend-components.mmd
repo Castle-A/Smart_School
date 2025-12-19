@@ -1,0 +1,23 @@
+graph TD
+    App[App Entry (main.tsx)] --> Router
+    Router --> AuthPages[Pages Publiques]
+    Router --> Protected[Layout Protégé (DashboardLayout)]
+    
+    AuthPages --> Login[LoginPage]
+    AuthPages --> Register[RegisterPage]
+    
+    Protected --> CheckRole{Vérification Rôle}
+    
+    CheckRole -->|FOUNDER| FounderDash[FounderDashboard]
+    CheckRole -->|DIRECTOR| DirectorDash[DirectorDashboard]
+    CheckRole -->|CENSOR| CensorDash[CensorDashboard]
+    CheckRole -->|TEACHER| TeacherDash[TeacherDashboard]
+    CheckRole -->|STUDENT| StudentDash[StudentDashboard]
+    CheckRole -->|PARENT| ParentDash[ParentDashboard]
+
+    
+    FounderDash --> SchoolMgmt[Gestion Écoles]
+    DirectorDash --> TeacherMgmt[Gestion Enseignants]
+    DirectorDash --> FinMgmt[Gestion Financière]
+    CensorDash --> Classes[Gestion Classes]
+    CensorDash --> Grades[Gestion Notes]

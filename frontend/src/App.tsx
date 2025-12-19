@@ -19,6 +19,7 @@ import FounderDashboard from '@app/pages/dashboard/FounderDashboard';
 import DirectorDashboard from '@app/pages/dashboard/DirectorDashboard';
 import AccountantDashboard from '@app/pages/dashboard/AccountantDashboard';
 import TeacherDashboard from '@app/pages/dashboard/TeacherDashboard';
+import SurveillantDashboard from '@app/pages/dashboard/SurveillantDashboard';
 import SupportLayout from '@support/layouts/SupportLayout';
 import SchoolListPage from '@support/pages/SchoolListPage';
 import SchoolDetailsPage from '@support/pages/SchoolDetailsPage';
@@ -58,7 +59,9 @@ function App() {
               <Route path="founder" element={<FounderDashboard />} />
               <Route path="director" element={<DirectorDashboard />} />
               <Route path="accountant" element={<AccountantDashboard />} />
+              <Route path="accountant" element={<AccountantDashboard />} />
               <Route path="teacher" element={<TeacherDashboard />} />
+              <Route path="surveillant" element={<SurveillantDashboard />} />
             </Route>
           </Route>
 

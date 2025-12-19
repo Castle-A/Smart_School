@@ -4,8 +4,8 @@ import {
     PERMISSION_CATEGORIES,
     DIRECTOR_PERMISSIONS,
     SECRETARY_PERMISSIONS,
-    SURVEILLANT_PERMISSIONS,
-    CENSEUR_PERMISSIONS,
+    SUPERVISOR_PERMISSIONS,
+    CENSOR_PERMISSIONS,
     ACCOUNTANT_PERMISSIONS
 } from '../src/shared/constants/permissions.constants';
 
@@ -18,8 +18,8 @@ async function main() {
     const allPermissions = [
         ...DIRECTOR_PERMISSIONS,
         ...SECRETARY_PERMISSIONS,
-        ...SURVEILLANT_PERMISSIONS,
-        ...CENSEUR_PERMISSIONS,
+        ...SUPERVISOR_PERMISSIONS,
+        ...CENSOR_PERMISSIONS,
         ...ACCOUNTANT_PERMISSIONS
     ];
 

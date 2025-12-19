@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+import { TransitionsModule } from './application/transitions/transitions.module';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
@@ -20,13 +22,31 @@ import { CleanupModule } from './application/cleanup/cleanup.module';
 
 import { StudentsModule } from './application/students/students.module';
 import { AdminRequestModule } from './application/admin-requests/admin-requests.module';
+import { VieScolaireModule } from './application/vie-scolaire/vie-scolaire.module';
+import { FinanceModule } from './application/finance/finance.module';
+import { AcademicCalendarModule } from './application/academic-calendar/academic-calendar.module';
+import { CommunicationModule } from './application/communication/communication.module';
+import { StorageModule } from './infrastructure/storage/storage.module';
+import { ExternalCommunicationModule } from './infrastructure/external/external-communication.module';
+
+import { AcademicYearsModule } from './application/academic-years/academic-years.module';
+import { ParentsModule } from './application/parents/parents.module';
+import { SmsModule } from './infrastructure/sms/sms.module';
+import { TenantModule } from './infrastructure/context/tenant.module'; // Isolation multi-tenant par contexte
 
 @Module({
   imports: [
+    TenantModule, // Activation globale de l'intercepteur de tenant (Phase 3)
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
+    // Rate limiting global (défaut: 100 requêtes/minute)
+    // Les endpoints peuvent override avec @Throttle()
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // Time to live: 60 secondes
+      limit: 100, // Limite par défaut: 100 requêtes par TTL
+    }]),
     PrismaModule,
     AuthModule,
     SchoolModule,
@@ -42,7 +62,18 @@ import { AdminRequestModule } from './application/admin-requests/admin-requests.
     SubjectsModule,
     CleanupModule,
     StudentsModule,
-    AdminRequestModule
+    AdminRequestModule,
+    VieScolaireModule,
+    FinanceModule,
+    AcademicCalendarModule,
+    CommunicationModule,
+    StorageModule,
+    ExternalCommunicationModule,
+
+    TransitionsModule,
+    AcademicYearsModule,
+    ParentsModule,
+    SmsModule
   ],
   controllers: [AppController],
   providers: [AppService],

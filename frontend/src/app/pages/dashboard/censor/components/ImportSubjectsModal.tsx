@@ -40,35 +40,18 @@ const ImportSubjectsModal = ({ onClose, onSuccess, existingSubjects }: ImportSub
         setIsSubmitting(true);
         try {
             const subjectsToImport = availableSubjects.filter(s => selectedSubjects.includes(s.name));
-            let successCount = 0;
-            let failCount = 0;
 
-            // Process sequentially to avoid Rate Limiting (429) and DB Locking (500)
-            for (const subject of subjectsToImport) {
-                try {
-                    // Slight delay to prevent 429 Rate Limiting
-                    await new Promise(r => setTimeout(r, 600));
+            // Transform to DTOs
+            const dtos = subjectsToImport.map(s => ({
+                name: s.name,
+                coefficient: s.defaultCoef,
+                cycle: s.cycle
+            }));
 
-                    await api.post('/subjects', {
-                        name: subject.name,
-                        coefficient: subject.defaultCoef,
-                        cycle: subject.cycle
-                    }, {
-                        // @ts-ignore
-                        skipGlobalErrorHandler: true
-                    });
-                    successCount++;
-                } catch (err) {
-                    console.error(`Failed to import ${subject.name}`, err);
-                    failCount++;
-                }
-            }
-
-            if (failCount > 0) {
-                alert(`${successCount} matières importées avec succès. ${failCount} échecs.`);
-            } else {
-                // All good
-            }
+            // Bulk API Call
+            await api.post('/subjects/bulk', {
+                subjects: dtos
+            });
 
             onSuccess();
             onClose();

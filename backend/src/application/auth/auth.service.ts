@@ -1,55 +1,82 @@
-import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Inject, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import { PasswordUtil } from '../../shared/utils/password.util';
 import type { IAuthRepository } from '../../domain/auth/user.entity';
 import { User } from '../../domain/auth/user.entity';
 import { AnalyticsService } from '../analytics/analytics.service';
-import { DIRECTOR_PERMISSIONS } from '../../shared/constants/permissions.constants';
+import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { CustomLogger } from '../../shared/logger/custom-logger.service';
+import {
+    DIRECTOR_PERMISSIONS,
+    SECRETARY_PERMISSIONS,
+    SUPERVISOR_PERMISSIONS,
+    CENSOR_PERMISSIONS,
+    ACCOUNTANT_PERMISSIONS
+} from '../../shared/constants/permissions.constants';
 
 @Injectable()
 export class AuthService {
+    private readonly logger = new CustomLogger();
+
     constructor(
         @Inject('IAuthRepository') private readonly authRepository: IAuthRepository,
+        private readonly prisma: PrismaService, // Injection directe pour les transactions et requêtes globales
         private readonly jwtService: JwtService,
         private readonly analyticsService: AnalyticsService,
     ) { }
 
-    // ... validateUser remains the same ...
-
+    /**
+     * Valide un utilisateur via son email ou son numéro de téléphone.
+     * Vérifie également le mot de passe et l'état du compte.
+     */
     async validateUser(identifier: string, pass: string): Promise<any> {
-        console.log(`[DEBUG] validateUser called for: ${identifier}`);
         const user = await this.authRepository.findByIdentifier(identifier);
 
         if (!user) {
-            console.log('[DEBUG] User not found by identifier');
             return null;
         }
-
-        console.log(`[DEBUG] User found: ${user.id}, Active: ${user.isActive}, Deleted: ${user.deletedAt}`);
 
         if (!user.password) {
-            console.log('[DEBUG] User has no password');
             return null;
         }
 
-        const isMatch = await bcrypt.compare(pass, user.password);
-        console.log(`[DEBUG] Password check: InputLen=${pass.length}, HashLen=${user.password.length}, MATCH=${isMatch}`);
+        // Vérification sécurisée du mot de passe
+        const isMatch = await PasswordUtil.compare(pass, user.password);
 
-        // Check if user exists, has password, is NOT deleted, and is ACTIVE
-        if (!user.deletedAt && user.isActive && isMatch) {
-            const { password, ...result } = user;
-            return result;
+        if (!isMatch) {
+            return null;
         }
 
-        console.log('[DEBUG] Validation failed due to flags or mismatch');
-        return null;
+        // Vérification de l'état du compte (Sécurité)
+        if (user.deletedAt) {
+            throw new UnauthorizedException('Ce compte a été supprimé.');
+        }
+
+        if (!user.isActive) {
+            throw new UnauthorizedException('Votre compte est désactivé. Veuillez contacter l\'administration.');
+        }
+
+        const { password, ...result } = user;
+        return { ...result, loginIdentifier: identifier };
     }
 
+    /**
+     * Génère un token JWT pour l'utilisateur authentifié.
+     * Normalise les rôles et inclut les permissions.
+     * Retourne le token (pour cookie) ET les données utilisateur (pour réponse).
+     */
     async login(user: any) {
+        // Normalisation des rôles (Gestion de l'historique français/anglais)
+        let normalizedRole = user.role;
+        if (user.role === 'CENSEUR') normalizedRole = 'CENSOR';
+        if (user.role === 'SURVEILLANT') normalizedRole = 'SUPERVISOR';
+        if (user.role === 'MAITRE') normalizedRole = 'TEACHER';
+        if (user.role === 'DIRECTEUR') normalizedRole = 'DIRECTOR';
+
         const payload = {
             email: user.email,
             sub: user.id,
-            role: user.role, // Legacy
+            role: normalizedRole,
             schoolRole: user.schoolRole,
             schoolId: user.schoolId,
             schoolName: user.schoolName,
@@ -60,9 +87,11 @@ export class AuthService {
             permissions: user.permissions,
             directorType: user.directorType,
             mustChangePassword: user.mustChangePassword,
+            phone: user.phone,
+            loginIdentifier: user.loginIdentifier,
         };
 
-        // Track Login Event
+        // Enregistrement de l'événement de connexion (Analytics)
         try {
             await this.analyticsService.trackEvent({
                 type: 'LOGIN',
@@ -71,15 +100,39 @@ export class AuthService {
                 metadata: { role: user.role, schoolRole: user.schoolRole },
             });
         } catch (error) {
-            console.error('Failed to track login event:', error);
+            // Non critique, on log simplement (Master Observability)
+            this.logger.warn(
+                'Erreur non bloquante lors de l\'enregistrement analytics',
+                'AuthService',
+            );
         }
 
+        // Clarification : Retour structuré avec token ET données utilisateur
         return {
             access_token: this.jwtService.sign(payload),
+            user: {
+                userId: payload.sub,
+                email: payload.email,
+                firstName: payload.firstName,
+                lastName: payload.lastName,
+                role: payload.role,
+                schoolRole: payload.schoolRole,
+                platformRole: payload.platformRole,
+                schoolId: payload.schoolId,
+                schoolName: payload.schoolName,
+                gender: payload.gender,
+                directorType: payload.directorType,
+                phone: payload.phone,
+                permissions: payload.permissions,
+                mustChangePassword: payload.mustChangePassword,
+            },
             mustChangePassword: user.mustChangePassword,
         };
     }
 
+    /**
+     * Crée un compte fondateur et configure son école de manière atomique.
+     */
     async registerFounder(data: {
         email: string;
         password: string;
@@ -98,38 +151,36 @@ export class AuthService {
             throw new UnauthorizedException('Un utilisateur avec cet email existe déjà.');
         }
 
-        const hashedPassword = await bcrypt.hash(data.password, 10);
-
-        // Use Prisma transaction to create School, User, and SchoolUser atomically
-        const result = await this.authRepository['prisma'].$transaction(async (prisma) => {
-            // Create the school
-            const school = await prisma.school.create({
+        // Utilisation d'une transaction Prisma pour garantir l'intégrité des données
+        const result = await this.prisma.$transaction(async (tx) => {
+            // 1. Création de l'école
+            const school = await tx.school.create({
                 data: {
                     name: data.schoolName,
                     address: data.schoolAddress,
                     phone: data.schoolPhone,
                     email: data.schoolEmail,
-                    cycles: data.schoolCycles?.join(','), // Store as comma-separated string
+                    cycles: data.schoolCycles?.join(','),
                 },
             });
 
-            // Create the user (founder)
-            const user = await prisma.user.create({
+            // 2. Création de l'utilisateur fondateur
+            const user = await tx.user.create({
                 data: {
                     email: data.email,
-                    password: hashedPassword,
+                    password: await PasswordUtil.hash(data.password),
                     firstName: data.firstName,
                     lastName: data.lastName,
                     gender: data.gender,
                     phone: data.phone,
-                    mustChangePassword: false, // Founder creates their own password
-                    termsAcceptedAt: new Date(), // Record Terms acceptance
-                    termsVersion: '2025-01', // Current Terms version
+                    mustChangePassword: false,
+                    termsAcceptedAt: new Date(),
+                    termsVersion: '2025-01',
                 },
             });
 
-            // Create SchoolUser relationship with FOUNDER role
-            const schoolUser = await prisma.schoolUser.create({
+            // 3. Liaison utilisateur-école avec rôle FOUNDER
+            const schoolUser = await tx.schoolUser.create({
                 data: {
                     userId: user.id,
                     schoolId: school.id,
@@ -137,30 +188,34 @@ export class AuthService {
                 },
             });
 
-            // Create founder permissions (full access)
-            // Create founder permissions (Use ALL Director permissions as base for Founder)
-            const founderPermissions = DIRECTOR_PERMISSIONS.map(p => p.code);
+            // 4. Attribution de toutes les permissions (Super-Admin)
+            const permissionCodes = new Set([
+                ...DIRECTOR_PERMISSIONS.map(p => p.code),
+                ...SECRETARY_PERMISSIONS.map(p => p.code),
+                ...SUPERVISOR_PERMISSIONS.map(p => p.code),
+                ...CENSOR_PERMISSIONS.map(p => p.code),
+                ...ACCOUNTANT_PERMISSIONS.map(p => p.code)
+            ]);
+            const uniqueCodes = Array.from(permissionCodes);
 
-            // Assign permissions to founder
-            for (const code of founderPermissions) {
-                const permissionDef = await prisma.permissionDefinition.findUnique({
-                    where: { code }
+            const permissionDefs = await tx.permissionDefinition.findMany({
+                where: { code: { in: uniqueCodes } },
+                select: { id: true }
+            });
+
+            if (permissionDefs.length > 0) {
+                await tx.rolePermission.createMany({
+                    data: permissionDefs.map(def => ({
+                        schoolUserId: schoolUser.id,
+                        permissionDefinitionId: def.id,
+                    }))
                 });
-
-                if (permissionDef) {
-                    await prisma.rolePermission.create({
-                        data: {
-                            schoolUserId: schoolUser.id,
-                            permissionDefinitionId: permissionDef.id,
-                        },
-                    });
-                }
             }
 
             return { user, school, schoolUser };
         });
 
-        return new User(result.user);
+        return new User(result.user as any);
     }
 
     async changePassword(userId: string, currentPassword: string | undefined, newPassword: string) {
@@ -177,19 +232,30 @@ export class AuthService {
             if (!currentPassword) {
                 throw new UnauthorizedException('Current password is required');
             }
-            const isValid = await bcrypt.compare(currentPassword, user.password);
+            const isValid = await PasswordUtil.compare(currentPassword, user.password);
             if (!isValid) {
                 throw new UnauthorizedException('Current password is incorrect');
             }
         }
 
-        // Hasher le nouveau mot de passe
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        try {
+            // Hasher le nouveau mot de passe
+            const hashedPassword = await PasswordUtil.hash(newPassword);
 
-        // Mettre à jour l'utilisateur
-        await this.authRepository.update(userId, {
-            password: hashedPassword,
-            mustChangePassword: false,
-        });
+            // Mettre à jour l'utilisateur
+            await this.authRepository.update(userId, {
+                password: hashedPassword,
+                mustChangePassword: false,
+            });
+
+            console.log(`[DEBUG] Password changed successfully for user ${userId}`);
+        } catch (error) {
+            this.logger.error(
+                `[CRITICAL] Échec de la mise à jour du mot de passe pour l'utilisateur ${userId}`,
+                error instanceof Error ? error.stack : String(error),
+                'AuthService',
+            );
+            throw new InternalServerErrorException('Échec de la mise à jour du mot de passe.');
+        }
     }
 }

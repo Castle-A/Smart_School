@@ -1,12 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, ArrowDownAZ, CalendarDays, GraduationCap, X, Mail, Phone, Calendar, FileText, ChevronLeft, ChevronRight, UserPlus, Trash2, Pencil } from 'lucide-react';
+import { ArrowDownAZ, CalendarDays, GraduationCap, X, Mail, Phone, Calendar, FileText, ChevronLeft, ChevronRight, UserPlus, Trash2, Pencil, Clock } from 'lucide-react';
 import Skeleton from '../../../../../shared/components/Skeleton';
 import api from '../../../../../shared/api/api';
 import Avatar from '../../../../../shared/components/Avatar';
 import { useAuth } from '../../../../../shared/contexts/AuthContext';
 import { adminRequestService } from '../../../../../shared/api/admin-requests.service';
 import { AnimatePresence } from 'framer-motion';
+import SearchFilterBar from '../../../../../shared/components/SearchFilterBar';
 
 interface Teacher {
     id: string;
@@ -29,32 +30,19 @@ interface Teacher {
 const CensorTeachersView = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const filterRef = useRef<HTMLDivElement>(null);
-    const searchContainerRef = useRef<HTMLDivElement>(null);
     const [teachers, setTeachers] = useState<Teacher[]>([]);
     const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [isSearchExpanded, setIsSearchExpanded] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [sortBy, setSortBy] = useState<'name' | 'date' | 'classes'>('name');
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
+    const [pendingRequests, setPendingRequests] = useState<Set<string>>(new Set());
     const itemsPerPage = 48;
 
     useEffect(() => {
         fetchTeachers();
-        const handleClickOutside = (event: MouseEvent) => {
-            // Close filter if clicked outside
-            if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
-                setIsFilterOpen(false);
-            }
-            // Close search if clicked outside search container
-            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node) && !searchTerm) {
-                setIsSearchExpanded(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        fetchPendingRequests();
     }, []);
 
     const fetchTeachers = async () => {
@@ -66,6 +54,26 @@ const CensorTeachersView = () => {
             console.error(err);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const fetchPendingRequests = async () => {
+        try {
+            const response = await adminRequestService.getMyRequests();
+            const pendingIds = new Set<string>();
+            response.data.forEach((req: any) => {
+                if (req.status === 'PENDING' && (req.type === 'UPDATE_TEACHER' || req.type === 'DELETE_TEACHER')) {
+                    try {
+                        const data = JSON.parse(req.data);
+                        if (data.teacherId) pendingIds.add(data.teacherId);
+                    } catch (e) {
+                        // ignore parsing error
+                    }
+                }
+            });
+            setPendingRequests(pendingIds);
+        } catch (error) {
+            console.error("Failed to fetch pending requests", error);
         }
     };
 
@@ -88,6 +96,11 @@ const CensorTeachersView = () => {
     const currentTeachers = filteredTeachers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     const handleDeleteRequest = async (teacherId: string) => {
+        if (pendingRequests.has(teacherId)) {
+            alert("Une requête est déjà en cours pour ce professeur.");
+            return;
+        }
+
         // Censor Request Logic
         const reason = prompt("Raison de la suppression (pour le Directeur):");
         if (!reason) return;
@@ -98,6 +111,7 @@ const CensorTeachersView = () => {
                 reason
             });
             alert('Requête de suppression envoyée au Directeur.');
+            fetchPendingRequests(); // Refresh badges
         } catch (err) {
             alert('Erreur lors de l\'envoi de la requête.');
         }
@@ -108,71 +122,37 @@ const CensorTeachersView = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center gap-4">
-                <div className="flex-1 flex items-center gap-3" ref={searchContainerRef}>
-
-                    <div className={`relative flex items-center transition-all duration-300 ease-in-out ${isSearchExpanded ? 'flex-1 max-w-md' : 'w-10'}`}>
-                        <button
-                            onClick={() => {
-                                setIsSearchExpanded(true);
-                            }}
-                            className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-lg transition-colors ${isSearchExpanded ? 'text-gray-400 pointer-events-none' : 'text-white bg-white/10 hover:bg-white/20'}`}
-                        >
-                            <Search size={18} />
+            <SearchFilterBar
+                onSearch={setSearchTerm}
+                placeholder="Rechercher un professeur..."
+                isFilterEnabled={true}
+                isFilterOpen={isFilterOpen}
+                onFilterClick={() => setIsFilterOpen(!isFilterOpen)}
+                filterContent={
+                    <div className="p-2">
+                        <button onClick={() => { setSortBy('name'); setIsFilterOpen(false); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${sortBy === 'name' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-white/5'}`}>
+                            <ArrowDownAZ size={16} /> <span className="text-sm">Alphabétique (A-Z)</span>
                         </button>
-
-                        <input
-                            type="text"
-                            placeholder="Rechercher un professeur..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            onBlur={() => {
-                                if (!searchTerm && !isFilterOpen) {
-                                    // Optional
-                                }
-                            }}
-                            className={`w-full py-2 bg-white/10 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500 transition-all pl-10 pr-4 ${isSearchExpanded ? 'opacity-100 visible' : 'opacity-0 invisible w-0 p-0 border-0'}`}
-                        />
+                        <button onClick={() => { setSortBy('date'); setIsFilterOpen(false); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${sortBy === 'date' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-white/5'}`}>
+                            <CalendarDays size={16} /> <span className="text-sm">Date d'embauche</span>
+                        </button>
+                        <button onClick={() => { setSortBy('classes'); setIsFilterOpen(false); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${sortBy === 'classes' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-white/5'}`}>
+                            <GraduationCap size={16} /> <span className="text-sm">Nombre de classes</span>
+                        </button>
                     </div>
-
-                    {isSearchExpanded && (
-                        <div className="relative" ref={filterRef}>
-                            <button
-                                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors border ${isFilterOpen ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-white/10 border-white/10 text-gray-300 hover:bg-white/20'}`}
-                            >
-                                <Filter size={18} />
-                                <span className="hidden md:inline">Filtrer</span>
-                            </button>
-                            {isFilterOpen && (
-                                <div className="absolute right-0 top-full mt-2 w-64 bg-[#1a1f37] border border-white/10 rounded-xl shadow-xl z-20 overflow-hidden">
-                                    <div className="p-2">
-                                        <button onClick={() => { setSortBy('name'); setIsFilterOpen(false); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${sortBy === 'name' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-white/5'}`}>
-                                            <ArrowDownAZ size={16} /> <span className="text-sm">Alphabétique (A-Z)</span>
-                                        </button>
-                                        <button onClick={() => { setSortBy('date'); setIsFilterOpen(false); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${sortBy === 'date' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-white/5'}`}>
-                                            <CalendarDays size={16} /> <span className="text-sm">Date d'embauche</span>
-                                        </button>
-                                        <button onClick={() => { setSortBy('classes'); setIsFilterOpen(false); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${sortBy === 'classes' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-white/5'}`}>
-                                            <GraduationCap size={16} /> <span className="text-sm">Nombre de classes</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                {canCreateTeacher && (
-                    <button
-                        onClick={() => navigate('/app/add-teacher')}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors shadow-lg shadow-indigo-500/20 whitespace-nowrap"
-                    >
-                        <UserPlus size={18} />
-                        Nouveau Professeur
-                    </button>
-                )}
-            </div>
+                }
+                actions={
+                    canCreateTeacher && (
+                        <button
+                            onClick={() => navigate('/app/add-teacher')}
+                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors shadow-lg shadow-indigo-500/20 whitespace-nowrap"
+                        >
+                            <UserPlus size={18} />
+                            Nouveau Professeur
+                        </button>
+                    )
+                }
+            />
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {isLoading ? (
@@ -180,47 +160,68 @@ const CensorTeachersView = () => {
                         <Skeleton key={i} className="h-48 w-full bg-white/5" />
                     ))
                 ) : (
-                    currentTeachers.map((teacher) => (
-                        <div
-                            key={teacher.id}
-                            onClick={() => setSelectedTeacher(teacher)}
-                            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3 hover:bg-white/10 transition-all cursor-pointer group hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/10 flex flex-col relative"
-                        >
-                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-1">
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigate(`/app/edit-teacher/${teacher.id}`);
-                                    }}
-                                    className="p-1 text-gray-400 hover:text-indigo-400"
-                                    title="Modifier"
-                                >
-                                    <Pencil size={14} />
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleDeleteRequest(teacher.id); }}
-                                    className="p-1 text-gray-400 hover:text-red-400"
-                                    title="Demander la suppression"
-                                >
-                                    <Trash2 size={14} />
-                                </button>
-                            </div>
-
-                            <div className="flex flex-col items-center mb-2">
-                                <Avatar firstName={teacher.firstName} lastName={teacher.lastName} size="md" />
-                                <h4 className="text-white font-medium text-xs mt-2 text-center line-clamp-1">{teacher.firstName} {teacher.lastName}</h4>
-                            </div>
-                            <div className="space-y-1 text-xs flex-1 w-full">
-                                <p className="text-indigo-300 font-medium text-[10px] text-center bg-indigo-500/10 rounded px-2 py-0.5 mx-auto w-fit">
-                                    {teacher.title || 'Enseignant'}
-                                </p>
-                                {teacher.specialty && (
-                                    <p className="text-gray-400 text-[10px] text-center truncate px-1">{teacher.specialty}</p>
+                    currentTeachers.map((teacher) => {
+                        const isPending = pendingRequests.has(teacher.id);
+                        return (
+                            <div
+                                key={teacher.id}
+                                onClick={() => setSelectedTeacher(teacher)}
+                                className={`bg-white/5 backdrop-blur-sm border ${isPending ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/10'} rounded-xl p-3 hover:bg-white/10 transition-all cursor-pointer group hover:scale-[1.02] hover:shadow-lg hover:shadow-indigo-500/10 flex flex-col relative`}
+                            >
+                                {isPending && (
+                                    <div className="absolute top-2 left-2 z-10">
+                                        <div className="bg-amber-500/20 text-amber-400 p-1 rounded-full" title="En attente de validation">
+                                            <Clock size={14} />
+                                        </div>
+                                    </div>
                                 )}
-                                <p className="text-gray-500 text-[9px] text-center truncate w-full px-1 pt-1">{teacher.phone}</p>
+
+                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-1">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (isPending) {
+                                                alert("Une modification est déjà en attente pour ce professeur.");
+                                                return;
+                                            }
+                                            navigate(`/app/edit-teacher/${teacher.id}`);
+                                        }}
+                                        className={`p-1 ${isPending ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-indigo-400'}`}
+                                        title="Modifier"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleDeleteRequest(teacher.id); }}
+                                        className="p-1 text-gray-400 hover:text-red-400"
+                                        title="Demander la suppression"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+
+                                <div className="flex flex-col items-center mb-2">
+                                    <Avatar firstName={teacher.firstName} lastName={teacher.lastName} size="md" />
+                                    <h4 className="text-white font-medium text-xs mt-2 text-center line-clamp-1">{teacher.firstName} {teacher.lastName}</h4>
+                                </div>
+                                <div className="space-y-1 text-xs flex-1">
+                                    <p className="text-gray-400 text-[10px] text-center">{teacher.phone}</p>
+                                    {teacher.email && <p className="text-gray-500 text-[9px] text-center truncate w-full px-1" title={teacher.email}>{teacher.email}</p>}
+                                    <p className="text-indigo-400 text-[10px] text-center">{teacher.contractType}</p>
+                                </div>
+
+                                <div className="mt-2 flex justify-center">
+                                    <div className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${(teacher.classes || 0) > 0
+                                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                                        }`}>
+                                        {(teacher.classes || 0) === 0 ? 'Aucune classe' : `${teacher.classes} classe${(teacher.classes || 0) > 1 ? 's' : ''}`}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
 
@@ -270,8 +271,8 @@ const CensorTeachersView = () => {
 
                                 <h3 className="text-2xl font-bold text-white mb-2">{selectedTeacher.firstName} {selectedTeacher.lastName}</h3>
 
-                                <span className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 uppercase tracking-wider shadow-sm">
-                                    {selectedTeacher.title || 'Enseignant'}
+                                <span className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-sm capitalize">
+                                    {(selectedTeacher.title || 'Enseignant').toLowerCase()}
                                 </span>
                                 {selectedTeacher.specialty && (
                                     <p className="text-gray-400 text-sm mt-2">{selectedTeacher.specialty}</p>

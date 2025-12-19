@@ -1,7 +1,7 @@
 import api from './api';
 
 export interface LoginCredentials {
-    email: string;
+    identifier: string;
     password: string;
 }
 
@@ -19,13 +19,30 @@ export interface RegisterData {
     schoolCycles?: string[];
 }
 
+// Master Security: Nouvelle structure de réponse (plus de token exposé)
 export interface AuthResponse {
-    access_token: string;
+    user: {
+        userId: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        schoolRole?: string;
+        role?: string;
+        platformRole?: string;
+        schoolId?: string;
+        schoolName?: string;
+        gender?: string;
+        mustChangePassword?: boolean;
+        directorType?: string;
+        phone?: string;
+        permissions?: string[];
+    };
     mustChangePassword: boolean;
 }
 
 export const authService = {
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
+        // Le backend définit automatiquement le cookie HttpOnly
         const response = await api.post('/auth/login', credentials);
         return response.data;
     },
@@ -35,12 +52,16 @@ export const authService = {
         return response.data;
     },
 
-    logout() {
-        localStorage.removeItem('access_token');
+    async logout(): Promise<void> {
+        // Appel au backend pour effacer le cookie sécurisé
+        await api.post('/auth/logout');
     },
 
+    // Cette méthode n'est plus nécessaire avec les cookies
+    // L'authentification est gérée automatiquement par le backend
     isAuthenticated(): boolean {
-        return !!localStorage.getItem('access_token');
+        // Deprecated: Utiliser le contexte d'authentification à la place
+        return false;
     },
 
     async changePassword(currentPassword: string, newPassword: string): Promise<void> {

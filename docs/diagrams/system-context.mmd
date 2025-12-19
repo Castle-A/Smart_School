@@ -1,0 +1,11 @@
+graph TD
+    User((Utilisateur))
+    subgraph "SmartSchool System"
+        Frontend[Frontend (React/Vite)]
+        Backend[Backend API (NestJS)]
+        DB[(Database (SQLite/Prisma))]
+    end
+
+    User -->|HTTPS| Frontend
+    Frontend -->|REST API / JSON| Backend
+    Backend -->|Prisma Client| DB

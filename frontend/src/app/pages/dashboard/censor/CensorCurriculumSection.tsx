@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Calendar, BookOpen, Clock } from 'lucide-react';
+import { Calendar, BookOpen, Clock, Users, Shield } from 'lucide-react';
 import TimetableEditor from './components/TimetableEditor';
+import ClassCouncil from '../components/ClassCouncil';
+import YearEndClosure from '../components/YearEndClosure';
 
 const CensorCurriculumSection = () => {
-    const [activeTab, setActiveTab] = useState<'timetable' | 'calendar' | 'syllabus'>('timetable');
+    const [activeTab, setActiveTab] = useState<'timetable' | 'calendar' | 'syllabus' | 'council' | 'closure'>('timetable');
 
     return (
         <div className="space-y-6">
@@ -46,6 +48,26 @@ const CensorCurriculumSection = () => {
                     <BookOpen size={18} />
                     Programmes d'Étude
                 </button>
+                <button
+                    onClick={() => setActiveTab('council')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors ${activeTab === 'council'
+                        ? 'bg-indigo-600 text-white border-b-2 border-indigo-400'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <Users size={18} />
+                    Conseil de Classe
+                </button>
+                <button
+                    onClick={() => setActiveTab('closure')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors ${activeTab === 'closure'
+                        ? 'bg-red-600 text-white border-b-2 border-red-400'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <Shield size={18} />
+                    Audit de Fin d'Année
+                </button>
             </div>
 
             {/* Content */}
@@ -72,6 +94,8 @@ const CensorCurriculumSection = () => {
                         </button>
                     </div>
                 )}
+                {activeTab === 'council' && <ClassCouncil />}
+                {activeTab === 'closure' && <YearEndClosure />}
             </div>
         </div>
     );

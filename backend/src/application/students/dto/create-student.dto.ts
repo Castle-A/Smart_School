@@ -40,4 +40,16 @@ export class CreateStudentDto {
     @IsString()
     @IsNotEmpty()
     parentPhone: string;
+
+    @IsString()
+    @IsOptional()
+    previousSchool?: string;
+
+    @IsOptional()
+    payment?: {
+        registrationAmount: number;
+        tuitionAmount: number;
+        method: string; // CASH, MOMO, ORANGE, CARD
+    };
 }
+

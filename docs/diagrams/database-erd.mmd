@@ -1,0 +1,40 @@
+erDiagram
+    User ||--o{ SchoolUser : "has roles in"
+    School ||--o{ SchoolUser : "employs"
+    School ||--o{ Student : "enrolls"
+    School ||--o{ Class : "has"
+    School ||--o{ Teacher : "employs"
+    
+    Class ||--o{ Student : "contains"
+    Teacher }|--|{ Subject : "teaches"
+    Class }|--|{ Subject : "learns (ClassSubject)"
+    
+    Student ||--o{ Grade : "receives"
+    Student ||--o{ Attendance : "has"
+    Student ||--o{ Sanction : "receives"
+
+    User {
+        string id PK
+        string email
+        string password
+        string role
+    }
+
+    School {
+        string id PK
+        string name
+        string plan
+    }
+
+    SchoolUser {
+        string userId FK
+        string schoolId FK
+        string role
+        string permissions
+    }
+
+    Student {
+        string id PK
+        string matricule
+        string name
+    }

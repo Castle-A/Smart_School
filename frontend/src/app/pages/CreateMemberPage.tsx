@@ -6,7 +6,7 @@ import PhoneInput from '../../shared/components/PhoneInput';
 import PermissionsChecklist from '../../shared/components/PermissionsChecklist';
 import SuccessCredentialsModal from '../../shared/components/SuccessCredentialsModal';
 
-type MemberRole = 'DIRECTOR' | 'SECRETARY' | 'SURVEILLANT' | 'CENSEUR' | 'ACCOUNTANT' | 'TEACHER';
+type MemberRole = 'DIRECTOR' | 'SECRETARY' | 'SUPERVISOR' | 'CENSOR' | 'ACCOUNTANT' | 'TEACHER';
 
 const CreateMemberPage = () => {
     const navigate = useNavigate();
@@ -97,7 +97,7 @@ const CreateMemberPage = () => {
     // Logic to determine if permissions should be shown
     const requiresDirectorType = ['DIRECTOR', 'SECRETARY'].includes(formData.role);
     const shouldShowPermissions =
-        ['SURVEILLANT', 'CENSEUR', 'ACCOUNTANT'].includes(formData.role) ||
+        ['SUPERVISOR', 'CENSOR', 'ACCOUNTANT'].includes(formData.role) ||
         (requiresDirectorType && formData.directorType !== '');
 
     return (
@@ -224,51 +224,50 @@ const CreateMemberPage = () => {
                                         onChange={e => handleChange('role', e.target.value)}
                                         className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-slate-800 [&>option]:text-white appearance-none transition-colors"
                                     >
-                                        <option value="DIRECTOR">Directeur</option>
-                                        <option value="CENSEUR">Censeur</option>
-                                        <option value="SURVEILLANT">Surveillant Général</option>
-                                        <option value="ACCOUNTANT">Comptable</option>
                                         <option value="SECRETARY">Secrétaire</option>
+                                        <option value="SUPERVISOR">Surveillant Général</option>
+                                        <option value="CENSOR">Censeur</option>
+                                        <option value="ACCOUNTANT">Comptable</option>
+                                        <option value="DIRECTOR">Directeur</option>
                                     </select>
                                 </div>
-                            </div>
-
-                            {/* Director Type Selection */}
-                            {requiresDirectorType && (
-                                <div className="mt-6 pt-6 border-t border-white/10">
-                                    <label className="block text-sm font-medium text-white/90 mb-2">
-                                        {formData.role === 'SECRETARY' ? 'Type de Secrétariat' : 'Type de Direction'} <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="relative">
-                                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
-                                        <select
-                                            required
-                                            value={formData.directorType}
-                                            onChange={e => handleChange('directorType', e.target.value)}
-                                            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-slate-800 [&>option]:text-white appearance-none transition-colors"
-                                        >
-                                            <option value="PRIMARY_PRESCHOOL">Primaire/Maternelle</option>
-                                            <option value="COLLEGE">Collège</option>
-                                            <option value="BOTH">Les Deux</option>
-                                        </select>
+                                {/* Director Type Selection */}
+                                {requiresDirectorType && (
+                                    <div className="mt-6 pt-6 border-t border-white/10">
+                                        <label className="block text-sm font-medium text-white/90 mb-2">
+                                            {formData.role === 'SECRETARY' ? 'Type de Secrétariat' : 'Type de Direction'} <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
+                                            <select
+                                                required
+                                                value={formData.directorType}
+                                                onChange={e => handleChange('directorType', e.target.value)}
+                                                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500 [&>option]:bg-slate-800 [&>option]:text-white appearance-none transition-colors"
+                                            >
+                                                <option value="PRIMARY_PRESCHOOL">Primaire/Maternelle</option>
+                                                <option value="COLLEGE">Collège</option>
+                                                <option value="BOTH">Les Deux</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            {shouldShowPermissions && (
-                                <div className="mt-6 pt-6 border-t border-white/10">
-                                    <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
-                                        <Shield className="text-indigo-400" size={20} />
-                                        Configuration des permissions
-                                    </h3>
-                                    <PermissionsChecklist
-                                        role={formData.role}
-                                        directorType={formData.directorType}
-                                        selectedPermissions={selectedPermissions}
-                                        onChange={setSelectedPermissions}
-                                    />
-                                </div>
-                            )}
+                                {shouldShowPermissions && (
+                                    <div className="mt-6 pt-6 border-t border-white/10">
+                                        <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                                            <Shield className="text-indigo-400" size={20} />
+                                            Configuration des permissions
+                                        </h3>
+                                        <PermissionsChecklist
+                                            role={formData.role}
+                                            directorType={formData.directorType}
+                                            selectedPermissions={selectedPermissions}
+                                            onChange={setSelectedPermissions}
+                                        />
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 

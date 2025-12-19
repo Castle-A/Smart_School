@@ -109,7 +109,7 @@ const CensorDashboard = () => {
                 />
             )}
             <DashboardLayout
-                role="CENSEUR"
+                role="CENSOR"
                 userName={`${user.firstName} ${user.lastName}`}
                 userEmail={user.email}
                 onLogout={logout}

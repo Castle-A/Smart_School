@@ -77,18 +77,41 @@ const DirectorAssignmentsView = () => {
                             </div>
                         </div>
 
-                        <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Corps Enseignant</h4>
-                        <div className="space-y-3">
-                            {classDetails.teachers.length === 0 ? (
-                                <p className="text-gray-500 italic text-center py-4">Aucun professeur assigné.</p>
-                            ) : (
-                                classDetails.teachers.map((t: any) => (
-                                    <div key={t.id} className="bg-white/5 p-3 rounded-lg flex justify-between items-center">
-                                        <span className="text-white">{t.user.firstName} {t.user.lastName}</span>
-                                        {/* Show subjects if available in API response? For now just names */}
-                                    </div>
-                                ))
-                            )}
+                        <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Répartition par Matière</h4>
+                        <div className="overflow-hidden rounded-xl border border-white/10">
+                            <table className="w-full text-left text-sm">
+                                <thead className="bg-white/5 text-gray-400">
+                                    <tr>
+                                        <th className="p-3 font-medium">Matière</th>
+                                        <th className="p-3 font-medium text-center">Coef.</th>
+                                        <th className="p-3 font-medium">Enseignant Affecté</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/10">
+                                    {classDetails.subjects?.map((s: any) => (
+                                        <tr key={s.id} className="hover:bg-white/5 transition-colors">
+                                            <td className="p-3 text-white font-medium">{s.name}</td>
+                                            <td className="p-3 text-center text-gray-300">{s.coefficient}</td>
+                                            <td className="p-3">
+                                                {s.assignedTeacher ? (
+                                                    <span className="text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20 text-xs font-semibold">
+                                                        {s.assignedTeacher.user.firstName} {s.assignedTeacher.user.lastName}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-500 text-xs italic">Non assigné</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {(!classDetails.subjects || classDetails.subjects.length === 0) && (
+                                        <tr>
+                                            <td colSpan={4} className="p-4 text-center text-gray-500 italic">
+                                                Aucune matière configurée.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

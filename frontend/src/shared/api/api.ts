@@ -12,16 +12,13 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    // Master Security: Support des cookies HttpOnly (credentials automatiques)
+    withCredentials: true,
 });
 
-// Intercepteur pour ajouter le token JWT
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+// IMPORTANT: L'intercepteur pour le token JWT a été supprimé
+// Le token est maintenant envoyé automatiquement via les cookies HttpOnly
+// Plus besoin de lire localStorage ou d'ajouter le header Authorization
 
 import { toastEvents } from '../utils/toast-events';
 

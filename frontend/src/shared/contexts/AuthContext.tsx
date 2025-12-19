@@ -17,41 +17,20 @@ interface User {
     mustChangePassword?: boolean;
     directorType?: string;
     permissions?: string[];
+    loginIdentifier?: string;
 }
-
-// ... (in decodeJWT)
-
-
-
 
 interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (token: string) => void;
-    logout: () => void;
+    login: (userData: User) => Promise<void>;
+    logout: () => Promise<void>;
     updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Fonction pour décoder le JWT (sans bibliothèque externe)
-function decodeJWT(token: string): any {
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-            atob(base64)
-                .split('')
-                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                .join('')
-        );
-        return JSON.parse(jsonPayload);
-    } catch (error) {
-        console.error('Error decoding JWT:', error);
-        return null;
-    }
-}
 
 // Fonction pour mapper le rôle du backend vers le type UserRole
 function mapRoleToUserRole(role: string): UserRole {
@@ -62,20 +41,12 @@ function mapRoleToUserRole(role: string): UserRole {
         'FOUNDER': 'FOUNDER',
         'DIRECTOR': 'DIRECTOR',
         'SECRETARY': 'SECRETARY',
-        'SURVEILLANT': 'SURVEILLANT',
-        'CENSEUR': 'CENSEUR',
+        'SUPERVISOR': 'SUPERVISOR',
+        'CENSOR': 'CENSOR',
         'ACCOUNTANT': 'ACCOUNTANT',
         'TEACHER': 'TEACHER',
-        'MAITRE': 'MAITRE',
         'STUDENT': 'STUDENT',
         'PARENT': 'PARENT',
-        // Legacy French support
-        'FONDATEUR': 'FOUNDER',
-        'DIRECTEUR': 'DIRECTOR',
-        'SECRETAIRE': 'SECRETARY',
-        'COMPTABLE': 'ACCOUNTANT',
-        'PROFESSEUR': 'TEACHER',
-        'ELEVE': 'STUDENT',
     };
 
     const mappedRole = roleMap[normalizedRole];
@@ -91,63 +62,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Vérifier si un token existe au chargement
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            const decoded = decodeJWT(token);
-            if (decoded) {
-                // Extraire les informations de l'utilisateur du token
-                const userData: User = {
-                    id: decoded.userId || decoded.sub,
-                    email: decoded.email,
-                    firstName: decoded.firstName || '',
-                    lastName: decoded.lastName || '',
-                    role: mapRoleToUserRole(decoded.schoolRole || decoded.role || decoded.roles?.[0]),
-                    schoolRole: decoded.schoolRole,
-                    platformRole: decoded.platformRole,
-                    schoolId: decoded.schoolId,
-                    schoolName: decoded.schoolName, // Added missing schoolName
-                    gender: decoded.gender,
-                    mustChangePassword: decoded.mustChangePassword,
-                    directorType: decoded.directorType,
-                };
-                setUser(userData);
+        // Master Security: Récupération du profil depuis le cookie HttpOnly
+        // Plus besoin de localStorage, le backend gère l'authentification via cookies
+        const fetchProfile = async () => {
+            try {
+                const response = await fetch('/auth/profile', {
+                    credentials: 'include', // CRITIQUE pour envoyer les cookies
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const userData: User = {
+                        id: data.user.userId,
+                        email: data.user.email,
+                        firstName: data.user.firstName || '',
+                        lastName: data.user.lastName || '',
+                        role: mapRoleToUserRole(data.user.schoolRole || data.user.role),
+                        schoolRole: data.user.schoolRole,
+                        platformRole: data.user.platformRole,
+                        schoolId: data.user.schoolId,
+                        schoolName: data.user.schoolName,
+                        gender: data.user.gender,
+                        mustChangePassword: data.user.mustChangePassword,
+                        directorType: data.user.directorType,
+                        phone: data.user.phone,
+                    };
+                    setUser(userData);
+                }
+            } catch (error) {
+                console.log('Aucune session active');
+            } finally {
+                setIsLoading(false);
             }
-        }
-        setIsLoading(false);
+        };
+
+        fetchProfile();
     }, []);
 
-    const login = (token: string) => {
-        localStorage.setItem('access_token', token);
-        const decoded = decodeJWT(token);
-        console.log('🔍 Decoded JWT:', decoded);
-        if (decoded) {
-            const userData: User = {
-                id: decoded.userId || decoded.sub,
-                email: decoded.email,
-                firstName: decoded.firstName || '',
-                lastName: decoded.lastName || '',
-                role: mapRoleToUserRole(decoded.schoolRole || decoded.role || decoded.roles?.[0]),
-                schoolRole: decoded.schoolRole,
-                platformRole: decoded.platformRole,
-                schoolId: decoded.schoolId,
-                schoolName: decoded.schoolName,
-                gender: decoded.gender,
-                mustChangePassword: decoded.mustChangePassword,
-                directorType: decoded.directorType,
-            };
-            console.log('👤 User data:', userData);
-            setUser(userData);
-        }
+    const login = async (userData: User) => {
+        // Master Security: Le backend a déjà défini le cookie HttpOnly
+        // On reçoit directement les données utilisateur enrichies depuis /auth/login
+        console.log('👤 User logged in:', userData);
+        setUser(userData);
     };
 
-    const logout = () => {
-        localStorage.removeItem('access_token');
+    const logout = async () => {
+        try {
+            // Appel au backend pour effacer le cookie sécurisé
+            await fetch('/auth/logout', {
+                method: 'POST',
+                credentials: 'include',
+            });
+        } catch (error) {
+            console.error('Erreur lors de la déconnexion:', error);
+        }
+
         if (user) {
             sessionStorage.removeItem(`hasShownWelcome_${user.id}`);
         }
         setUser(null);
-        // Redirect to landing page
         window.location.href = '/';
     };
 

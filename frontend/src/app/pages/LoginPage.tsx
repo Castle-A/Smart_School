@@ -19,10 +19,28 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            const response = await authService.login({ email, password });
+            const response = await authService.login({ identifier: email, password });
 
-            // Utiliser la méthode login du contexte pour gérer l'authentification
-            login(response.access_token);
+            // Master Security: Transformer les données du backend vers le format User
+            const userData = {
+                id: response.user.userId,
+                email: response.user.email,
+                firstName: response.user.firstName,
+                lastName: response.user.lastName,
+                role: (response.user.schoolRole || response.user.role) as any,
+                schoolRole: response.user.schoolRole,
+                platformRole: response.user.platformRole,
+                schoolId: response.user.schoolId,
+                schoolName: response.user.schoolName,
+                gender: response.user.gender,
+                mustChangePassword: response.user.mustChangePassword,
+                directorType: response.user.directorType,
+                phone: response.user.phone,
+                permissions: response.user.permissions,
+            };
+
+            // Le backend a déjà défini le cookie HttpOnly
+            await login(userData);
 
             if (response.mustChangePassword) {
                 navigate('/change-password');

@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query, ValidationPipe } from '@nestjs/common';
 import { ClassesService } from '../../application/classes/classes.service';
 import { CreateClassDto } from '../../application/classes/dto/create-class.dto';
 import { UpdateClassDto } from '../../application/classes/dto/update-class.dto';
 import { JwtAuthGuard } from '../../application/auth/jwt-auth.guard';
 import { SchoolAccessGuard } from '../../shared/guards/school-access.guard';
 import { CustomLogger } from '../../shared/logger/custom-logger.service';
+import { PaginationQueryDto } from '../../shared/dto/pagination-query.dto';
 
 @Controller('classes')
 @UseGuards(JwtAuthGuard, SchoolAccessGuard)
@@ -19,9 +20,21 @@ export class ClassesController {
         return this.classesService.create(req.user.schoolId, createClassDto, req.user.userId);
     }
 
+    @Post('builder')
+    async createBuilder(@Request() req, @Body() dto: any) { // Type as CreateClassBuilderDto ideally, but `any` avoids import cycle for now or simple mapping
+        this.logger.log(`Building class: ${dto.name}`, 'ClassesController');
+        // Basic permission check same as create
+        // Assuming user has permission if they hit this (Guards apply)
+        return this.classesService.createBuilder(req.user.schoolId, dto, req.user.userId);
+    }
+
     @Get()
-    findAll(@Request() req) {
-        return this.classesService.findAll(req.user.schoolId);
+    findAll(
+        @Request() req,
+        @Query(new ValidationPipe({ transform: true, whitelist: true })) query: PaginationQueryDto
+    ) {
+        // Master Quality: Validation automatique avec PaginationQueryDto
+        return this.classesService.findAll(req.user.schoolId, query);
     }
 
     @Get(':id')
@@ -32,7 +45,7 @@ export class ClassesController {
     @Patch(':id')
     async update(@Request() req, @Param('id') id: string, @Body() updateClassDto: UpdateClassDto) {
         this.logger.log(`Updating class: ${id}`, 'ClassesController');
-        return this.classesService.update(id, req.user.schoolId, updateClassDto);
+        return this.classesService.update(id, req.user.schoolId, updateClassDto, req.user.userId);
     }
 
     @Delete(':id')

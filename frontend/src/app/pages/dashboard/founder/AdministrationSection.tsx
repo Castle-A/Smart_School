@@ -158,8 +158,8 @@ const AdministrationSection = ({ readOnly = false }: AdministrationSectionProps)
 
     const [postCounts, setPostCounts] = useState<PostCount[]>([
         { role: 'DIRECTOR', label: 'Directeur', count: 0 },
-        { role: 'CENSEUR', label: 'Censeur', count: 0 },
-        { role: 'SURVEILLANT', label: 'Surveillant', count: 0 },
+        { role: 'CENSOR', label: 'Censeur', count: 0 },
+        { role: 'SUPERVISOR', label: 'Surveillant', count: 0 },
         { role: 'SECRETARY', label: 'Secrétaire', count: 0 },
         { role: 'ACCOUNTANT', label: 'Comptable', count: 0 },
     ]);

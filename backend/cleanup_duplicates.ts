@@ -44,7 +44,7 @@ async function main() {
         if (schoolUserIds.length > 0) {
             await prisma.rolePermission.deleteMany({ where: { schoolUserId: { in: schoolUserIds } } });
             // Delete Payrolls linked to SchoolUser
-            await prisma.payroll.deleteMany({ where: { staffId: { in: schoolUserIds } } });
+            await prisma.payroll.deleteMany({ where: { teacher: { userId: { in: schoolUserIds } } } });
             // Delete SchoolUser records
             await prisma.schoolUser.deleteMany({ where: { userId: user.id } });
         }

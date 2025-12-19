@@ -80,18 +80,20 @@ const MENU_BY_ROLE: Record<UserRole, MenuItemId[]> = {
         "configuration",
     ],
     SECRETARY: [
+        "vue_ensemble",
         "administration",
         "vie_scolaire",
         "programme_scolaire",
         "communication",
     ],
-    SURVEILLANT: [
+    SUPERVISOR: [
+        "vue_ensemble",
         "administration",
         "vie_scolaire",
         "programme_scolaire",
         "communication",
     ],
-    CENSEUR: [
+    CENSOR: [
         "vue_ensemble",
         "administration",
         "vie_scolaire",
@@ -105,12 +107,6 @@ const MENU_BY_ROLE: Record<UserRole, MenuItemId[]> = {
         "communication",
     ],
     TEACHER: [
-        "vue_ensemble",
-        "vie_scolaire",
-        "programme_scolaire",
-        "communication",
-    ],
-    MAITRE: [
         "vue_ensemble",
         "vie_scolaire",
         "programme_scolaire",
@@ -482,7 +478,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
                         {!isCollapsed && (
                             <div className="user-info">
                                 <span className="user-name">{userName}</span>
-                                <span className="user-email">{userEmail}</span>
+                                <span className="user-email">{user?.loginIdentifier || userEmail}</span>
                             </div>
                         )}
 

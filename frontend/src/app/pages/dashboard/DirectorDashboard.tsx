@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../../shared/contexts/AuthContext';
 import { DashboardLayout } from '../../layouts/DashboardLayout';
 import type { MenuItemId } from '../../layouts/DashboardLayout';
 import DirectorOverviewSection from './director/DirectorOverviewSection';
 import DirectorAdministrationSection from './director/DirectorAdministrationSection';
-import DirectorSchoolLifeSection from './director/DirectorSchoolLifeSection';
+import { DirectorVieScolaireSection } from './director/components/vie-scolaire/DirectorVieScolaireSection';
 import DirectorCurriculumSection from './director/DirectorCurriculumSection';
 import DirectorCommunicationSection from './director/DirectorCommunicationSection';
 import ConfigurationSection from './founder/ConfigurationSection';
@@ -16,6 +17,8 @@ const DirectorDashboard = () => {
     const [activeSection, setActiveSection] = useState<MenuItemId | 'settings'>('vue_ensemble');
     const [showWelcome, setShowWelcome] = useState(false);
 
+    const location = useLocation();
+
     useEffect(() => {
         const hasSeenWelcome = sessionStorage.getItem('welcomeShown');
         if (!hasSeenWelcome) {
@@ -24,6 +27,12 @@ const DirectorDashboard = () => {
         }
     }, []);
 
+    useEffect(() => {
+        if (location.state && (location.state as any).section) {
+            setActiveSection((location.state as any).section);
+        }
+    }, [location]);
+
     const renderContent = () => {
         switch (activeSection) {
             case 'vue_ensemble':
@@ -31,7 +40,7 @@ const DirectorDashboard = () => {
             case 'administration':
                 return <DirectorAdministrationSection />;
             case 'vie_scolaire':
-                return <DirectorSchoolLifeSection />;
+                return <DirectorVieScolaireSection />;
             case 'programme_scolaire':
                 return <DirectorCurriculumSection />;
             case 'communication':

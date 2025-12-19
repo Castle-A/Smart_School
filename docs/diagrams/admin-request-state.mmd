@@ -1,0 +1,16 @@
+stateDiagram-v2
+    [*] --> PENDING : Requête Créée (par Censeur/Autre)
+    PENDING --> APPROVED : Validée par Directeur
+    PENDING --> REJECTED : Refusée par Directeur
+    
+    state APPROVED {
+        [*] --> ExecuteAction
+        ExecuteAction --> DatabaseUpdate : Mise à jour Données
+        DatabaseUpdate --> [*]
+    }
+    
+    PENDING --> ARCHIVED : Auto-archivage (après délai)
+    APPROVED --> ARCHIVED : Après lecture/Temps
+    REJECTED --> ARCHIVED : Après lecture/Temps
+    
+    ARCHIVED --> [*]

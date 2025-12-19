@@ -1,4 +1,5 @@
-import { Controller, Post, Body, UseGuards, Request, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, UnauthorizedException, Res, Get } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthService } from '../../application/auth/auth.service';
 import { JwtAuthGuard } from '../../application/auth/jwt-auth.guard';
 import { LoginDto } from '../../application/auth/dto/login.dto';
@@ -13,24 +14,56 @@ export class AuthController {
     constructor(private authService: AuthService) { }
 
     @Post('login')
-    async login(@Body() loginDto: LoginDto) {
+    async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) response: Response) {
         try {
-            this.logger.log(`Tentative de connexion: ${loginDto.email}`, 'AuthController');
+            this.logger.log(`Tentative de connexion: ${loginDto.identifier}`, 'AuthController');
 
-            const user = await this.authService.validateUser(loginDto.email, loginDto.password);
+            const user = await this.authService.validateUser(loginDto.identifier, loginDto.password);
             if (!user) {
-                this.logger.warn(`Identifiants invalides pour: ${loginDto.email}`, 'AuthController');
+                this.logger.warn(`Identifiants invalides pour: ${loginDto.identifier}`, 'AuthController');
                 throw new UnauthorizedException('Invalid credentials');
             }
 
-            this.logger.log(`Utilisateur validé: ${user.email}`, 'AuthController');
+            this.logger.log(`Utilisateur validé: ${user.email || user.phone}`, 'AuthController');
             const result = await this.authService.login(user);
-            this.logger.log('Token généré avec succès', 'AuthController');
-            return result;
+
+            // Sécurisation Master : Cookie HttpOnly pour empêcher le vol de token via XSS
+            response.cookie('access_token', result.access_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production', // Uniquement en HTTPS en prod
+                sameSite: 'strict', // Protection contre CSRF
+                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
+            });
+
+            this.logger.log('Token injecté en cookie HttpOnly avec succès', 'AuthController');
+
+            // On retourne les infos utilisateur mais PAS le token (il est dans le cookie)
+            return {
+                user: result.user,
+                mustChangePassword: result.mustChangePassword,
+            };
         } catch (error) {
             this.logger.error(`Erreur lors de la connexion: ${error.message}`, error.stack, 'AuthController');
             throw error;
         }
+    }
+
+    @Post('logout')
+    async logout(@Res({ passthrough: true }) response: Response) {
+        // Effacement du cookie sécurisé
+        response.clearCookie('access_token');
+        this.logger.log('Déconnexion réussie (Cookie effacé)', 'AuthController');
+        return { message: 'Logged out successfully' };
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('profile')
+    async getProfile(@Request() req: any) {
+        // Endpoint Master : Permet au frontend de récupérer le profil depuis le cookie
+        this.logger.log(`Récupération du profil pour: ${req.user.userId}`, 'AuthController');
+        return {
+            user: req.user,
+        };
     }
 
     @Post('register/founder')

@@ -3,9 +3,17 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import cookieParser from 'cookie-parser';
+import { GlobalExceptionFilter } from './shared/filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Middleware cookie-parser (Master Security: Support des cookies HttpOnly)
+  app.use(cookieParser());
+
+  // Filtre d'exceptions global (Master Quality: Gestion centralisée des erreurs)
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   // Security headers
   app.use(helmet());

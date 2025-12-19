@@ -100,7 +100,7 @@ const OverviewSection = () => {
                         trend: stats?.attendance?.rate || "0%"
                     }
                 ].map((stat, idx) => (
-                    <div key={idx} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4 hover:shadow-lg transition-all shadow-sm">
+                    <div key={idx} className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4 hover:shadow-lg hover:shadow-indigo-500/10 transition-all shadow-sm hover:z-10 hover:border-white/20">
                         <div className="flex justify-between items-start mb-3">
                             <div className={`p-2.5 rounded-lg ${stat.bg} ${stat.color}`}>
                                 <stat.icon size={20} />

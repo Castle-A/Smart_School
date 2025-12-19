@@ -1,70 +1,100 @@
-import { Calendar, Clock, Edit2 } from 'lucide-react';
+import YearEndClosure from '../components/YearEndClosure';
+import { Shield, Calendar, Users, ArrowRightCircle } from 'lucide-react';
+import { useState } from 'react';
+import { SmartCalendar } from '../components/calendar/SmartCalendar';
+import { AddEventModal } from '../components/calendar/AddEventModal';
+import { calendarService } from '../../../api/calendar.service';
+import ClassCouncil from './components/ClassCouncil';
+import PromotionWizard from './components/PromotionWizard';
 
 const DirectorCurriculumSection = () => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<'calendar' | 'council' | 'promo' | 'closure'>('calendar');
+
+    // ... fetchEvents ...
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white">Programme Scolaire</h2>
-                <div className="flex gap-2">
-                    <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors flex items-center gap-2">
-                        <Edit2 size={16} />
-                        Modifier Planning
-                    </button>
+                <div>
+                    <h2 className="text-2xl font-bold text-white">Programme Scolaire & Transition</h2>
+                    <p className="text-gray-400 text-sm">Gestion du calendrier et des conseils de classe de fin d'année</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Calendrier Académique */}
-                <div className="lg:col-span-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <Calendar className="text-indigo-400" size={24} />
-                        <h3 className="text-xl font-semibold text-white">Calendrier Académique & Examens</h3>
-                    </div>
+            {/* Tabs */}
+            <div className="flex gap-2 overflow-x-auto pb-2 border-b border-white/10">
+                <button
+                    onClick={() => setActiveTab('calendar')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors ${activeTab === 'calendar'
+                        ? 'bg-indigo-600 text-white border-b-2 border-indigo-400'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <Calendar size={18} />
+                    Calendrier Scolaire
+                </button>
+                <button
+                    onClick={() => setActiveTab('council')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors ${activeTab === 'council'
+                        ? 'bg-indigo-600 text-white border-b-2 border-indigo-400'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <Users size={18} />
+                    Conseil de Classe
+                </button>
+                <button
+                    onClick={() => setActiveTab('promo')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors ${activeTab === 'promo'
+                        ? 'bg-indigo-600 text-white border-b-2 border-indigo-400'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <ArrowRightCircle size={18} />
+                    Assistant Promotion
+                </button>
+                <button
+                    onClick={() => setActiveTab('closure')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors ${activeTab === 'closure'
+                        ? 'bg-red-600 text-white border-b-2 border-red-400'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    <Shield size={18} />
+                    Clôture Annuelle
+                </button>
+            </div>
 
-                    <div className="relative border-l-2 border-white/10 ml-3 space-y-8 pb-4">
-                        {[
-                            { date: "15 Sept 2024", event: "Rentrée Scolaire", type: "info", desc: "Début des cours pour tous les cycles" },
-                            { date: "12 Nov 2024", event: "Devoir Surveillé Math (3ème)", type: "exam", desc: "Coefficient 2" },
-                            { date: "15 Déc 2024", event: "Fin du 1er Trimestre", type: "exam", desc: "Arrêt des notes et conseils de classe" },
-                        ].map((item, idx) => (
-                            <div key={idx} className="relative pl-8">
-                                <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 border-slate-900 ${item.type === 'holiday' ? 'bg-emerald-500' :
-                                    item.type === 'exam' ? 'bg-red-500' : 'bg-blue-500'
-                                    }`}></div>
-                                <div className="bg-white/5 p-4 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <span className="text-sm font-bold text-indigo-300">{item.date}</span>
-                                        <span className={`text-[10px] uppercase px-2 py-0.5 rounded ${item.type === 'holiday' ? 'bg-emerald-500/20 text-emerald-300' :
-                                            item.type === 'exam' ? 'bg-red-500/20 text-red-300' : 'bg-blue-500/20 text-blue-300'
-                                            }`}>{item.type}</span>
-                                    </div>
-                                    <h4 className="text-white font-medium text-lg">{item.event}</h4>
-                                    <p className="text-sm text-gray-400 mt-1">{item.desc}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+            {/* Content */}
+            <div className="min-h-[600px] bg-white rounded-xl text-gray-800">
+                {activeTab === 'calendar' && (
+                    <>
+                        <SmartCalendar
+                            canCreate={true}
+                            onCreateClick={() => setIsModalOpen(true)}
+                        />
 
-                {/* Configuration Rapide */}
-                <div className="space-y-6">
-                    {/* Planning Évaluations */}
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                            <Clock className="text-amber-400" size={20} />
-                            <h3 className="text-lg font-semibold text-white">Prochains Examens</h3>
-                        </div>
-                        <ul className="space-y-4">
-                            <li className="p-3 bg-white/5 rounded-lg border-l-2 border-amber-500">
-                                <div className="flex justify-between text-sm text-gray-300 mb-1">
-                                    <span>Devoir Surveillé Math</span>
-                                    <span className="text-amber-400 font-bold">12 Nov</span>
-                                </div>
-                                <div className="text-xs text-gray-500">Classe: 3ème • Coeff 2</div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                        <AddEventModal
+                            isOpen={isModalOpen}
+                            onClose={() => setIsModalOpen(false)}
+                            onSave={async (data) => {
+                                await calendarService.createEvent(data);
+                                // SmartCalendar auto-refreshes or we force it? 
+                                // Ideally SmartCalendar listens to an update, but for now specific reload might be needed.
+                                // Let's keep it simple: Changing state or forcing reload logic inside SmartCalendar would be best.
+                                // For MVP: We will update SmartCalendar to expose a refresh method or just reload window (brute force) or trigger a re-fetch.
+                                // Actually, SmartCalendar fetches on mount. 
+                                // Let's add a key to force re-mount or simple reload.
+                                window.location.reload();
+                            }}
+                        />
+                    </>
+                )}
+
+                {activeTab === 'council' && <ClassCouncil />}
+                {activeTab === 'promo' && <PromotionWizard />}
+                {activeTab === 'closure' && <YearEndClosure />}
             </div>
         </div>
     );

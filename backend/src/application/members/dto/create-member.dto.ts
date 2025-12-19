@@ -25,7 +25,7 @@ export class CreateMemberDto {
     @IsNotEmpty({ message: 'Le genre est requis' })
     gender: string;
 
-    @IsEnum(['DIRECTOR', 'SECRETARY', 'SURVEILLANT', 'CENSEUR', 'CENSOR', 'ACCOUNTANT'], {
+    @IsEnum(['DIRECTOR', 'SECRETARY', 'SUPERVISOR', 'CENSOR', 'ACCOUNTANT'], {
         message: 'Rôle invalide'
     })
     @IsNotEmpty({ message: 'Le rôle est requis' })

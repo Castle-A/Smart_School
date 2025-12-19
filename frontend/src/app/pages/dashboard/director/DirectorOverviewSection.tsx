@@ -1,8 +1,90 @@
-import { Users, GraduationCap, TrendingUp, AlertTriangle, Calendar, BookOpen, UserCheck } from 'lucide-react';
+import { Users, GraduationCap, TrendingUp, Calendar, BookOpen, UserCheck, Bell, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { adminRequestService, type AdminRequest } from '../../../../shared/api/admin-requests.service';
+import { calendarService, type AcademicEvent } from '../../../api/calendar.service';
 import { useAuth } from '../../../../shared/contexts/AuthContext';
+import StudentValidationModal from './components/StudentValidationModal';
 
 const DirectorOverviewSection = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
+    const [requests, setRequests] = useState<AdminRequest[]>([]);
+    const [showArchived, setShowArchived] = useState(false);
+    const [selectedRequest, setSelectedRequest] = useState<AdminRequest | null>(null);
+    const [validationStudentId, setValidationStudentId] = useState<string | null>(null);
+    const [validationRequestId, setValidationRequestId] = useState<string | null>(null);
+    const [upcomingEvents, setUpcomingEvents] = useState<AcademicEvent[]>([]);
+
+    useEffect(() => {
+        const fetchEvents = async () => {
+            try {
+                const events = await calendarService.getEvents();
+                // Filter for future events only
+                const futureEvents = events
+                    .filter((e: AcademicEvent) => new Date(e.start) >= new Date())
+                    .sort((a: AcademicEvent, b: AcademicEvent) => new Date(a.start).getTime() - new Date(b.start).getTime())
+                    .slice(0, 5);
+                setUpcomingEvents(futureEvents);
+            } catch (error) {
+                console.error("Failed to fetch events", error);
+            }
+        };
+        fetchEvents();
+    }, []);
+
+    const getEventTypeColor = (type: string) => {
+        switch (type) {
+            case 'EXAM': return 'bg-red-400';
+            case 'MEETING': return 'bg-blue-400';
+            case 'HOLIDAY': return 'bg-emerald-400';
+            case 'ACADEMIC_PERIOD': return 'bg-purple-400';
+            default: return 'bg-amber-400';
+        }
+    };
+
+    useEffect(() => {
+        const fetchRequests = async () => {
+            try {
+                const res = await adminRequestService.findAll(undefined, showArchived);
+                // Parse data if it is a string
+                const parsedRequests = res.data.map(req => ({
+                    ...req,
+                    payload: typeof req.data === 'string' ? JSON.parse(req.data) : req.data
+                }));
+                setRequests(parsedRequests);
+            } catch (error) {
+                console.error("Failed to fetch requests", error);
+            }
+        };
+        fetchRequests();
+    }, [showArchived]);
+
+    const handleArchive = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!confirm('Archiver cette notification ?')) return;
+        try {
+            await adminRequestService.archive(id);
+            setRequests(prev => prev.filter(r => r.id !== id));
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleArchiveAll = async () => {
+        if (!confirm('Tout archiver (approuvées/refusées) ?')) return;
+        try {
+            await adminRequestService.archiveAllProcessed();
+            const res = await adminRequestService.findAll(undefined, showArchived);
+            const parsedRequests = res.data.map(req => ({
+                ...req,
+                payload: typeof req.data === 'string' ? JSON.parse(req.data) : req.data
+            }));
+            setRequests(parsedRequests);
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const getTeacherLabel = () => {
         if (user?.directorType === 'PRIMARY_PRESCHOOL') return 'Maîtres';
@@ -44,35 +126,110 @@ const DirectorOverviewSection = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Alertes */}
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <AlertTriangle className="text-amber-400" size={24} />
-                        <h3 className="text-xl font-semibold text-white">Alertes & Actions</h3>
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <Bell className="text-amber-400" size={24} />
+                            <h3 className="text-xl font-semibold text-white">Notifications & Actions</h3>
+                        </div>
+                        <div className="flex gap-2">
+                            {!showArchived && (
+                                <button
+                                    onClick={handleArchiveAll}
+                                    className="px-3 py-1.5 text-xs bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors border border-white/10"
+                                >
+                                    Tout nettoyer
+                                </button>
+                            )}
+                            <button
+                                onClick={() => setShowArchived(!showArchived)}
+                                className={`px-3 py-1.5 text-xs rounded-lg transition-colors border ${showArchived ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'}`}
+                            >
+                                {showArchived ? 'Voir Actifs' : 'Voir Archives'}
+                            </button>
+                        </div>
                     </div>
+
                     <div className="space-y-3">
-                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-                            <div className="flex justify-between items-start mb-2">
-                                <h4 className="text-white font-medium">Bulletins à Valider</h4>
-                                <span className="text-red-400 font-bold">5</span>
+                        {requests.length === 0 ? (
+                            <div className="p-4 bg-white/5 border border-white/10 rounded-lg text-center py-8">
+                                <p className="text-gray-400 text-sm">{showArchived ? 'Aucune archive.' : 'Aucune alerte pour le moment.'}</p>
                             </div>
-                            <p className="text-sm text-gray-400">Trimestre 1 - Classes en attente</p>
-                            <button className="mt-3 text-sm text-red-400 hover:text-red-300">Voir les bulletins →</button>
-                        </div>
-                        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                            <div className="flex justify-between items-start mb-2">
-                                <h4 className="text-white font-medium">Incidents Discipline</h4>
-                                <span className="text-amber-400 font-bold">12</span>
+                        ) : (
+                            <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                {requests.slice(0, 5).map(req => {
+                                    let statusColor = 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+                                    let StatusIcon = Clock;
+                                    let statusText = 'En attente';
+
+                                    if (req.status === 'APPROVED') {
+                                        statusColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+                                        StatusIcon = CheckCircle;
+                                        statusText = 'Approuvée';
+                                    } else if (req.status === 'REJECTED') {
+                                        statusColor = 'text-red-400 bg-red-500/10 border-red-500/20';
+                                        StatusIcon = XCircle;
+                                        statusText = 'Refusée';
+                                    }
+
+                                    let title = 'Requête';
+                                    if (req.type === 'UPDATE_TEACHER') title = 'Modif. Prof';
+                                    if (req.type === 'DELETE_TEACHER') title = 'Suppr. Prof';
+                                    if (req.type === 'CLASS_ASSEMBLY') title = 'Assemblage';
+                                    if (req.type === 'VALIDATE_STUDENT_REGISTRATION') title = 'Inscription Élève';
+
+                                    return (
+                                        <div
+                                            key={req.id}
+                                            onClick={() => {
+                                                if (req.type === 'VALIDATE_STUDENT_REGISTRATION' && req.status === 'PENDING') {
+                                                    setValidationStudentId(req.payload?.studentId);
+                                                    setValidationRequestId(req.id);
+                                                } else {
+                                                    setSelectedRequest(req);
+                                                }
+                                            }}
+                                            className={`p-3 rounded-lg border ${statusColor} hover:bg-white/5 transition-colors cursor-pointer group relative`}
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-lg ${statusColor.split(' ')[1]}`}>
+                                                        <StatusIcon size={16} className={statusColor.split(' ')[0]} />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="text-white font-medium text-sm">{title}</h4>
+                                                        <p className="text-xs text-gray-400">
+                                                            {req.requester?.firstName} {req.requester?.lastName} • {new Date(req.createdAt).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${statusColor.split(' ')[1]} ${statusColor.split(' ')[0]}`}>
+                                                        {statusText}
+                                                    </span>
+                                                    {req.status !== 'PENDING' && !showArchived && (
+                                                        <button
+                                                            onClick={(e) => handleArchive(req.id, e)}
+                                                            className="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:bg-red-500/20 rounded-md transition-all"
+                                                            title="Archiver"
+                                                        >
+                                                            <XCircle size={14} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                {requests.length > 5 && (
+                                    <button
+                                        onClick={() => navigate('/app/dashboard', { state: { section: 'administration', view: 'requests' } })}
+                                        className="text-center text-xs text-indigo-400 hover:text-indigo-300 py-2"
+                                    >
+                                        Voir toutes les {requests.length} notifications →
+                                    </button>
+                                )}
                             </div>
-                            <p className="text-sm text-gray-400">Cette semaine</p>
-                            <button className="mt-3 text-sm text-amber-400 hover:text-amber-300">Consulter →</button>
-                        </div>
-                        <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                            <div className="flex justify-between items-start mb-2">
-                                <h4 className="text-white font-medium">Absences Non Justifiées</h4>
-                                <span className="text-blue-400 font-bold">28</span>
-                            </div>
-                            <p className="text-sm text-gray-400">À traiter</p>
-                            <button className="mt-3 text-sm text-blue-400 hover:text-blue-300">Traiter →</button>
-                        </div>
+                        )}
                     </div>
                 </div>
 
@@ -83,27 +240,29 @@ const DirectorOverviewSection = () => {
                         <h3 className="text-xl font-semibold text-white">Événements à Venir</h3>
                     </div>
                     <div className="space-y-3">
-                        {[
-                            { title: 'Conseil de Classe 3ème', date: '02 Déc', time: '14:00', type: 'meeting' },
-                            { title: 'Composition Trimestre 1', date: '05 Déc', time: '08:00', type: 'exam' },
-                            { title: 'Réunion Parents-Profs', date: '08 Déc', time: '15:00', type: 'meeting' },
-                            { title: 'Fin Trimestre 1', date: '15 Déc', time: 'Toute la journée', type: 'deadline' },
-                        ].map((event, idx) => (
-                            <div key={idx} className="flex items-start gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-                                <div className="flex-shrink-0 w-12 text-center">
-                                    <div className="text-xs text-gray-400">{event.date.split(' ')[1]}</div>
-                                    <div className="text-lg font-bold text-white">{event.date.split(' ')[0]}</div>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="text-white font-medium text-sm truncate">{event.title}</h4>
-                                    <p className="text-xs text-gray-400">{event.time}</p>
-                                </div>
-                                <div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${event.type === 'exam' ? 'bg-red-400' :
-                                    event.type === 'meeting' ? 'bg-blue-400' :
-                                        'bg-amber-400'
-                                    }`}></div>
-                            </div>
-                        ))}
+                        {upcomingEvents.length === 0 ? (
+                            <p className="text-gray-400 text-sm text-center py-4">Aucun événement à venir.</p>
+                        ) : (
+                            upcomingEvents.map((event, idx) => {
+                                const dateObj = new Date(event.start);
+                                const dateStr = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+                                const timeStr = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+                                return (
+                                    <div key={idx} className="flex items-start gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                                        <div className="flex-shrink-0 w-12 text-center">
+                                            <div className="text-xs text-gray-400">{dateStr.split(' ')[1]}</div>
+                                            <div className="text-lg font-bold text-white">{dateStr.split(' ')[0]}</div>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="text-white font-medium text-sm truncate">{event.title}</h4>
+                                            <p className="text-xs text-gray-400">{timeStr}</p>
+                                        </div>
+                                        <div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${getEventTypeColor(event.type)}`}></div>
+                                    </div>
+                                );
+                            })
+                        )}
                     </div>
                 </div>
             </div>
@@ -153,6 +312,101 @@ const DirectorOverviewSection = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Detail Modal */}
+            {selectedRequest && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                    onClick={() => setSelectedRequest(null)}>
+                    <div className="bg-[#1e293b] border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-start mb-6">
+                            <h3 className="text-xl font-bold text-white">Détails de la Notification</h3>
+                            <button onClick={() => setSelectedRequest(null)} className="text-gray-400 hover:text-white">
+                                <XCircle size={24} />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="bg-black/20 p-4 rounded-xl">
+                                <p className="text-gray-400 text-sm mb-1">Type de Requête</p>
+                                <p className="text-white font-medium">
+                                    {selectedRequest.type === 'UPDATE_TEACHER' && 'Modification Professeur'}
+                                    {selectedRequest.type === 'DELETE_TEACHER' && 'Suppression Professeur'}
+                                    {selectedRequest.type === 'CLASS_ASSEMBLY' && 'Assemblage Classe'}
+                                    {selectedRequest.type === 'VALIDATE_STUDENT_REGISTRATION' && 'Inscription Élève'}
+                                    {!['UPDATE_TEACHER', 'DELETE_TEACHER', 'CLASS_ASSEMBLY', 'VALIDATE_STUDENT_REGISTRATION'].includes(selectedRequest.type) && selectedRequest.type}
+                                </p>
+                            </div>
+                            <div className="bg-black/20 p-4 rounded-xl">
+                                <p className="text-gray-400 text-sm mb-1">Statut</p>
+                                <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${selectedRequest.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400' :
+                                    selectedRequest.status === 'REJECTED' ? 'bg-red-500/20 text-red-400' :
+                                        'bg-amber-500/20 text-amber-400'
+                                    }`}>
+                                    {selectedRequest.status === 'APPROVED' && 'Approuvée'}
+                                    {selectedRequest.status === 'REJECTED' && 'Refusée'}
+                                    {selectedRequest.status === 'PENDING' && 'En Attente'}
+                                </span>
+                            </div>
+                            {selectedRequest.adminComment && (
+                                <div className="bg-black/20 p-4 rounded-xl border border-white/5">
+                                    <p className="text-gray-400 text-sm mb-1">Commentaire Administration</p>
+                                    <p className="text-white italic">"{selectedRequest.adminComment}"</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-6 flex justify-end gap-3">
+                            <button
+                                onClick={() => {
+                                    if (selectedRequest?.type === 'VALIDATE_STUDENT_REGISTRATION' && selectedRequest.status === 'PENDING') {
+                                        setValidationStudentId(selectedRequest.payload?.studentId);
+                                        setSelectedRequest(null);
+                                    } else {
+                                        navigate('/app/dashboard', { state: { section: 'administration', view: 'requests' } });
+                                        setSelectedRequest(null);
+                                    }
+                                }}
+                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                            >
+                                Traiter / Voir Détails
+                            </button>
+                            <button
+                                onClick={() => setSelectedRequest(null)}
+                                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg"
+                            >
+                                Fermer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {validationStudentId && (
+                <StudentValidationModal
+                    studentId={validationStudentId}
+                    requestId={validationRequestId}
+                    onClose={() => {
+                        setValidationStudentId(null);
+                        setValidationRequestId(null);
+                    }}
+                    onSuccess={() => {
+                        // We refresh request after success
+                        const fetchRequests = async () => {
+                            try {
+                                const res = await adminRequestService.findAll(undefined, showArchived);
+                                const parsedRequests = res.data.map(req => ({
+                                    ...req,
+                                    payload: typeof req.data === 'string' ? JSON.parse(req.data) : req.data
+                                }));
+                                setRequests(parsedRequests);
+                            } catch (e) { console.error(e) }
+                        };
+                        fetchRequests();
+                        setValidationStudentId(null);
+                        setValidationRequestId(null);
+                    }}
+                />
+            )}
         </div>
     );
 };

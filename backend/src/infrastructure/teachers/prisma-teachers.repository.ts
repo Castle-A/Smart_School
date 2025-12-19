@@ -61,7 +61,42 @@ export class PrismaTeachersRepository implements ITeachersRepository {
         };
     }
 
-    async findAllBySchoolId(schoolId: string) {
+    async findAllBySchoolId(schoolId: string, isSimple: boolean = false) {
+        if (isSimple) {
+            // Optimized query for dropdowns (Wizard)
+            const teachers = await this.prisma.teacher.findMany({
+                where: { schoolId, deletedAt: null },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                            phone: true,
+                            // Minimal user info needed for dropdown identity
+                        }
+                    },
+                    // We might need subjects to show specialty if it's not on teacher directly?
+                    // Schema has specialty on Teacher model directly? Let's check schema again if needed.
+                    // Checking ViewFile 3280, specialty is on Teacher model (lines 115).
+                    // But we also include subjects for relation check? 
+                    // Let's keep it simple.
+                },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            return teachers.map((teacher: any) => ({
+                id: teacher.id,
+                userId: teacher.userId,
+                firstName: teacher.user?.firstName ?? teacher.firstName,
+                lastName: teacher.user?.lastName ?? teacher.lastName,
+                specialty: teacher.specialty, // Crucial for filtering
+                user: teacher.user // Need this structure for frontend compatibility
+            }));
+        }
+
+        // Full Heavy Query with Counts
         const teachers = await this.prisma.teacher.findMany({
             where: {
                 schoolId,
@@ -172,6 +207,11 @@ export class PrismaTeachersRepository implements ITeachersRepository {
 
     async update(id: string, data: any) {
         const { subjects: subjectNames, ...updateData } = data;
+
+        // Fix hireDate validation error (Prisma expects Date object)
+        if (updateData.hireDate) {
+            updateData.hireDate = new Date(updateData.hireDate);
+        }
 
         // If subjects are being updated
         if (Array.isArray(subjectNames)) {
