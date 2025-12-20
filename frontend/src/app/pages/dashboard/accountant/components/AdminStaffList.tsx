@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Shield } from 'lucide-react';
 import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 
 interface SchoolUser {
     id: string;
@@ -39,7 +40,7 @@ const AdminStaffList = ({ readOnly = false }: { readOnly?: boolean }) => {
             setEditingId(null);
             fetchStaff();
         } catch (error) {
-            alert("Erreur maj salaire");
+            toastEvents.error("Erreur mise à jour salaire");
         }
     };
 

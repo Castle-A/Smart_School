@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Search, FileText } from 'lucide-react';
 import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 
 interface Teacher {
     id: string;
@@ -41,7 +42,7 @@ const TeacherFinancialList = ({ readOnly = false }: { readOnly?: boolean }) => {
             setEditingId(null);
             fetchTeachers();
         } catch (error) {
-            alert("Erreur lors de la mise à jour du taux horaire");
+            toastEvents.error("Erreur lors de la mise à jour du taux horaire");
         }
     };
 

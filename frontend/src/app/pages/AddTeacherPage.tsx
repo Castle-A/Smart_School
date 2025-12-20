@@ -5,6 +5,7 @@ import api from '../../shared/api/api';
 import Avatar from '../../shared/components/Avatar';
 import PhoneInput from '../../shared/components/PhoneInput';
 import { useAuth } from '../../shared/contexts/AuthContext';
+import { toastEvents } from '../../shared/utils/toast-events';
 
 interface TeacherFormData {
     // Ã‰tape 1 - Personnel
@@ -88,7 +89,7 @@ export default function AddTeacherPage() {
             });
         } catch (err) {
             console.error("Failed to fetch teacher", err);
-            alert("Impossible de charger les donnÃ©es de l'enseignant.");
+            toastEvents.error("Impossible de charger les données de l'enseignant.");
             navigate('/app/dashboard');
         } finally {
             setIsLoading(false);
@@ -285,7 +286,7 @@ export default function AddTeacherPage() {
             });
         } catch (error: any) {
             console.error('ðŸ”´ Error saving teacher:', error);
-            alert(`Erreur lors de la sauvegarde: ${error.response?.data?.message || error.message}`);
+            toastEvents.error(`Erreur lors de la sauvegarde: ${error.response?.data?.message || error.message}`);
         } finally {
             setIsSubmitting(false);
         }

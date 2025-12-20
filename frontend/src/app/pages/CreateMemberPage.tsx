@@ -5,6 +5,7 @@ import { User, Mail, Briefcase, ArrowLeft, Shield, Building2, Smartphone } from 
 import PhoneInput from '../../shared/components/PhoneInput';
 import PermissionsChecklist from '../../shared/components/PermissionsChecklist';
 import SuccessCredentialsModal from '../../shared/components/SuccessCredentialsModal';
+import { toastEvents } from '../../shared/utils/toast-events';
 
 type MemberRole = 'DIRECTOR' | 'SECRETARY' | 'SUPERVISOR' | 'CENSOR' | 'ACCOUNTANT' | 'TEACHER';
 
@@ -73,7 +74,7 @@ const CreateMemberPage = () => {
         } catch (error: any) {
             console.error('Error creating member:', error.response?.data || error);
             const errorMessage = error.response?.data?.message || error.message || 'Erreur inconnue';
-            alert(`Erreur lors de la création du membre: ${errorMessage}`);
+            toastEvents.error(`Erreur lors de la création du membre: ${errorMessage}`);
         } finally {
             setIsLoading(false);
         }

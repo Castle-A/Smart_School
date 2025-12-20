@@ -8,19 +8,19 @@ import { AsyncLocalStorage } from 'async_hooks';
  */
 @Injectable()
 export class TenantContextService {
-    private static readonly storage = new AsyncLocalStorage<string>();
+  private static readonly storage = new AsyncLocalStorage<string>();
 
-    /**
-     * Définit le schoolId pour la durée de la requête actuelle
-     */
-    setSchoolId(schoolId: string, callback: () => void) {
-        TenantContextService.storage.run(schoolId, callback);
-    }
+  /**
+   * Définit le schoolId pour la durée de la requête actuelle
+   */
+  setSchoolId(schoolId: string, callback: () => void) {
+    TenantContextService.storage.run(schoolId, callback);
+  }
 
-    /**
-     * Récupère le schoolId associé à la requête actuelle
-     */
-    getSchoolId(): string | undefined {
-        return TenantContextService.storage.getStore();
-    }
+  /**
+   * Récupère le schoolId associé à la requête actuelle
+   */
+  getSchoolId(): string | undefined {
+    return TenantContextService.storage.getStore();
+  }
 }

@@ -20,10 +20,14 @@ import {
     Bell,
     Palette,
     Accessibility,
-    ArrowLeft
+    ArrowLeft,
+    Building2,
+    CalendarDays
 } from "lucide-react";
 import "./DashboardLayout.css";
 import { useAnalytics } from '../../shared/hooks/useAnalytics';
+import api from '../../shared/api/api';
+import type { SchoolConfig } from '../../shared/api/school-config.service';
 
 import type { UserRole } from "../../shared/types/roles";
 
@@ -105,6 +109,7 @@ const MENU_BY_ROLE: Record<UserRole, MenuItemId[]> = {
         "programme_scolaire",
         "comptabilite",
         "communication",
+        "configuration",
     ],
     TEACHER: [
         "vue_ensemble",
@@ -162,7 +167,6 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
     const menuItems = MENU_BY_ROLE[role];
     const { trackPageView, trackClick } = useAnalytics();
     const { user } = useAuth(); // Create direct access to user
-    const token = localStorage.getItem('access_token');
     const location = window.location;
 
     // State for school info
@@ -170,6 +174,8 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
         name: schoolName || user?.schoolName || 'Mon École',
         logo: null
     });
+    const [schoolConfig, setSchoolConfig] = useState<SchoolConfig | null>(null);
+    const [activeYear, setActiveYear] = useState<{ name: string } | null>(null);
 
     // Track Page Views
     useEffect(() => {
@@ -245,47 +251,78 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
         };
     }, []);
 
-    // Fetch School Info Effect
+    // Inject Brand Colors
     useEffect(() => {
-        const fetchSchoolInfo = async () => {
-            if (!token) {
-                // console.warn('[DashboardLayout] No access token found');
-                return;
-            }
-
+        if (schoolConfig?.officialColors) {
             try {
-                // Get user data (which includes school info)
-                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-                const response = await fetch(`${apiUrl}/profile/me`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const colors = typeof schoolConfig.officialColors === 'string'
+                    ? JSON.parse(schoolConfig.officialColors)
+                    : schoolConfig.officialColors;
 
-                if (!response.ok) {
-                    // console.error('[DashboardLayout] Failed to fetch user profile');
-                    // Fallback to props if fetch fails
-                    setSchoolInfo(prev => ({ ...prev, name: schoolName || prev.name }));
-                    return;
+                if (colors.primary) {
+                    document.documentElement.style.setProperty('--primary-brand', colors.primary);
                 }
+                if (colors.secondary) {
+                    document.documentElement.style.setProperty('--secondary-brand', colors.secondary);
+                }
+            } catch (e) {
+                console.debug('[DashboardLayout] Colors parse failed:', e);
+            }
+        }
+    }, [schoolConfig]);
 
-                const userData = await response.json();
+    const fetchDataRef = useRef(false);
 
-                if (userData.school) {
-                    setSchoolInfo({
-                        name: userData.school.name,
-                        logo: userData.school.logo
-                    });
+    // Fetch School Info, Config and Active Year
+    useEffect(() => {
+        if (fetchDataRef.current) return;
+        fetchDataRef.current = true;
+
+        const fetchAllData = async () => {
+            // 1. Fetch User Profile for School Name/Logo
+            try {
+                const response = await api.get('/profile/me', { skipGlobalErrorHandler: true } as any);
+
+                if (response.data) {
+                    const userData = response.data;
+                    if (userData.school) {
+                        setSchoolInfo({
+                            name: userData.school.name,
+                            logo: userData.school.logo
+                        });
+                    }
+                } else {
+                    setSchoolInfo(prev => ({ ...prev, name: schoolName || prev.name }));
                 }
             } catch (error) {
-                console.error('[DashboardLayout] Error fetching school info:', error);
+                console.debug('[DashboardLayout] Profile fetch failed:', error);
+            }
+
+            // 2. Fetch School Config and Active Year
+            try {
+                // Fetch School Config (defaults to null if not implemented yet)
+                const configResponse = await api.get('/schools/config').catch(err => {
+                    if (err.response?.status === 404) return { data: null };
+                    throw err;
+                });
+                if (configResponse.data) {
+                    setSchoolConfig(configResponse.data);
+                }
+
+                const yearResponse = await api.get('/academic-years/active').catch(err => {
+                    if (err.response?.status === 404) return { data: null };
+                    throw err;
+                });
+                if (yearResponse.data) {
+                    setActiveYear(yearResponse.data);
+                }
+            } catch (error) {
+                console.debug('[DashboardLayout] Non-critical data fetch failed:', error);
             }
         };
 
-        fetchSchoolInfo();
-    }, [token, schoolName]);
+        fetchAllData();
+    }, [schoolName]);
 
     const handleClick = (item: MenuItemId) => {
         setActiveItem(item);
@@ -334,26 +371,41 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
                 </div>
 
                 {!isCollapsed && (
-                    <div className="px-4 py-2 mb-4">
+                    <div className="px-3 mb-4">
                         <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
-                            {schoolInfo?.logo ? (
+                            {/* Logo de l'école */}
+                            {(schoolInfo?.logo || schoolConfig?.logo) ? (
                                 <img
-                                    src={schoolInfo.logo}
-                                    alt={schoolInfo.name}
-                                    className="w-10 h-10 rounded-lg object-cover bg-white"
+                                    src={schoolInfo?.logo || schoolConfig?.logo || ''}
+                                    alt={schoolInfo?.name || 'Logo'}
+                                    className="w-12 h-12 rounded-lg object-cover border-2 border-white/20"
                                 />
                             ) : (
-                                <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                                    <School size={20} />
+                                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                                    <Building2 className="text-white" size={24} />
                                 </div>
                             )}
+
                             <div className="flex-1 min-w-0">
+                                {/* Nom de l'école */}
                                 <h3 className="text-sm font-bold text-white truncate">
-                                    {schoolName || schoolInfo?.name || 'Chargement...'}
+                                    {schoolInfo?.name || 'Chargement...'}
                                 </h3>
-                                <p className="text-xs text-gray-400 truncate">
-                                    Année 2024-2025
-                                </p>
+
+                                {/* Devise */}
+                                {schoolConfig?.motto && (
+                                    <p className="text-[10px] text-slate-400 italic truncate" title={schoolConfig.motto}>
+                                        "{schoolConfig.motto}"
+                                    </p>
+                                )}
+
+                                {/* Année active */}
+                                <div className="flex items-center gap-1 mt-0.5">
+                                    <CalendarDays size={10} className="text-indigo-400" />
+                                    <span className="text-[10px] text-indigo-300">
+                                        {activeYear?.name || 'Aucune année active'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>

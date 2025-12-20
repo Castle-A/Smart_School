@@ -182,7 +182,7 @@ const DirectorOverviewSection = () => {
                                             key={req.id}
                                             onClick={() => {
                                                 if (req.type === 'VALIDATE_STUDENT_REGISTRATION' && req.status === 'PENDING') {
-                                                    setValidationStudentId(req.payload?.studentId);
+                                                    setValidationStudentId((req.payload as any)?.studentId);
                                                     setValidationRequestId(req.id);
                                                 } else {
                                                     setSelectedRequest(req);
@@ -359,7 +359,7 @@ const DirectorOverviewSection = () => {
                             <button
                                 onClick={() => {
                                     if (selectedRequest?.type === 'VALIDATE_STUDENT_REGISTRATION' && selectedRequest.status === 'PENDING') {
-                                        setValidationStudentId(selectedRequest.payload?.studentId);
+                                        setValidationStudentId((selectedRequest.payload as any)?.studentId);
                                         setSelectedRequest(null);
                                     } else {
                                         navigate('/app/dashboard', { state: { section: 'administration', view: 'requests' } });

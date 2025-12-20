@@ -3,6 +3,7 @@ import { Users, Shield, Lock, LockOpen, Settings, X, GraduationCap, School, Sear
 import { useNavigate } from 'react-router-dom';
 import api from '../../../../shared/api/api';
 import { ROLE_LABELS } from '../../../../shared/constants/roles';
+import { toastEvents } from '../../../../shared/utils/toast-events';
 
 const SearchableCardHeader = ({
     title,
@@ -350,7 +351,7 @@ const AdministrationSection = ({ readOnly = false }: AdministrationSectionProps)
                     }
                 } catch (error) {
                     console.error('Error resetting password:', error);
-                    alert('Erreur lors de la réinitialisation du mot de passe');
+                    toastEvents.error('Erreur lors de la réinitialisation du mot de passe');
                 }
             }
         });
@@ -378,14 +379,14 @@ const AdministrationSection = ({ readOnly = false }: AdministrationSectionProps)
 
                     // Success feedback
                     if (newStatus === 'inactive') {
-                        alert(`Le compte de ${member.firstName} ${member.lastName} a été désactivé avec succès.`);
+                        toastEvents.success(`Le compte de ${member.firstName} ${member.lastName} a été désactivé avec succès.`);
                     } else {
-                        alert(`Le compte de ${member.firstName} ${member.lastName} a été réactivé avec succès.`);
+                        toastEvents.success(`Le compte de ${member.firstName} ${member.lastName} a été réactivé avec succès.`);
                     }
 
                 } catch (error) {
                     console.error('Error updating status:', error);
-                    alert('Erreur lors de la modification du statut');
+                    toastEvents.error('Erreur lors de la modification du statut');
                 }
             }
         });
@@ -403,10 +404,10 @@ const AdministrationSection = ({ readOnly = false }: AdministrationSectionProps)
                     await api.delete(`/members/${member.id}`);
                     fetchMembers();
                     setOpenMenuId(null);
-                    alert('Membre supprimé avec succès');
+                    toastEvents.success('Membre supprimé avec succès');
                 } catch (error) {
                     console.error('Error deleting member:', error);
-                    alert('Erreur lors de la suppression du membre');
+                    toastEvents.error('Erreur lors de la suppression du membre');
                 }
             }
         });

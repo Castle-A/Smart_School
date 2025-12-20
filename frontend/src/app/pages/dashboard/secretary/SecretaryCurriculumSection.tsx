@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import TimelineCalendar, { type CalendarEvent } from '../../../../shared/components/calendar/TimelineCalendar';
 import CreateAcademicEventModal from '../../../../shared/components/calendar/modals/CreateAcademicEventModal';
 import api from '../../../../shared/api/api';
+import { toastEvents } from '../../../../shared/utils/toast-events';
 
 const SecretaryCurriculumSection = () => {
     const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -29,7 +30,7 @@ const SecretaryCurriculumSection = () => {
             await api.post('/academic-calendar', data);
             fetchEvents();
         } catch (error) {
-            alert("Erreur lors de la création.");
+            toastEvents.error("Erreur lors de la création.");
         }
     };
 

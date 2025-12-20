@@ -8,16 +8,16 @@ import { MembersModule } from '../members/members.module';
 import { AdminRequestModule } from '../admin-requests/admin-requests.module';
 
 @Module({
-    imports: [PrismaModule, MembersModule, AdminRequestModule],
-    controllers: [TeachersController],
-    providers: [
-        TeachersService,
-        AuditService,
-        {
-            provide: 'ITeachersRepository',
-            useClass: PrismaTeachersRepository,
-        },
-    ],
-    exports: [TeachersService, 'ITeachersRepository'],
+  imports: [PrismaModule, MembersModule, AdminRequestModule],
+  controllers: [TeachersController],
+  providers: [
+    TeachersService,
+    AuditService,
+    {
+      provide: 'ITeachersRepository',
+      useClass: PrismaTeachersRepository,
+    },
+  ],
+  exports: [TeachersService, 'ITeachersRepository'],
 })
-export class TeachersModule { }
+export class TeachersModule {}

@@ -4,13 +4,13 @@ import { ConfigModule } from '@nestjs/config';
 
 @Global() // Make it global so text/pdf services can use it easily
 @Module({
-    imports: [ConfigModule],
-    providers: [
-        {
-            provide: 'IStorageProvider',
-            useClass: R2StorageProvider
-        }
-    ],
-    exports: ['IStorageProvider']
+  imports: [ConfigModule],
+  providers: [
+    {
+      provide: 'IStorageProvider',
+      useClass: R2StorageProvider,
+    },
+  ],
+  exports: ['IStorageProvider'],
 })
-export class StorageModule { }
+export class StorageModule {}

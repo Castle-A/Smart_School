@@ -1,8 +1,8 @@
 import {
-    Injectable,
-    NestInterceptor,
-    ExecutionContext,
-    CallHandler,
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { TenantContextService } from './tenant-context.service';
@@ -13,25 +13,25 @@ import { TenantContextService } from './tenant-context.service';
  */
 @Injectable()
 export class TenantInterceptor implements NestInterceptor {
-    constructor(private readonly tenantContextService: TenantContextService) { }
+  constructor(private readonly tenantContextService: TenantContextService) {}
 
-    intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-        const request = context.switchToHttp().getRequest();
-        const user = request.user;
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
 
-        if (user && user.schoolId) {
-            // On enveloppe l'exécution de la suite du pipeline NestJS dans le contexte AsyncLocalStorage
-            return new Observable((observer) => {
-                this.tenantContextService.setSchoolId(user.schoolId, () => {
-                    next.handle().subscribe({
-                        next: (res) => observer.next(res),
-                        error: (err) => observer.error(err),
-                        complete: () => observer.complete(),
-                    });
-                });
-            });
-        }
-
-        return next.handle();
+    if (user && user.schoolId) {
+      // On enveloppe l'exécution de la suite du pipeline NestJS dans le contexte AsyncLocalStorage
+      return new Observable((observer) => {
+        this.tenantContextService.setSchoolId(user.schoolId, () => {
+          next.handle().subscribe({
+            next: (res) => observer.next(res),
+            error: (err) => observer.error(err),
+            complete: () => observer.complete(),
+          });
+        });
+      });
     }
+
+    return next.handle();
+  }
 }

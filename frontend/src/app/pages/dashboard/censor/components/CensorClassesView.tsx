@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, School, Check, X, AlertCircle, Edit2, Trash2, ShieldAlert } from 'lucide-react';
 import SearchFilterBar from '../../../../../shared/components/SearchFilterBar';
 import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 import { useAuth } from '../../../../../shared/contexts/AuthContext';
 import { adminRequestService } from '../../../../../shared/api/admin-requests.service';
 // Import EditClassModal - we can reuse the Director's component
@@ -49,8 +50,14 @@ const LEVELS: Record<string, string[]> = {
 };
 
 const SERIES: Record<string, string[]> = {
-    PREMIER_CYCLE: ['A', 'B', 'C', 'D'],
-    SECOND_CYCLE: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'Ti'], // Standard series
+    PREMIER_CYCLE: ['A', 'B', 'C', 'D'], // Groupes pédagogiques au Collège
+    SECOND_CYCLE: [
+        'A1', 'A2', 'B', 'C', 'D',
+        'E',
+        'F1', 'F2', 'F3', 'F4',
+        'G1', 'G2', 'G3',
+        'Ti', 'EA'
+    ],
 };
 
 const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
@@ -75,6 +82,7 @@ const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
         cycle: 'PREMIER_CYCLE',
         level: '',
         series: '',
+        suffix: '',
         room: '',
         mainTeacherId: '',
     });
@@ -121,6 +129,7 @@ const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
             cycle: 'PREMIER_CYCLE',
             level: '',
             series: '',
+            suffix: '',
             room: '',
             mainTeacherId: ''
         });
@@ -147,7 +156,7 @@ const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
         } catch (err) {
             console.error('Error requesting delete:', err);
             // Could show error toast
-            alert("Erreur lors de l'envoi de la demande");
+            toastEvents.error("Erreur lors de l'envoi de la demande");
         } finally {
             setDeleteLoading(false);
         }
@@ -175,13 +184,20 @@ const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
             // CreateClassPage.tsx uses: name (generated), cycle, level, series.
             // I will generate the name: `${level} ${series || ''}`.trim()
 
-            const generatedName = `${formData.level} ${formData.series || ''}`.trim();
+            // Compose Series: "C" + "1" -> "C 1"
+            let finalSeries = formData.series;
+            if (formData.suffix) {
+                finalSeries = finalSeries ? `${finalSeries} ${formData.suffix}` : formData.suffix;
+            }
+
+            // Compose Name
+            const generatedName = `${formData.level} ${finalSeries || ''}`.trim();
 
             const payload = {
                 name: generatedName,
                 cycle: formData.cycle,
                 level: formData.level,
-                series: formData.series,
+                series: finalSeries, // Stores "C 1" or "A"
                 room: formData.room,
                 mainTeacherId: formData.mainTeacherId ? parseInt(formData.mainTeacherId) : undefined
             };
@@ -402,6 +418,19 @@ const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
                                 </div>
 
                                 <div>
+                                    <label className="block text-xs font-medium text-gray-400 mb-1">Indice / Suffixe (ex: 1, A)</label>
+                                    <input
+                                        type="text"
+                                        value={formData.suffix}
+                                        onChange={(e) => setFormData({ ...formData, suffix: e.target.value })}
+                                        placeholder="Optionnel"
+                                        className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
                                     <label className="block text-xs font-medium text-gray-400 mb-1">Salle (Optionnel)</label>
                                     <input
                                         type="text"
@@ -411,20 +440,19 @@ const CensorClassesView = ({ classes, onRefresh }: CensorClassesViewProps) => {
                                         className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
                                     />
                                 </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-400 mb-1">Professeur Principal (Optionnel)</label>
-                                <select
-                                    value={formData.mainTeacherId}
-                                    onChange={(e) => setFormData({ ...formData, mainTeacherId: e.target.value })}
-                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
-                                >
-                                    <option value="">-- Choisir un professeur --</option>
-                                    {teachers.map(t => (
-                                        <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>
-                                    ))}
-                                </select>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 mb-1">Professeur Principal (Optionnel)</label>
+                                    <select
+                                        value={formData.mainTeacherId}
+                                        onChange={(e) => setFormData({ ...formData, mainTeacherId: e.target.value })}
+                                        className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
+                                    >
+                                        <option value="">-- Choisir un professeur --</option>
+                                        {teachers.map(t => (
+                                            <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
                             <div className="flex justify-end gap-3 pt-4">

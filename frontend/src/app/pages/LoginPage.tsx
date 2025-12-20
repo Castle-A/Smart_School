@@ -42,6 +42,10 @@ export default function LoginPage() {
             // Le backend a déjà défini le cookie HttpOnly
             await login(userData);
 
+            // IMPORTANT: Petit délai pour laisser le navigateur traiter le cookie
+            // Évite la race condition où les requêtes dashboard sont faites avant que le cookie soit prêt
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             if (response.mustChangePassword) {
                 navigate('/change-password');
             } else {

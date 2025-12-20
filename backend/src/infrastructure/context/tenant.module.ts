@@ -5,13 +5,13 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 
 @Global()
 @Module({
-    providers: [
-        TenantContextService,
-        {
-            provide: APP_INTERCEPTOR,
-            useClass: TenantInterceptor,
-        },
-    ],
-    exports: [TenantContextService],
+  providers: [
+    TenantContextService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TenantInterceptor,
+    },
+  ],
+  exports: [TenantContextService],
 })
-export class TenantModule { }
+export class TenantModule {}

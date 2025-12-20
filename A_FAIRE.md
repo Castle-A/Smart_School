@@ -1,51 +1,61 @@
-# Fonctionnalités en Attente
+# 🚀 À FAIRE - Configuration des Notifications
 
-## Phase 3 : Distribution des Bulletins & Conformité
-> **Statut** : EN ATTENTE (Spécifications Gouvernementales requises)
+Ce fichier récapitule les étapes nécessaires pour activer pleinement le système de notifications multi-canaux (Dashboard, Email, SMS).
 
-Cette phase est mise en pause jusqu'à réception des directives officielles pour le format et la distribution des bulletins.
+## 1. Configuration des Serveurs (.env)
+Ces variables doivent être renseignées dans votre fichier `.env` à la racine du dossier `backend`.
 
-### À Faire
-- [ ] **Design du Bulletin** :
-    - Création du modèle HTML (`bulletin.template.ts`) conforme aux normes.
-    - Validation des mentions obligatoires.
-- [ ] **Génération & Stockage** :
-    - Intégration `PdfService` pour conversion HTML -> PDF.
-    - Stockage sécurisé sur R2/S3 via `StorageService`.
-- [ ] **Distribution** :
-    - Envoi par Email aux parents.
-    - Notification SMS de disponibilité.
+### 📧 Email (SMTP)
+```env
+# Configuration SMTP
+MAIL_HOST=votre_serveur_smtp
+MAIL_PORT=587
+MAIL_USER=votre_utilisateur
+MAIL_PASS=votre_mot_de_passe
+MAIL_FROM="SmartSchool <noreply@smartschool.com>"
+```
 
-## Phase 7a : Portail Parents (Mobile First)
-> **Statut** : PLANIFIÉ (En attente de démarrage)
+### 📱 SMS (Twilio ou autre)
+```env
+# Configuration SMS
+SMS_PROVIDER=TWILIO # ou MOCK pour les tests
+TWILIO_ACCOUNT_SID=votre_sid
+TWILIO_AUTH_TOKEN=votre_token
+TWILIO_FROM=+123456789
+```
 
-Interface dédiée aux parents pour suivre la scolarité de leurs enfants.
+---
 
-### Architecture Frontend
-- [ ] Créer `ParentLayout` (Bottom Navigation, Header Minimaliste).
-- [ ] Créer `SocketProvider` pour la réception des notifications temps réel.
+## 2. Validation des Canevas de Notification
+Veuillez valider ou modifier les modèles de messages suivants avec le client :
 
-### Pages & Fonctionnalités
-- [ ] **Dashboard (`/mobile/overview`)** :
-    - Résumé : Nombre d'enfants, Prochains paiements, Notifications non lues.
-- [ ] **Détails Enfant (`/mobile/children/:id`)** :
-    - Onglet **Journal** : Emploi du temps du jour.
-    - Onglet **Scolarité** : Notes et Bulletins.
-    - Onglet **Vie Scolaire** : Absences et incidents.
-- [ ] **Login & Redirection** :
-    - Redirection automatique vers `/parent/dashboard` si rôle `PARENT`.
+- [ ] **Finances** : Alerte sur la certification comptable globale.
+- [ ] **Cycles** : Alerte spécifique aux directeurs de cycle (Maternelle/Primaire ou Collège/Lycée).
+- [ ] **Pédagogie** : Alerte sur les décisions de conseil manquantes (pour le Censeur).
 
-## Phase 7b : Dashboard Enseignant (Offline-First)
-> **Statut** : PLANIFIÉ (Détails techniques validés)
+> [!NOTE]
+> Les détails des modèles de messages sont consultables dans l'artéfact `notification_templates.md`.
 
-Espace de travail numérique optimisé pour tablettes et zones à faible connectivité.
+---
 
-### Architecture PWA
-- [ ] **Configuration Vite PWA** : Manifest, Service Workers.
-- [ ] **Stockage Local** : Utilitaire `OfflineStorage` (IndexedDB) pour persister les données sans réseau.
-- [ ] **Sync Manager** : Système de synchronisation en background dès le retour du réseau.
+## 3. Tâches de Test
+- [ ] Faire un envoi d'email de test.
+- [ ] Faire un envoi de SMS de test.
+- [ ] Vérifier la réception des notifications sur le dashboard admin.
 
-### Modules "Focus"
-- [ ] **Appel (Attendance)** : Interface type "Tinder" (Swipe) pour marquer rapidement les absences.
-- [ ] **Notes (Grades)** : Grille de saisie type Excel, optimisée tactile (clavier numérique).
-- [ ] **Cahier de Texte** : Éditeur simplifié pour les devoirs.
+---
+
+## 4. Implémentation Technique (À faire par le développeur)
+
+Ces tâches nécessitent une intervention sur le code source (Backend).
+
+### Dépendances
+- [ ] Installer `nodemailer` et `@types/nodemailer`.
+
+### Infrastructure Email
+- [ ] Créer `SmtpEmailProvider` implémentant `IEmailProvider`.
+- [ ] Configurer `nodemailer` pour utiliser les variables `SMTP_*` définies dans `.env`.
+
+### Refactoring
+- [ ] Modifier `ExternalCommunicationModule` pour utiliser un `useFactory`.
+- [ ] Permettre le basculement dynamique entre 'CONSOLE' et 'SMTP' via la variable `EMAIL_PROVIDER`.

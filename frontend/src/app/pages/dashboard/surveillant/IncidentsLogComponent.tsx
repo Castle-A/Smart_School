@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, Plus, Search } from 'lucide-react';
+import { toastEvents } from '../../../../shared/utils/toast-events';
 // Simplified interface for Incident
 interface Incident {
     id: string;
@@ -37,7 +38,7 @@ const IncidentsLogComponent = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         // Logic to submit to backend
-        alert("Création d'incident simulée (Backend en attente de redémarrage)");
+        toastEvents.info("Création d'incident simulée (Backend en attente de redémarrage)");
         setShowForm(false);
     };
 

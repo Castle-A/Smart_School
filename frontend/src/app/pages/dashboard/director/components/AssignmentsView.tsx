@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BookOpen, UserPlus, Users, Trash2, Plus, ArrowRightLeft, X } from 'lucide-react';
 import api from '../../../../../shared/api/api';
 import Avatar from '../../../../../shared/components/Avatar';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 
 interface AssignmentsViewProps {
     classes: any[];
@@ -67,7 +68,7 @@ const AssignmentsView = ({ classes }: AssignmentsViewProps) => {
             setSelectedSubjectToAdd(null);
         } catch (err) {
             console.error('Error adding subject:', err);
-            alert('Erreur lors de l\'ajout de la matière');
+            toastEvents.error('Erreur lors de l\'ajout de la matière');
         }
     };
 
@@ -79,7 +80,7 @@ const AssignmentsView = ({ classes }: AssignmentsViewProps) => {
             setClassDetails(res.data);
         } catch (err) {
             console.error('Error removing subject:', err);
-            alert('Erreur lors du retrait de la matière');
+            toastEvents.error('Erreur lors du retrait de la matière');
         }
     };
 
@@ -120,7 +121,7 @@ const AssignmentsView = ({ classes }: AssignmentsViewProps) => {
             setIsAddTeacherOpen(false);
         } catch (err) {
             console.error('Error adding teacher:', err);
-            alert('Erreur lors de l\'ajout du professeur');
+            toastEvents.error('Erreur lors de l\'ajout du professeur');
         }
     };
 
@@ -135,7 +136,7 @@ const AssignmentsView = ({ classes }: AssignmentsViewProps) => {
             setClassDetails(res.data);
         } catch (err) {
             console.error('Error removing teacher:', err);
-            alert('Erreur lors du retrait du professeur');
+            toastEvents.error('Erreur lors du retrait du professeur');
         }
     };
 

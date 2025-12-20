@@ -5,21 +5,23 @@ import { PrismaSchoolRepository } from '../../infrastructure/school/prisma-schoo
 import { PrismaSchoolUserRepository } from '../../infrastructure/school/prisma-school-user.repository';
 import { ConfigurationService } from './configuration.service';
 import { ConfigurationController } from '../../interface/school/configuration.controller';
+import { StorageModule } from '../../infrastructure/storage/storage.module';
 
 @Module({
-    controllers: [SchoolController, ConfigurationController],
-    providers: [
-        SchoolService,
-        ConfigurationService,
-        {
-            provide: 'ISchoolRepository',
-            useClass: PrismaSchoolRepository,
-        },
-        {
-            provide: 'ISchoolUserRepository',
-            useClass: PrismaSchoolUserRepository,
-        },
-    ],
-    exports: [SchoolService, ConfigurationService],
+  imports: [StorageModule],
+  controllers: [SchoolController, ConfigurationController],
+  providers: [
+    SchoolService,
+    ConfigurationService,
+    {
+      provide: 'ISchoolRepository',
+      useClass: PrismaSchoolRepository,
+    },
+    {
+      provide: 'ISchoolUserRepository',
+      useClass: PrismaSchoolUserRepository,
+    },
+  ],
+  exports: [SchoolService, ConfigurationService],
 })
-export class SchoolModule { }
+export class SchoolModule {}

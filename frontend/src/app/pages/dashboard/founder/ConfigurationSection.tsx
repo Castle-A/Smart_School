@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Settings, Palette, BookOpen, DollarSign, Bell, Loader2 } from 'lucide-react';
+import { Palette, Loader2, CreditCard, Calendar } from 'lucide-react';
 import { schoolConfigService } from '../../../../shared/api/school-config.service';
 import type { SchoolConfig, UpdateSchoolConfigDto } from '../../../../shared/api/school-config.service';
 import { IdentityConfig } from './config/IdentityConfig';
-import { AcademicConfig } from './config/AcademicConfig';
-import { FinanceConfig } from './config/FinanceConfig';
-import { NotificationConfig } from './config/NotificationConfig';
 import { toastEvents } from '../../../../shared/utils/toast-events';
 import AcademicYearManager from '../components/AcademicYearManager';
+import { SubscriptionConfig } from './config/SubscriptionConfig';
+import { useAuth } from '../../../../shared/contexts/AuthContext';
 
-type ConfigTab = 'identity' | 'academic' | 'finance' | 'notifications' | 'years';
+type ConfigTab = 'identity' | 'years' | 'subscription';
 
 const ConfigurationSection = () => {
     const [activeTab, setActiveTab] = useState<ConfigTab>('identity');
+    const { user } = useAuth();
     const [config, setConfig] = useState<SchoolConfig | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -20,8 +20,33 @@ const ConfigurationSection = () => {
         try {
             const data = await schoolConfigService.getConfig();
             setConfig(data);
-        } catch (error) {
-            console.error('Failed to fetch config', error);
+        } catch (error: any) {
+            // Silently handle 404 errors - endpoint not implemented yet
+            if (error?.response?.status === 404 || error?.message?.includes('Cannot GET')) {
+                console.log('[ConfigurationSection] API endpoint not yet implemented, using default config');
+                // Set default config with all required properties
+                setConfig({
+                    id: 'default-config',
+                    schoolId: 'default-school',
+                    motto: null,
+                    officialColors: null,
+                    reportTemplate: 'standard',
+                    receiptTemplate: 'standard',
+                    gradingScale: 20,
+                    passingGrade: 10,
+                    defaultCoefficient: 1,
+                    currency: 'XOF',
+                    penaltyRate: 0,
+                    smsAlertsEnabled: false,
+                    emailAlertsEnabled: true,
+                    logo: null,
+                    logoKey: null,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                });
+            } else {
+                console.error('Failed to fetch config', error);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -35,9 +60,9 @@ const ConfigurationSection = () => {
         try {
             const updated = await schoolConfigService.updateConfig(dto);
             setConfig(updated);
-            toastEvents.emit('success', 'Configuration mise à jour avec succès');
+            toastEvents.success('Configuration mise à jour avec succès');
         } catch (error) {
-            toastEvents.emit('error', 'Échec de la mise à jour de la configuration');
+            toastEvents.error('Échec de la mise à jour de la configuration');
         }
     };
 
@@ -54,11 +79,13 @@ const ConfigurationSection = () => {
 
     const tabs = [
         { id: 'identity', label: 'Identité & Branding', icon: Palette },
-        { id: 'academic', label: 'Académique', icon: BookOpen },
-        { id: 'finance', label: 'Finance', icon: DollarSign },
-        { id: 'notifications', label: 'Notifications', icon: Bell },
-        { id: 'years', label: 'Années Scolaires', icon: Settings },
+        { id: 'years', label: 'Années Scolaires', icon: Calendar },
     ];
+
+    // Ne montrer l'onglet abonnement qu'au fondateur
+    if (user?.role === 'FOUNDER') {
+        tabs.push({ id: 'subscription', label: 'Abonnement', icon: CreditCard });
+    }
 
     return (
         <div className="space-y-6">
@@ -67,17 +94,17 @@ const ConfigurationSection = () => {
             </div>
 
             {/* Navigation par onglets */}
-            <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
+            <div className="flex gap-2 overflow-x-auto pb-2 border-b border-white/10 custom-scrollbar">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as ConfigTab)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all whitespace-nowrap ${activeTab === tab.id
-                            ? 'bg-indigo-600 text-white shadow-lg'
-                            : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                        className={`relative flex items-center gap-2 px-4 py-3 rounded-t-lg transition-colors whitespace-nowrap min-w-max ${activeTab === tab.id
+                            ? 'bg-indigo-600 text-white border-b-2 border-indigo-400'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
                             }`}
                     >
-                        <tab.icon size={18} />
+                        <tab.icon size={16} />
                         <span className="text-sm font-medium">{tab.label}</span>
                     </button>
                 ))}
@@ -88,19 +115,13 @@ const ConfigurationSection = () => {
                 {activeTab === 'identity' && (
                     <IdentityConfig config={config} onUpdate={handleUpdate} />
                 )}
-                {activeTab === 'academic' && (
-                    <AcademicConfig config={config} onUpdate={handleUpdate} />
-                )}
-                {activeTab === 'finance' && (
-                    <FinanceConfig config={config} onUpdate={handleUpdate} />
-                )}
-                {activeTab === 'notifications' && (
-                    <NotificationConfig config={config} onUpdate={handleUpdate} />
-                )}
                 {activeTab === 'years' && (
                     <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
                         <AcademicYearManager />
                     </div>
+                )}
+                {activeTab === 'subscription' && (
+                    <SubscriptionConfig />
                 )}
             </div>
         </div>

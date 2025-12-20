@@ -47,9 +47,9 @@ export const RequestItem = ({
         }
     };
 
-    const getDiff = (current: any, proposed: any) => {
+    const getDiff = (current: Record<string, any>, proposed: Record<string, any>) => {
         if (!current) return [];
-        const changes: { label: string, old: any, new: any }[] = [];
+        const changes: { label: string, old: string | number | undefined, new: string | number | undefined }[] = [];
 
         const fieldLabels: Record<string, string> = {
             firstName: 'Prénom',

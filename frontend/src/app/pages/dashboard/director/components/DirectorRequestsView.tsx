@@ -4,6 +4,7 @@ import { RequestItem } from './RequestItem';
 import { adminRequestService, type AdminRequest } from '../../../../../shared/api/admin-requests.service';
 import SearchFilterBar from '../../../../../shared/components/SearchFilterBar';
 import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 
 const DirectorRequestsView = () => {
     const [requests, setRequests] = useState<AdminRequest[]>([]);
@@ -134,7 +135,7 @@ const DirectorRequestsView = () => {
             // Let's refresh requests to show clear status update
             fetchRequests();
         } catch (err) {
-            alert("Erreur lors de l'approbation.");
+            toastEvents.error("Erreur lors de l'approbation.");
             fetchRequests();
         } finally {
             setProcessing(null);
@@ -177,7 +178,7 @@ const DirectorRequestsView = () => {
             await adminRequestService.resolve(id, 'REJECTED', rejectionReason);
             setRequests(prev => prev.filter(r => r.id !== id));
         } catch (err) {
-            alert("Erreur lors du rejet.");
+            toastEvents.error("Erreur lors du rejet.");
             fetchRequests();
         } finally {
             setProcessing(null);

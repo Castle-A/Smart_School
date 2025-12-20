@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowRight, CheckCircle, ArrowRightCircle } from 'lucide-react';
 import api from '../../../../shared/api/api';
+import { toastEvents } from '../../../../shared/utils/toast-events';
 
 interface Student {
     id: string;
@@ -120,7 +121,7 @@ const PromotionWizard = () => {
             setStep(3);
         } catch (e) {
             console.error("Promotion failed", e);
-            alert("Erreur lors de la promotion");
+            toastEvents.error("Erreur lors de la promotion");
         } finally {
             setProcessing(false);
         }

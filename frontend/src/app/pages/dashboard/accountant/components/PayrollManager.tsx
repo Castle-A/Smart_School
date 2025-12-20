@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DollarSign, Check, Download, RefreshCw } from 'lucide-react';
 import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 
 interface Payroll {
     id: string;
@@ -55,7 +56,7 @@ const PayrollManager = () => {
             await api.post('/finance/payroll/generate', { month: `${selectedYear}-${selectedMonth}`, year: selectedYear });
             fetchPayroll();
         } catch (error) {
-            alert("Erreur lors de la génération");
+            toastEvents.error("Erreur lors de la génération");
         } finally {
             setLoading(false);
         }
@@ -70,7 +71,7 @@ const PayrollManager = () => {
             setEditingId(null);
             fetchPayroll();
         } catch (error) {
-            alert("Erreur sauvegarde modifications");
+            toastEvents.error("Erreur sauvegarde modifications");
         }
     };
 
@@ -80,7 +81,7 @@ const PayrollManager = () => {
             await api.patch(`/finance/payroll/${id}`, { status: 'PAID' });
             fetchPayroll();
         } catch (error) {
-            alert("Erreur validation");
+            toastEvents.error("Erreur validation");
         }
     };
 

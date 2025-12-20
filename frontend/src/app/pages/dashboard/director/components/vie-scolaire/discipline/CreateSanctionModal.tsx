@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Search } from 'lucide-react';
 import api from '../../../../../../../shared/api/api';
+import { toastEvents } from '../../../../../../../shared/utils/toast-events';
 
 interface CreateSanctionModalProps {
     onClose: () => void;
@@ -45,7 +46,7 @@ export const CreateSanctionModal = ({ onClose, onSuccess }: CreateSanctionModalP
             onSuccess();
             onClose();
         } catch (err) {
-            alert('Erreur lors de la création');
+            toastEvents.error('Erreur lors de la création');
         }
     };
 

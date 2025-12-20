@@ -8,11 +8,14 @@ import { Roles } from '../../shared/decorators/roles.decorator';
 @Controller('vie-scolaire/bulletins')
 @UseGuards(JwtAuthGuard, RolesGuard, SchoolAccessGuard) // Isolation des bulletins scolaires
 export class BulletinController {
-    constructor(private bulletinService: BulletinService) { }
+  constructor(private bulletinService: BulletinService) {}
 
-    @Get('generate/:studentId/:term')
-    @Roles('DIRECTOR', 'CENSOR', 'TEACHER')
-    async generateBulletin(@Param('studentId') studentId: string, @Param('term') term: string) {
-        return this.bulletinService.generateBulletinData(studentId, term);
-    }
+  @Get('generate/:studentId/:term')
+  @Roles('DIRECTOR', 'CENSOR', 'TEACHER')
+  async generateBulletin(
+    @Param('studentId') studentId: string,
+    @Param('term') term: string,
+  ) {
+    return this.bulletinService.generateBulletinData(studentId, term);
+  }
 }

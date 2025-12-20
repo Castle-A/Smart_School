@@ -15,11 +15,30 @@ import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 import { CommunicationModule } from '../communication/communication.module';
 
 @Module({
-    imports: [PrismaModule, CommunicationModule],
-    controllers: [SanctionsController, RewardsController, IncidentsController, AttendanceController, BulletinController, TimetableController],
-    providers: [SanctionsService, RewardsService, IncidentsService, AttendanceService, BulletinService, TimetableService],
-    exports: [SanctionsService, RewardsService, IncidentsService, AttendanceService, BulletinService, TimetableService]
+  imports: [PrismaModule, CommunicationModule],
+  controllers: [
+    SanctionsController,
+    RewardsController,
+    IncidentsController,
+    AttendanceController,
+    BulletinController,
+    TimetableController,
+  ],
+  providers: [
+    SanctionsService,
+    RewardsService,
+    IncidentsService,
+    AttendanceService,
+    BulletinService,
+    TimetableService,
+  ],
+  exports: [
+    SanctionsService,
+    RewardsService,
+    IncidentsService,
+    AttendanceService,
+    BulletinService,
+    TimetableService,
+  ],
 })
-export class VieScolaireModule { }
-
-
+export class VieScolaireModule {}

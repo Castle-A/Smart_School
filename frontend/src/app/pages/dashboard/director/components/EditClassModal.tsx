@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Trash2, UserPlus } from 'lucide-react';
 import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 
 interface Teacher {
     id: string;
@@ -68,7 +69,7 @@ const EditClassModal = ({ classId, onClose, onUpdate }: EditClassModalProps) => 
             onClose();
         } catch (err) {
             console.error('Error updating class:', err);
-            alert("Erreur lors de la mise à jour de la classe. Vérifiez votre connexion ou contactez le support.");
+            toastEvents.error("Erreur lors de la mise à jour de la classe. Vérifiez votre connexion ou contactez le support.");
         } finally {
             setSaving(false);
         }

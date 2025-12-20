@@ -47,8 +47,8 @@ async function cleanDatabase() {
         console.log('Suppression des SupportLogs...');
         await prisma.supportLog.deleteMany({});
 
-        console.log('Suppression des CalendarEvents...');
-        await prisma.calendarEvent.deleteMany({});
+        console.log('Suppression des AcademicEvents...');
+        await prisma.academicEvent.deleteMany({});
 
         console.log('Suppression des SchoolUsers...');
         await prisma.schoolUser.deleteMany({});

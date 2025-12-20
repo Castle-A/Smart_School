@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Save, User, Users, Hash } from 'lucide-react';
+import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 
 interface StudentRegistrationModalProps {
     isOpen: boolean;
@@ -35,13 +37,9 @@ const StudentRegistrationModal = ({ isOpen, onClose, scope }: StudentRegistratio
     const fetchClasses = async () => {
         setIsLoadingClasses(true);
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await fetch('http://localhost:3000/classes', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setClasses(data);
+            const response = await api.get('/classes');
+            if (response.data) {
+                setClasses(response.data);
             }
         } catch (error) {
             console.error("Failed to fetch classes", error);
@@ -66,7 +64,7 @@ const StudentRegistrationModal = ({ isOpen, onClose, scope }: StudentRegistratio
         e.preventDefault();
 
         if (!formData.matricule || !formData.firstName || !formData.lastName || !formData.dob || !formData.classId || !formData.parentName || !formData.parentPhone) {
-            alert("Veuillez remplir tous les champs obligatoires.");
+            toastEvents.warning("Veuillez remplir tous les champs obligatoires.");
             return;
         }
 
@@ -83,22 +81,9 @@ const StudentRegistrationModal = ({ isOpen, onClose, scope }: StudentRegistratio
                 gender: genderMap[formData.gender] || 'HOMME',
             };
 
-            const token = localStorage.getItem('access_token');
-            const response = await fetch('http://localhost:3000/students', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(payload)
-            });
+            await api.post('/students', payload);
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Erreur lors de l\'enregistrement');
-            }
-
-            alert('Élève enregistré avec succès !');
+            toastEvents.success('Élève enregistré avec succès !');
             setFormData({
                 matricule: '',
                 firstName: '',
@@ -112,7 +97,7 @@ const StudentRegistrationModal = ({ isOpen, onClose, scope }: StudentRegistratio
             });
             onClose();
         } catch (error: any) {
-            alert(error.message);
+            toastEvents.error(error.message);
         } finally {
             setIsSubmitting(false);
         }

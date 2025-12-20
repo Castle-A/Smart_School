@@ -4,6 +4,8 @@ export interface SchoolConfig {
     id: string;
     schoolId: string;
     motto: string | null;
+    logo: string | null;
+    logoKey: string | null;
     officialColors: string | null;
     reportTemplate: string;
     receiptTemplate: string;
@@ -37,7 +39,7 @@ export const schoolConfigService = {
      * Récupère la configuration de l'école
      */
     async getConfig(): Promise<SchoolConfig> {
-        const response = await api.get('/api/schools/config');
+        const response = await api.get('/schools/config');
         return response.data;
     },
 
@@ -45,7 +47,7 @@ export const schoolConfigService = {
      * Met à jour la configuration de l'école
      */
     async updateConfig(dto: UpdateSchoolConfigDto): Promise<SchoolConfig> {
-        const response = await api.patch('/api/schools/config', dto);
+        const response = await api.patch('/schools/config', dto);
         return response.data;
     }
 };

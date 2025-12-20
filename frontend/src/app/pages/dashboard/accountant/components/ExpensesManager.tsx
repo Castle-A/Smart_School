@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Archive } from 'lucide-react';
 import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 
 interface Expense {
     id: string;
@@ -52,7 +53,7 @@ const ExpensesManager = () => {
             setBeneficiary("");
             fetchExpenses();
         } catch (error) {
-            alert("Erreur lors de l'ajout de la dépense");
+            toastEvents.error("Erreur lors de l'ajout de la dépense");
         }
     };
 

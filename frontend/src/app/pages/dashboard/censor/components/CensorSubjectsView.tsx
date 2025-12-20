@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BookOpen, Plus, Trash2, Edit2, Download, Layers, Check } from 'lucide-react';
 import SearchFilterBar from '../../../../../shared/components/SearchFilterBar';
 import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 import { BENIN_SUBJECTS_LIST } from '../../../../../shared/constants/benin-subjects.constants';
 import ImportSubjectsModal from './ImportSubjectsModal';
 
@@ -54,7 +55,7 @@ const CensorSubjectsView = () => {
             setEditingSubject(null);
             fetchSubjects();
         } catch (err) {
-            alert('Erreur lors de l\'enregistrement');
+            toastEvents.error('Erreur lors de l\'enregistrement');
         }
     };
 
@@ -64,7 +65,7 @@ const CensorSubjectsView = () => {
             await api.delete(`/subjects/${id}`);
             fetchSubjects();
         } catch (err) {
-            alert('Erreur lors de la suppression');
+            toastEvents.error('Erreur lors de la suppression');
         }
     };
 

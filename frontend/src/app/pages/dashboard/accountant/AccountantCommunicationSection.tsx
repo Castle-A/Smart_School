@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Mail, AlertTriangle, MessageSquare, Send, Smartphone } from 'lucide-react';
 import api from '../../../../shared/api/api';
+import { toastEvents } from '../../../../shared/utils/toast-events';
 import CreateAnnouncementModal from './components/CreateAnnouncementModal';
 
 const AccountantCommunicationSection = () => {
@@ -37,9 +38,9 @@ const AccountantCommunicationSection = () => {
         if (!confirm(`Envoyer un rappel par ${method} ?`)) return;
         try {
             await api.post(`/communication/remind/${studentId}`, { method });
-            alert(`Rappel ${method} envoyé !`);
+            toastEvents.success(`Rappel ${method} envoyé !`);
         } catch (error) {
-            alert('Erreur lors de l\'envoi');
+            toastEvents.error('Erreur lors de l\'envoi');
         }
     };
 

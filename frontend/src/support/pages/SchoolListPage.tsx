@@ -13,6 +13,8 @@ interface SchoolMeta {
     studentCount: number;
 }
 
+import api from '../../shared/api/api';
+
 const SchoolListPage = () => {
     const navigate = useNavigate();
     const [schools, setSchools] = useState<SchoolMeta[]>([]);
@@ -25,14 +27,8 @@ const SchoolListPage = () => {
 
     const fetchSchools = async () => {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await fetch('http://localhost:3000/support/schools', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            const data = await response.json();
-            setSchools(data);
+            const response = await api.get('/support/schools');
+            setSchools(response.data);
         } catch (error) {
             console.error('Error fetching schools:', error);
         } finally {

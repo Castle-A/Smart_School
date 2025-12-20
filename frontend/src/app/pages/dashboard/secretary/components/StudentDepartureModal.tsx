@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, AlertTriangle, ArrowRight } from 'lucide-react';
 import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 
 interface StudentDepartureModalProps {
     isOpen: boolean;
@@ -30,12 +31,12 @@ const StudentDepartureModal = ({ isOpen, onClose, student, onSuccess }: StudentD
                 date,
                 comments
             });
-            alert("Départ enregistré avec succès.");
+            toastEvents.success("Départ enregistré avec succès.");
             onSuccess();
             onClose();
         } catch (e) {
             console.error("Transfer failed", e);
-            alert("Erreur lors du traitement du départ.");
+            toastEvents.error("Erreur lors du traitement du départ.");
         } finally {
             setLoading(false);
         }

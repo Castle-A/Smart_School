@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Check, ShieldCheck, Loader2, User, Building2, Shield, Briefcase, Smartphone } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import api from '../api/api';
 
 interface PermissionDefinition {
@@ -21,7 +22,7 @@ interface PermissionsChecklistProps {
 
 const PermissionsChecklist = ({ role, directorType, selectedPermissions, onChange, readOnly = false }: PermissionsChecklistProps) => {
   // --- UI CONSTANTS ---
-  const CATEGORY_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
+  const CATEGORY_CONFIG: Record<string, { label: string; icon: LucideIcon; color: string }> = {
     students: { label: 'Élèves & Scolarité', icon: User, color: 'text-blue-500' },
     finance: { label: 'Finance & Caisse', icon: Building2, color: 'text-emerald-500' },
     discipline: { label: 'Vie Scolaire & Discipline', icon: Shield, color: 'text-red-500' },
@@ -32,6 +33,8 @@ const PermissionsChecklist = ({ role, directorType, selectedPermissions, onChang
     services: { label: 'Services (Cantine/Internat)', icon: Briefcase, color: 'text-pink-500' },
     reports: { label: 'Rapports & Stats', icon: Smartphone, color: 'text-cyan-500' },
     communication: { label: 'Communication', icon: Smartphone, color: 'text-teal-500' },
+    configuration: { label: 'Configuration Établissement', icon: ShieldCheck, color: 'text-violet-500' },
+    subscriptions: { label: 'Gestion Abonnement', icon: Building2, color: 'text-amber-500' },
   };
 
   const [permissionsByCategory, setPermissionsByCategory] = useState<Record<string, PermissionDefinition[]>>({});

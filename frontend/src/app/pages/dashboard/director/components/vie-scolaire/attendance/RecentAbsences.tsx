@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, Filter } from 'lucide-react';
 import api from '../../../../../../../shared/api/api';
+import { toastEvents } from '../../../../../../../shared/utils/toast-events';
 
 export const RecentAbsences = () => {
     const [absences, setAbsences] = useState<any[]>([]);
@@ -34,7 +35,7 @@ export const RecentAbsences = () => {
     }, []);
 
     const handleJustify = (id: string) => {
-        alert(`Fonctionnalité de justification pour l'ID ${id} à venir`);
+        toastEvents.info(`Fonctionnalité de justification pour l'ID ${id} à venir`);
     };
 
     return (

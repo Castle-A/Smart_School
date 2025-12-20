@@ -12,9 +12,9 @@ const StudentEnrollmentForm: React.FC<StudentEnrollmentFormProps> = ({ isOpen, o
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [classes, setClasses] = useState<any[]>([]);
+    const [feeCategories, setFeeCategories] = useState<{ id: string, name: string }[]>([]);
 
     // Form Data
-    const [isNewStudent, setIsNewStudent] = useState(true);
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -27,6 +27,7 @@ const StudentEnrollmentForm: React.FC<StudentEnrollmentFormProps> = ({ isOpen, o
         parentPhone: '',
         countryCode: '+229',
         address: '',
+        categoryId: '', // New field for fee profile
 
         // Academic
         cycle: '',
@@ -41,17 +42,28 @@ const StudentEnrollmentForm: React.FC<StudentEnrollmentFormProps> = ({ isOpen, o
 
     useEffect(() => {
         if (isOpen) {
-            const fetchClasses = async () => {
+            const fetchData = async () => {
                 try {
-                    const res = await api.get('/classes');
-                    if (Array.isArray(res.data)) {
-                        setClasses(res.data);
+                    const [classesRes, configRes] = await Promise.all([
+                        api.get('/classes'),
+                        api.get('/finance/config') // Assume this endpoint returns { categories: [] }
+                    ]);
+
+                    if (Array.isArray(classesRes.data)) {
+                        setClasses(classesRes.data);
+                    }
+                    if (configRes.data && Array.isArray(configRes.data.categories)) {
+                        const cats = configRes.data.categories;
+                        setFeeCategories(cats);
+                        // Auto-select 'Nouveaux' if exists as default
+                        const defaultCat = cats.find((c: any) => c.name.toLowerCase().includes('nouveau')) || cats[0];
+                        if (defaultCat) setFormData(prev => ({ ...prev, categoryId: defaultCat.id }));
                     }
                 } catch (e) {
-                    console.error("Failed to fetch classes", e);
+                    console.error("Failed to fetch data", e);
                 }
             };
-            fetchClasses();
+            fetchData();
         }
     }, [isOpen]);
 
@@ -118,7 +130,8 @@ const StudentEnrollmentForm: React.FC<StudentEnrollmentFormProps> = ({ isOpen, o
                 parentPhone: `${formData.countryCode} ${formData.parentPhone}`,
                 address: formData.address,
                 classId: formData.classId || undefined,
-                previousSchool: isNewStudent ? formData.previousSchool : undefined, // Send undefined if old student (backend handles null logic if needed or we send empty)
+                previousSchool: formData.previousSchool,
+                categoryId: formData.categoryId,
                 payment: paymentData
             };
 
@@ -169,15 +182,25 @@ const StudentEnrollmentForm: React.FC<StudentEnrollmentFormProps> = ({ isOpen, o
                             <span className="bg-indigo-500/20 text-indigo-400 text-xs px-2 py-0.5 rounded-full border border-indigo-500/30">1</span> Identité de l'Élève
                         </h3>
 
-                        <div className="flex gap-4 mb-4">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="studentType" checked={isNewStudent} onChange={() => setIsNewStudent(true)} className="accent-indigo-500" />
-                                <span className="text-white text-sm">Nouvel Élève</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="studentType" checked={!isNewStudent} onChange={() => setIsNewStudent(false)} className="accent-indigo-500" />
-                                <span className="text-white text-sm">Ancien Élève (Réinscription)</span>
-                            </label>
+                        <div className="mb-4">
+                            <label className="block text-xs font-medium text-gray-400 mb-2">Profil Tarifaire <span className="text-red-400">*</span></label>
+                            <div className="flex flex-wrap gap-4">
+                                {feeCategories.length > 0 ? feeCategories.map(cat => (
+                                    <label key={cat.id} className={`flex items-center gap-2 px-4 py-3 rounded-xl border2 cursor-pointer transition-all ${formData.categoryId === cat.id ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'bg-black/20 border-white/10 text-gray-400 hover:bg-white/5'}`}>
+                                        <input
+                                            type="radio"
+                                            name="categoryId"
+                                            checked={formData.categoryId === cat.id}
+                                            onChange={() => setFormData({ ...formData, categoryId: cat.id })}
+                                            className="hidden" // Hiding default radio for custom UI
+                                        />
+                                        <span className="font-bold">{cat.name}</span>
+                                        {formData.categoryId === cat.id && <Check size={16} />}
+                                    </label>
+                                )) : (
+                                    <p className="text-red-400 text-xs italic">Aucune catégorie de frais configurée. Veuillez contacter le comptable.</p>
+                                )}
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -207,12 +230,10 @@ const StudentEnrollmentForm: React.FC<StudentEnrollmentFormProps> = ({ isOpen, o
                                 </div>
                             </div>
 
-                            {isNewStudent && (
-                                <div className="md:col-span-2">
-                                    <label className="block text-xs font-medium text-gray-400 mb-1">École de Provenance <span className="text-red-400">*</span></label>
-                                    <input required type="text" value={formData.previousSchool} onChange={e => setFormData({ ...formData, previousSchool: e.target.value })} className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none" placeholder="Ex: Complexe Scolaire ..." />
-                                </div>
-                            )}
+                            <div className="md:col-span-2">
+                                <label className="block text-xs font-medium text-gray-400 mb-1">École de Provenance</label>
+                                <input type="text" value={formData.previousSchool} onChange={e => setFormData({ ...formData, previousSchool: e.target.value })} className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-indigo-500 outline-none" placeholder="Ex: Complexe Scolaire ..." />
+                            </div>
 
                             <div className="md:col-span-2">
                                 <label className="block text-xs font-medium text-gray-400 mb-1">Adresse (Quartier/Ville)</label>

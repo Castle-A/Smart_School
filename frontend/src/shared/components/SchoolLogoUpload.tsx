@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
 import { Upload, School, X } from 'lucide-react';
+import api from '../api/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SchoolLogoUploadProps {
     currentLogo?: string | null;
@@ -12,6 +14,7 @@ const SchoolLogoUpload = ({ currentLogo, schoolId, onSuccess }: SchoolLogoUpload
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { user } = useAuth();
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -53,29 +56,20 @@ const SchoolLogoUpload = ({ currentLogo, schoolId, onSuccess }: SchoolLogoUpload
             reader.onloadend = async () => {
                 const base64 = reader.result as string;
 
-                const token = localStorage.getItem('access_token');
-                const userResponse = await fetch('http://localhost:3000/auth/me', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const userData = await userResponse.json();
+                if (!user) {
+                    setError('Utilisateur non connecté');
+                    return;
+                }
 
-                const response = await fetch(`http://localhost:3000/schools/${schoolId}/logo`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        logoUrl: base64,
-                        userId: userData.id,
-                    }),
+                const response = await api.put(`/schools/${schoolId}/logo`, {
+                    logoUrl: base64,
+                    userId: user.id,
                 });
 
-                if (response.ok) {
+                if (response.status === 200 || response.status === 201) {
                     onSuccess?.();
                 } else {
-                    const data = await response.json();
-                    setError(data.message || 'Erreur lors de l\'upload');
+                    setError('Erreur lors de l\'upload');
                 }
             };
             reader.readAsDataURL(file);
@@ -92,28 +86,18 @@ const SchoolLogoUpload = ({ currentLogo, schoolId, onSuccess }: SchoolLogoUpload
 
         setUploading(true);
         try {
-            const token = localStorage.getItem('access_token');
-            const userResponse = await fetch('http://localhost:3000/auth/me', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const userData = await userResponse.json();
-
-            const response = await fetch(`http://localhost:3000/schools/${schoolId}/logo`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    logoUrl: null,
-                    userId: userData.id,
-                }),
-            });
-
-            if (response.ok) {
-                setPreview(null);
-                onSuccess?.();
+            if (!user) {
+                setError('Utilisateur non connecté');
+                return;
             }
+
+            await api.put(`/schools/${schoolId}/logo`, {
+                logoUrl: null,
+                userId: user.id,
+            });
+
+            setPreview(null);
+            onSuccess?.();
         } catch (err) {
             setError('Erreur lors de la suppression');
             console.error(err);

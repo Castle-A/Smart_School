@@ -20,6 +20,22 @@ class ToastEventEmitter {
     emit(type: ToastType, message: string) {
         this.listeners.forEach(listener => listener({ type, message }));
     }
+
+    success(message: string) {
+        this.emit('success', message);
+    }
+
+    error(message: string) {
+        this.emit('error', message);
+    }
+
+    info(message: string) {
+        this.emit('info', message);
+    }
+
+    warning(message: string) {
+        this.emit('warning', message);
+    }
 }
 
 export const toastEvents = new ToastEventEmitter();

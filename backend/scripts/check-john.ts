@@ -9,23 +9,22 @@ async function main() {
   const user = await prisma.user.findUnique({
     where: { email },
     include: {
-        schoolUsers: {
-            include: {
-                school: true
-            }
+      schoolUsers: {
+        include: {
+          school: true
         }
+      }
     }
   });
 
   if (user) {
     console.log('User found:', {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        isActive: user.isActive,
-        schoolUsers: user.schoolUsers
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      isActive: user.isActive,
+      schoolUsers: user.schoolUsers
     });
     // Check if password matches a known hash (e.g. 'password123') if we could, 
     // but bcrypt is one-way. We can just say user exists.

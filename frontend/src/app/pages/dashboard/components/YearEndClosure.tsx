@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Shield, CheckCircle, AlertTriangle, Lock, Banknote, GraduationCap } from 'lucide-react';
 import { useAuth } from '../../../../shared/contexts/AuthContext';
 import api from '../../../../shared/api/api';
+import { toastEvents } from '../../../../shared/utils/toast-events';
 
 const YearEndClosure = () => {
     const { user } = useAuth();
@@ -32,7 +33,7 @@ const YearEndClosure = () => {
             await api.post(type === 'FINANCE' ? '/transitions/certify-finance' : '/transitions/certify-academic');
             await fetchStatus();
         } catch (e) {
-            alert("Erreur lors de la certification.");
+            toastEvents.error("Erreur lors de la certification.");
         } finally {
             setActionLoading(false);
         }
@@ -43,10 +44,10 @@ const YearEndClosure = () => {
         setActionLoading(true);
         try {
             await api.post('/transitions/close-year');
-            alert("Année clôturée avec succès ! Le système est prêt pour la bascule.");
+            toastEvents.success("Année clôturée avec succès ! Le système est prêt pour la bascule.");
             fetchStatus();
         } catch (e) {
-            alert("Erreur critique lors de la clôture.");
+            toastEvents.error("Erreur critique lors de la clôture.");
         } finally {
             setActionLoading(false);
         }
@@ -107,8 +108,8 @@ const YearEndClosure = () => {
                             onClick={() => handleCertify('FINANCE')}
                             disabled={!canCertifyFinance || actionLoading}
                             className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${canCertifyFinance
-                                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                    : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                                 }`}
                         >
                             {canCertifyFinance ? 'Certifier les Comptes' : 'Réservé au Comptable'}
@@ -154,8 +155,8 @@ const YearEndClosure = () => {
                             onClick={() => handleCertify('ACADEMIC')}
                             disabled={!canCertifyAcademic || actionLoading || status.pendingDecisionsCount > 0}
                             className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${canCertifyAcademic && status.pendingDecisionsCount === 0
-                                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                    : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                                 }`}
                         >
                             {status.pendingDecisionsCount > 0
@@ -198,8 +199,8 @@ const YearEndClosure = () => {
                         onClick={handleCloseYear}
                         disabled={!canCloseYear || actionLoading || !status.financeCertified || !status.academicCertified}
                         className={`w-full py-3 px-4 rounded-lg font-bold transition-all shadow-lg ${canCloseYear && status.financeCertified && status.academicCertified
-                                ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-500/20'
-                                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                            ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-500/20'
+                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                             }`}
                     >
                         {canCloseYear ? "CLÔTURER L'ANNÉE" : "Réservé au Directeur"}

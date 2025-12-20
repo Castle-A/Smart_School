@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Save, Shield } from 'lucide-react';
 import PermissionsChecklist from './PermissionsChecklist';
 import api from '../api/api';
+import { toastEvents } from '../utils/toast-events';
 
 interface EditPermissionsModalProps {
     isOpen: boolean;
@@ -49,7 +50,7 @@ const EditPermissionsModal = ({ isOpen, onClose, member, onSuccess }: EditPermis
             onClose();
         } catch (error) {
             console.error('Error updating permissions:', error);
-            alert('Erreur lors de la mise à jour des permissions');
+            toastEvents.error('Erreur lors de la mise à jour des permissions');
         } finally {
             setLoading(false);
         }

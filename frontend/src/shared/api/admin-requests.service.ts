@@ -1,11 +1,41 @@
 import api from './api';
 
+// Basic payloads
+export interface UpdateTeacherPayload {
+    teacherId: string;
+    updates: Record<string, unknown>;
+}
+
+export interface DeleteTeacherPayload {
+    teacherId: string;
+    reason: string;
+}
+
+export interface ClassAssemblyPayload {
+    classId: string;
+    reason: string;
+}
+
+export interface StudentRegistrationPayload {
+    studentId: string;
+    matricule?: string;
+    [key: string]: unknown;
+}
+
+// Union type for possible data structures
+export type RequestData =
+    | UpdateTeacherPayload
+    | DeleteTeacherPayload
+    | ClassAssemblyPayload
+    | StudentRegistrationPayload
+    | Record<string, unknown>; // Fallback for flexibility
+
 export interface AdminRequest {
     id: string;
     type: 'DELETE_TEACHER' | 'UPDATE_TEACHER' | 'CLASS_ASSEMBLY' | 'DELETE_CLASS' | 'VALIDATE_STUDENT_REGISTRATION' | string;
     status: 'PENDING' | 'APPROVED' | 'REJECTED';
-    data: any; // Changed from string to any to support pre-parsed or object data
-    payload?: any; // Add payload as alias or complementary field
+    data: RequestData;
+    payload?: RequestData; // Keep optional alias but typed
     requester: {
         firstName: string;
         lastName: string;
@@ -20,7 +50,7 @@ export interface AdminRequest {
 }
 
 export const adminRequestService = {
-    create: async (type: string, data: any) => {
+    create: async (type: string, data: RequestData) => {
         return api.post('/admin-requests', { type, data });
     },
 

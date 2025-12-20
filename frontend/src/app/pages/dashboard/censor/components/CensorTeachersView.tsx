@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowDownAZ, CalendarDays, GraduationCap, X, Mail, Phone, Calendar, FileText, ChevronLeft, ChevronRight, UserPlus, Trash2, Pencil, Clock } from 'lucide-react';
 import Skeleton from '../../../../../shared/components/Skeleton';
 import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 import Avatar from '../../../../../shared/components/Avatar';
 import { useAuth } from '../../../../../shared/contexts/AuthContext';
 import { adminRequestService } from '../../../../../shared/api/admin-requests.service';
@@ -97,7 +98,7 @@ const CensorTeachersView = () => {
 
     const handleDeleteRequest = async (teacherId: string) => {
         if (pendingRequests.has(teacherId)) {
-            alert("Une requête est déjà en cours pour ce professeur.");
+            toastEvents.warning("Une requête est déjà en cours pour ce professeur.");
             return;
         }
 
@@ -110,10 +111,10 @@ const CensorTeachersView = () => {
                 teacherId,
                 reason
             });
-            alert('Requête de suppression envoyée au Directeur.');
+            toastEvents.success('Requête de suppression envoyée au Directeur.');
             fetchPendingRequests(); // Refresh badges
         } catch (err) {
-            alert('Erreur lors de l\'envoi de la requête.');
+            toastEvents.error('Erreur lors de l\'envoi de la requête.');
         }
     };
 
@@ -181,7 +182,7 @@ const CensorTeachersView = () => {
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             if (isPending) {
-                                                alert("Une modification est déjà en attente pour ce professeur.");
+                                                toastEvents.warning("Une modification est déjà en attente pour ce professeur.");
                                                 return;
                                             }
                                             navigate(`/app/edit-teacher/${teacher.id}`);

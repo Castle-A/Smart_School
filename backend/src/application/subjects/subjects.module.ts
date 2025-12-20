@@ -5,15 +5,15 @@ import { PrismaSubjectsRepository } from '../../infrastructure/subjects/prisma-s
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [SubjectsController],
-    providers: [
-        SubjectsService,
-        {
-            provide: 'ISubjectsRepository',
-            useClass: PrismaSubjectsRepository,
-        },
-    ],
-    exports: [SubjectsService],
+  imports: [PrismaModule],
+  controllers: [SubjectsController],
+  providers: [
+    SubjectsService,
+    {
+      provide: 'ISubjectsRepository',
+      useClass: PrismaSubjectsRepository,
+    },
+  ],
+  exports: [SubjectsService],
 })
-export class SubjectsModule { }
+export class SubjectsModule {}

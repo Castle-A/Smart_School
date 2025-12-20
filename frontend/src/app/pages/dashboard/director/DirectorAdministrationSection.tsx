@@ -11,6 +11,7 @@ import EditClassModal from './components/EditClassModal';
 import ConfirmationModal from '../../../../shared/components/ConfirmationModal';
 import AddSubjectModal from './components/AddSubjectModal';
 import DirectorAssignmentsView from './components/DirectorAssignmentsView';
+import { toastEvents } from '../../../../shared/utils/toast-events';
 
 import CensorStudentsView from '../censor/components/CensorStudentsView';
 import SearchFilterBar from '../../../../shared/components/SearchFilterBar';
@@ -190,7 +191,7 @@ const DirectorAdministrationSection = () => {
                     refreshData();
                 } catch (error) {
                     console.error('Error deleting class:', error);
-                    alert('Erreur lors de la suppression de la classe');
+                    toastEvents.error('Erreur lors de la suppression de la classe');
                 }
             }
         });
@@ -202,13 +203,13 @@ const DirectorAdministrationSection = () => {
             await api.delete(`/teachers/${id}`);
             fetchTeachers();
         } catch (err) {
-            alert('Erreur lors de la suppression');
+            toastEvents.error('Erreur lors de la suppression');
         }
     };
 
     const handleDeleteSubject = (id: string) => {
         if (!confirm('Supprimer cette matière ?')) return;
-        api.delete(`/subjects/${id}`).then(fetchSubjects).catch(() => alert("Erreur"));
+        api.delete(`/subjects/${id}`).then(fetchSubjects).catch(() => toastEvents.error("Erreur"));
     };
 
     // Handle navigation state

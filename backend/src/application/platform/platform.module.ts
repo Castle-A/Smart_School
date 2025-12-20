@@ -6,9 +6,9 @@ import { AuditService } from '../../shared/services/audit.service';
 import { DataMaskingService } from '../../shared/services/data-masking.service';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [PlatformController],
-    providers: [PlatformService, AuditService, DataMaskingService],
-    exports: [PlatformService],
+  imports: [PrismaModule],
+  controllers: [PlatformController],
+  providers: [PlatformService, AuditService, DataMaskingService],
+  exports: [PlatformService],
 })
-export class PlatformModule { }
+export class PlatformModule {}

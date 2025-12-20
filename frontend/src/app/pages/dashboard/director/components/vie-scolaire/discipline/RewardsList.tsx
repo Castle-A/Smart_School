@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Trophy, Trash2 } from 'lucide-react';
 import api from '../../../../../../../shared/api/api';
 import { CreateRewardModal } from './CreateRewardModal';
+import { toastEvents } from '../../../../../../../shared/utils/toast-events';
 
 export const RewardsList = () => {
     const [rewards, setRewards] = useState<any[]>([]);
@@ -30,7 +31,7 @@ export const RewardsList = () => {
             await api.delete(`/vie-scolaire/rewards/${id}`);
             fetchRewards();
         } catch (err) {
-            alert('Erreur lors de la suppression');
+            toastEvents.error('Erreur lors de la suppression');
         }
     };
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import api from '../../api/api';
 import AddSessionModal from './modals/AddSessionModal';
+import type { TimetableSession } from '../../types/timetable';
 
 interface TimetableEditorProps {
     classId: string;
@@ -11,7 +12,7 @@ const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 const HOURS = Array.from({ length: 11 }, (_, i) => i + 7); // 7h to 17h (start times)
 
 const TimetableEditor: React.FC<TimetableEditorProps> = ({ classId }) => {
-    const [sessions, setSessions] = useState<any[]>([]);
+    const [sessions, setSessions] = useState<TimetableSession[]>([]);
     // Removed unused loading, hoveredCell states
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalDefaults, setModalDefaults] = useState<{ day: number, time: string } | undefined>(undefined);
@@ -58,7 +59,7 @@ const TimetableEditor: React.FC<TimetableEditorProps> = ({ classId }) => {
     };
 
     // Helper to calculate position/height of a session block
-    const getSessionStyle = (session: any) => {
+    const getSessionStyle = (session: TimetableSession) => {
         const startHour = parseInt(session.startTime.split(':')[0]);
         const startMin = parseInt(session.startTime.split(':')[1]);
         const endHour = parseInt(session.endTime.split(':')[0]);

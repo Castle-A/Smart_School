@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Save, BookOpen } from 'lucide-react';
 import api from '../../../../../shared/api/api';
 import { useAuth } from '../../../../../shared/contexts/AuthContext';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 
 import { BENIN_SUBJECTS_LIST } from '../../../../../shared/constants/benin-subjects.constants';
 
@@ -54,7 +55,7 @@ const AddSubjectModal = ({ onClose, onSuccess }: AddSubjectModalProps) => {
             onClose();
         } catch (err) {
             console.error('Error creating subject:', err);
-            alert("Erreur lors de la création de la matière.");
+            toastEvents.error("Erreur lors de la création de la matière.");
         } finally {
             setLoading(false);
         }

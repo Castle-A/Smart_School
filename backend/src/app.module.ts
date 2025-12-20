@@ -14,6 +14,7 @@ import { TeachersModule } from './application/teachers/teachers.module';
 import { PlatformModule } from './application/platform/platform.module';
 import { PermissionsModule } from './application/permissions/permissions.module';
 import { AnalyticsModule } from './application/analytics/analytics.module';
+import { SubscriptionsModule } from './application/subscriptions/subscriptions.module';
 
 import { ClassesModule } from './application/classes/classes.module';
 import { ProfileModule } from './application/profile/profile.module';
@@ -43,10 +44,12 @@ import { TenantModule } from './infrastructure/context/tenant.module'; // Isolat
     }),
     // Rate limiting global (défaut: 100 requêtes/minute)
     // Les endpoints peuvent override avec @Throttle()
-    ThrottlerModule.forRoot([{
-      ttl: 60000, // Time to live: 60 secondes
-      limit: 100, // Limite par défaut: 100 requêtes par TTL
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // Time to live: 60 secondes
+        limit: 100, // Limite par défaut: 100 requêtes par TTL
+      },
+    ]),
     PrismaModule,
     AuthModule,
     SchoolModule,
@@ -73,9 +76,10 @@ import { TenantModule } from './infrastructure/context/tenant.module'; // Isolat
     TransitionsModule,
     AcademicYearsModule,
     ParentsModule,
-    SmsModule
+    SmsModule,
+    SubscriptionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

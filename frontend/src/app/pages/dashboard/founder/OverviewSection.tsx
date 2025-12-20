@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     Users,
     GraduationCap,
@@ -25,9 +25,14 @@ const OverviewSection = () => {
     const [stats, setStats] = useState<SchoolKPIs | null>(null);
     const [loading, setLoading] = useState(true);
 
+    const fetchStatsRef = useRef(false);
+
     useEffect(() => {
+        if (fetchStatsRef.current) return;
+
         const fetchStats = async () => {
             if (user?.schoolId) {
+                fetchStatsRef.current = true;
                 try {
                     console.log('Fetching stats for school:', user.schoolId);
                     const response = await api.get(`/analytics/kpis/school/${user.schoolId}`);
@@ -35,6 +40,7 @@ const OverviewSection = () => {
                     setStats(response.data);
                 } catch (error) {
                     console.error("Failed to fetch dashboard stats", error);
+                    fetchStatsRef.current = false; // Allow retry on failure
                 } finally {
                     setLoading(false);
                 }
@@ -100,7 +106,7 @@ const OverviewSection = () => {
                         trend: stats?.attendance?.rate || "0%"
                     }
                 ].map((stat, idx) => (
-                    <div key={idx} className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4 hover:shadow-lg hover:shadow-indigo-500/10 transition-all shadow-sm hover:z-10 hover:border-white/20">
+                    <div key={idx} className="relative bg-white/8 border border-white/10 rounded-xl p-4 shadow-sm transition-all hover:bg-white/12 hover:border-white/20 hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/20 overflow-hidden isolate">
                         <div className="flex justify-between items-start mb-3">
                             <div className={`p-2.5 rounded-lg ${stat.bg} ${stat.color}`}>
                                 <stat.icon size={20} />
@@ -118,7 +124,7 @@ const OverviewSection = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Alertes Urgentes (Statique pour l'instant) */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-6 relative z-10">
                     <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 shadow-sm">
                         <div className="flex items-center gap-3 mb-6">
                             <AlertTriangle className="text-red-400" size={24} />
@@ -129,7 +135,7 @@ const OverviewSection = () => {
                                 { title: "Paiements en retard", desc: `Plusieurs échéances dépassées ce mois-ci.`, type: "finance", time: "Ce mois" },
                                 { title: "Absences élevées", desc: `Le taux d'absence a augmenté de 2% cette semaine.`, type: "academic", time: "Cette semaine" },
                             ].map((alert, idx) => (
-                                <div key={idx} className="flex items-start gap-4 p-4 bg-red-500/5 border border-red-500/10 rounded-lg hover:bg-red-500/10 transition-colors cursor-pointer">
+                                <div key={idx} className="flex items-start gap-4 p-4 bg-red-500/5 border border-red-500/10 rounded-lg hover:bg-red-500/10 transition-all cursor-pointer hover:border-red-500/20 hover:shadow-md">
                                     <div className={`mt-1 w-2 h-2 rounded-full ${idx === 0 ? 'bg-red-500 animate-pulse' : 'bg-red-400'}`}></div>
                                     <div className="flex-1">
                                         <div className="flex justify-between items-start">
@@ -138,7 +144,7 @@ const OverviewSection = () => {
                                         </div>
                                         <p className="text-sm text-slate-300 mt-1">{alert.desc}</p>
                                     </div>
-                                    <button className="text-xs text-red-300 hover:text-white border border-red-500/30 px-2 py-1 rounded">
+                                    <button className="text-xs text-red-300 hover:text-white border border-red-500/30 hover:border-red-500/50 px-2 py-1 rounded transition-colors">
                                         Voir
                                     </button>
                                 </div>
@@ -157,7 +163,7 @@ const OverviewSection = () => {
                                 { icon: UserPlus, color: "text-emerald-400", title: "Nouvelle Inscription", desc: "Consultation du module élèves...", time: "Récemment" },
                                 { icon: CreditCard, color: "text-blue-400", title: "Mouvement Financier", desc: "Consultation du module finance...", time: "Récemment" },
                             ].map((activity, idx) => (
-                                <div key={idx} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
+                                <div key={idx} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0 hover:bg-white/5 -mx-2 px-2 rounded-lg transition-all cursor-pointer">
                                     <div className={`p-2 rounded-lg bg-white/10 ${activity.color}`}>
                                         <activity.icon size={18} />
                                     </div>
@@ -173,7 +179,7 @@ const OverviewSection = () => {
                 </div>
 
                 {/* Sidebar Right */}
-                <div className="space-y-6">
+                <div className="space-y-6 relative z-10">
                     <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-xl p-6 text-white shadow-lg shadow-indigo-500/20">
                         <h3 className="font-bold text-lg mb-2">Support Premium</h3>
                         <p className="text-indigo-100 text-sm mb-4">Besoin d'aide ? Notre équipe est disponible 24/7 pour les fondateurs.</p>

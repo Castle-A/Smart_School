@@ -7,6 +7,7 @@ import AccountantCurriculumSection from './accountant/AccountantCurriculumSectio
 import AccountantCommunicationSection from './accountant/AccountantCommunicationSection';
 import AccountantOverviewSection from './accountant/AccountantOverviewSection';
 import AccountantFinanceSection from './accountant/AccountantFinanceSection';
+import AccountantConfigurationSection from './accountant/AccountantConfigurationSection';
 import ProfileSection from './founder/settings/ProfileSection';
 import SecuritySection from './founder/settings/SecuritySection';
 import NotificationsSection from './founder/settings/NotificationsSection';
@@ -19,7 +20,7 @@ type SettingsSectionId = 'profil' | 'securite' | 'notifications' | 'apparence' |
 
 const AccountantDashboard = () => {
     const { user, logout } = useAuth();
-    const [activeSection, setActiveSection] = useState<MenuItemId | 'settings'>('vue_ensemble');
+    const [activeSection, setActiveSection] = useState<MenuItemId | 'settings' | 'configuration'>('vue_ensemble');
     const [activeSettingsSection, setActiveSettingsSection] = useState<SettingsSectionId>('profil');
     const [showWelcome, setShowWelcome] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -91,6 +92,8 @@ const AccountantDashboard = () => {
                 return <AccountantFinanceSection />;
             case 'communication':
                 return <AccountantCommunicationSection />;
+            case 'configuration':
+                return <AccountantConfigurationSection />;
             default:
                 return <AccountantOverviewSection />;
         }

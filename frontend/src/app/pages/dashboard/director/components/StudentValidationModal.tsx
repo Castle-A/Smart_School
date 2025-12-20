@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Check, X, UserCheck, AlertTriangle } from 'lucide-react';
 import { adminRequestService } from '../../../../../shared/api/admin-requests.service';
 import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 
 interface StudentValidationModalProps {
     studentId: string | null;
@@ -53,10 +54,11 @@ const StudentValidationModal: React.FC<StudentValidationModalProps> = ({ student
             }
 
             onSuccess();
+            onSuccess();
             onClose();
         } catch (error) {
             console.error("Error validating student", error);
-            alert("Erreur lors de la validation");
+            toastEvents.error("Erreur lors de la validation");
         } finally {
             setLoading(false);
         }

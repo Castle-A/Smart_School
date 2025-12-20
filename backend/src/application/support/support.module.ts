@@ -4,8 +4,8 @@ import { SupportService } from './support.service';
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [SupportController],
-    providers: [SupportService],
+  imports: [PrismaModule],
+  controllers: [SupportController],
+  providers: [SupportService],
 })
-export class SupportModule { }
+export class SupportModule {}

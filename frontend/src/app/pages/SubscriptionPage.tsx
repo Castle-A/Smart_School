@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Check, X, ChevronDown, ChevronUp, Zap, CreditCard, Building2, Crown, Sparkles, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toastEvents } from '../../shared/utils/toast-events';
 
 interface SubscriptionPlan {
     id: string;
@@ -157,7 +158,7 @@ export default function SubscriptionPage() {
 
     const handleSubscribe = async () => {
         if (!selectedPayment) {
-            alert(t('subscription.payment.selectMethod'));
+            toastEvents.error(t('subscription.payment.selectMethod'));
             return;
         }
         setLoading(true);

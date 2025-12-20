@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../../../../shared/contexts/AuthContext';
 import api from '../../../../shared/api/api';
 import StudentEnrollmentForm from './components/StudentEnrollmentForm';
+import StudentReEnrollmentModal from './components/StudentReEnrollmentModal';
 import PendingRegistrationsList from './components/PendingRegistrationsList';
 import StudentDepartureModal from './components/StudentDepartureModal';
 
@@ -81,6 +82,7 @@ const SecretaryAdministrationSection = () => {
 
 const RegistrationTab = ({ scope }: { scope?: string }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isReEnrollOpen, setIsReEnrollOpen] = useState(false);
     const [classes, setClasses] = useState<any[]>([]);
     const [loadingClasses, setLoadingClasses] = useState(false);
 
@@ -152,6 +154,11 @@ const RegistrationTab = ({ scope }: { scope?: string }) => {
                 onClose={() => setIsModalOpen(false)}
                 scope={scope}
             />
+            <StudentReEnrollmentModal
+                isOpen={isReEnrollOpen}
+                onClose={() => setIsReEnrollOpen(false)}
+                scope={scope}
+            />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Actions & Stats */}
@@ -177,6 +184,14 @@ const RegistrationTab = ({ scope }: { scope?: string }) => {
                                     Collège / Lycée
                                 </button>
                             )}
+
+                            <button
+                                onClick={() => setIsReEnrollOpen(true)}
+                                className="flex items-center gap-3 px-6 py-3 bg-white/5 hover:bg-emerald-600 border border-white/10 hover:border-emerald-500 text-white rounded-lg transition-all font-medium group"
+                            >
+                                <Users size={20} className="text-emerald-400 group-hover:text-white" />
+                                Réinscription (Anciens)
+                            </button>
                         </div>
                         <p className="text-sm text-gray-400 mt-4">
                             L'inscription crée un dossier "En attente". La validation du Directeur sera requise.

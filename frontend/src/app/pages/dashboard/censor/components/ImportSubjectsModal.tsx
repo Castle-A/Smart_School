@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { X, CheckSquare, Square, Save, Loader2 } from 'lucide-react';
 import { BENIN_SUBJECTS_LIST } from '../../../../../shared/constants/benin-subjects.constants';
 import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 
 interface ImportSubjectsModalProps {
     onClose: () => void;
@@ -58,7 +59,7 @@ const ImportSubjectsModal = ({ onClose, onSuccess, existingSubjects }: ImportSub
         } catch (error: any) {
             console.error('Import process failed', error);
             const msg = error.response?.data?.message || error.message || "Erreur critique lors de l'importation.";
-            alert(`Erreur: ${Array.isArray(msg) ? msg.join(', ') : msg}`);
+            toastEvents.error(`Erreur: ${Array.isArray(msg) ? msg.join(', ') : msg}`);
         } finally {
             setIsSubmitting(false);
         }

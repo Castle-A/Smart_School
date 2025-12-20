@@ -44,8 +44,8 @@ async function main() {
         await prisma.teacher.deleteMany({});
         console.log('✓ Cleared Teachers');
 
-        await prisma.calendarEvent.deleteMany({});
-        console.log('✓ Cleared CalendarEvents');
+        await prisma.academicEvent.deleteMany({});
+        console.log('✓ Cleared AcademicEvents');
 
         await prisma.class.deleteMany({});
         console.log('✓ Cleared Classes');

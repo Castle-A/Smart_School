@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Trash2, Calendar } from 'lucide-react';
 import api from '../../../../../../../shared/api/api';
 import { CreateSanctionModal } from './CreateSanctionModal';
+import { toastEvents } from '../../../../../../../shared/utils/toast-events';
 
 export const SanctionsList = () => {
     const [sanctions, setSanctions] = useState<any[]>([]);
@@ -35,7 +36,7 @@ export const SanctionsList = () => {
             await api.delete(`/vie-scolaire/sanctions/${id}`);
             fetchSanctions();
         } catch (err) {
-            alert('Erreur lors de la suppression');
+            toastEvents.error('Erreur lors de la suppression');
         }
     };
 

@@ -13,6 +13,18 @@ interface AddSessionModalProps {
     timeDefault?: string;
 }
 
+interface SubjectOption {
+    id: string;
+    name: string;
+    defaultTeacherId?: string;
+}
+
+interface TeacherOption {
+    id: string;
+    firstName: string;
+    lastName: string;
+}
+
 const AddSessionModal: React.FC<AddSessionModalProps> = ({ isOpen, onClose, onSubmit, classId, dayDefault, timeDefault }) => {
     const [formData, setFormData] = useState<UpsertSessionDto>({
         dayOfWeek: dayDefault || 1,
@@ -24,8 +36,8 @@ const AddSessionModal: React.FC<AddSessionModalProps> = ({ isOpen, onClose, onSu
         room: ''
     });
 
-    const [subjects, setSubjects] = useState<any[]>([]);
-    const [teachers, setTeachers] = useState<any[]>([]);
+    const [subjects, setSubjects] = useState<SubjectOption[]>([]);
+    const [teachers, setTeachers] = useState<TeacherOption[]>([]);
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(false);
 
@@ -51,6 +63,7 @@ const AddSessionModal: React.FC<AddSessionModalProps> = ({ isOpen, onClose, onSu
             // Fetch Subjects
             const classResponse = await api.get(`/classes/${classId}`);
             if (classResponse.data && classResponse.data.classSubjects) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setSubjects(classResponse.data.classSubjects.map((cs: any) => ({
                     id: cs.subjectId,
                     name: cs.subject.name,

@@ -3,7 +3,7 @@ import axios from 'axios';
 // Configuration de l'API
 // Utilise des URLs relatives pour profiter du proxy Vite
 // Cela fonctionne en localhost ET via ngrok avec une seule URL
-const API_BASE_URL = '';
+const API_BASE_URL = '/api';
 
 console.log(`🌐 API: Using Vite proxy (relative URLs)`);
 
@@ -31,6 +31,12 @@ api.interceptors.response.use(
         // Allow skipping global error handling for batch operations
         // @ts-ignore
         if (error.config?.skipGlobalErrorHandler) {
+            return Promise.reject(error);
+        }
+
+        // Silently ignore 404 errors for config endpoints (not implemented yet)
+        const url = error.config?.url || '';
+        if (error.response?.status === 404 && url.includes('/schools/config')) {
             return Promise.reject(error);
         }
 

@@ -4,6 +4,7 @@ import CreateAcademicEventModal from '../../../../shared/components/calendar/mod
 import TimetableEditor from '../../../../shared/components/timetable/TimetableEditor';
 import { Calendar, Table, Users } from 'lucide-react';
 import api from '../../../../shared/api/api';
+import { toastEvents } from '../../../../shared/utils/toast-events';
 
 const SurveillantProgrammeSection = () => {
     const [activeTab, setActiveTab] = useState<'calendar' | 'timetable'>('calendar');
@@ -52,7 +53,7 @@ const SurveillantProgrammeSection = () => {
             await api.post('/academic-calendar', data);
             fetchEvents();
         } catch (error) {
-            alert("Erreur/Permission refusée.");
+            toastEvents.error("Erreur/Permission refusée.");
         }
     };
 

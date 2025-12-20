@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search, CreditCard, Check } from 'lucide-react';
 import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 
 // Interface for Student Finance Summary (To be defined in backend)
 interface StudentFinanceSummary {
@@ -61,7 +62,7 @@ const TuitionManager = () => {
                 reason: paymentReason,
                 reference: paymentReference
             });
-            alert(`Paiement de ${paymentAmount} FCFA enregistré pour ${selectedStudent.firstName} ! Reçu généré.`);
+            toastEvents.success(`Paiement de ${paymentAmount} FCFA enregistré pour ${selectedStudent.firstName} ! Reçu généré.`);
 
             // Download PDF from Backend
             try {
@@ -82,7 +83,7 @@ const TuitionManager = () => {
             setPaymentReference('');
             handleSearch({ preventDefault: () => { } } as any); // Refresh
         } catch (error) {
-            alert("Erreur lors du paiement");
+            toastEvents.error("Erreur lors du paiement");
         } finally {
             setProcessingPayment(false);
         }

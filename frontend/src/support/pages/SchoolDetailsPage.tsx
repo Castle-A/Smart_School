@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, School, Users, Calendar, Key, CheckCircle } from 'lucide-react';
+import api from '../../shared/api/api';
 
 interface SchoolDetails {
     id: string;
@@ -33,14 +34,8 @@ const SchoolDetailsPage = () => {
 
     const fetchSchoolDetails = async () => {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await fetch(`http://localhost:3000/support/schools/${id}/meta`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            const data = await response.json();
-            setSchool(data);
+            const response = await api.get(`/support/schools/${id}/meta`);
+            setSchool(response.data);
         } catch (error) {
             console.error('Error fetching school details:', error);
         } finally {
@@ -50,15 +45,8 @@ const SchoolDetailsPage = () => {
 
     const handleResetPassword = async (userId: string) => {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await fetch(`http://localhost:3000/support/users/${userId}/reset-password`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            const data = await response.json();
-            console.log('Password reset:', data);
+            const response = await api.post(`/support/users/${userId}/reset-password`);
+            console.log('Password reset:', response.data);
             setResetSuccess(true);
             setTimeout(() => setResetSuccess(false), 3000);
         } catch (error) {

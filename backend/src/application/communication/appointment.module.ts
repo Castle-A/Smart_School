@@ -5,9 +5,9 @@ import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-    imports: [PrismaModule, NotificationsModule],
-    controllers: [AppointmentController],
-    providers: [AppointmentService],
-    exports: [AppointmentService],
+  imports: [PrismaModule, NotificationsModule],
+  controllers: [AppointmentController],
+  providers: [AppointmentService],
+  exports: [AppointmentService],
 })
-export class AppointmentModule { }
+export class AppointmentModule {}

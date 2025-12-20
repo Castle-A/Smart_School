@@ -6,9 +6,9 @@ import { AdminRequestController } from '../../interface/admin-requests/admin-req
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-    imports: [PrismaModule, NotificationsModule],
-    controllers: [AdminRequestController],
-    providers: [AdminRequestService],
-    exports: [AdminRequestService],
+  imports: [PrismaModule, NotificationsModule],
+  controllers: [AdminRequestController],
+  providers: [AdminRequestService],
+  exports: [AdminRequestService],
 })
-export class AdminRequestModule { }
+export class AdminRequestModule {}

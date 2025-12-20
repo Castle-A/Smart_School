@@ -4,8 +4,8 @@ import { TransitionsController } from '../../interface/transitions/transitions.c
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [TransitionsController],
-    providers: [TransitionsService],
+  imports: [PrismaModule],
+  controllers: [TransitionsController],
+  providers: [TransitionsService],
 })
-export class TransitionsModule { }
+export class TransitionsModule {}

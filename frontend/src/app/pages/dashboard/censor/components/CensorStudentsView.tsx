@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MessageSquare, ChevronUp, Send } from 'lucide-react';
 import api from '../../../../../shared/api/api';
+import { toastEvents } from '../../../../../shared/utils/toast-events';
 import { studentCommentService, type StudentComment } from '../../../../../shared/api/student-comments.service';
 import SearchFilterBar from '../../../../../shared/components/SearchFilterBar';
 
@@ -81,7 +82,7 @@ const CensorStudentsView = () => {
             setNewComment('');
             fetchComments(studentId);
         } catch (err) {
-            alert('Erreur lors de l\'ajout du commentaire');
+            toastEvents.error('Erreur lors de l\'ajout du commentaire');
         }
     };
 

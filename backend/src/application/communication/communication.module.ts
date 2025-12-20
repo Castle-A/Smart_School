@@ -9,9 +9,9 @@ import { NotificationsGateway } from '../../infrastructure/websocket/notificatio
 import { WebhookController } from '../../interface/webhooks/webhook.controller';
 
 @Module({
-    imports: [PrismaModule, NotificationsModule, AppointmentModule, SmsModule],
-    providers: [CommunicationService, NotificationsGateway],
-    controllers: [CommunicationController, WebhookController],
-    exports: [CommunicationService, NotificationsGateway],
+  imports: [PrismaModule, NotificationsModule, AppointmentModule, SmsModule],
+  providers: [CommunicationService, NotificationsGateway],
+  controllers: [CommunicationController, WebhookController],
+  exports: [CommunicationService, NotificationsGateway],
 })
-export class CommunicationModule { }
+export class CommunicationModule {}

@@ -4,9 +4,9 @@ import { TimetableController } from '../../interface/vie-scolaire/timetable.cont
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    providers: [TimetableService],
-    controllers: [TimetableController],
-    exports: [TimetableService],
+  imports: [PrismaModule],
+  providers: [TimetableService],
+  controllers: [TimetableController],
+  exports: [TimetableService],
 })
-export class TimetableModule { }
+export class TimetableModule {}
