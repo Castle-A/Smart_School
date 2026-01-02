@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  smartschool-api:
+    build: .
+    container_name: smartschool-api
+    restart: always
+    ports:
+      - "3002:3000"
+    environment:
+      # On utilise la variable définie dans Portainer
+      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@smartschool-db:5432/${DB_NAME}
+    depends_on:
+      - smartschool-db
+
+  smartschool-db:
+    image: postgres:15
+    container_name: smartschool-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - smartschool_data:/var/lib/postgresql/data
+
+volumes:
+  smartschool_data:
