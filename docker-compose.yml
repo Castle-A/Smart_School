@@ -1,13 +1,14 @@
 version: '3.8'
 services:
   smartschool-api:
-    build: .
+    build:
+      context: ./backend  # <--- On dit à Docker d'aller dans le dossier backend
+      dockerfile: Dockerfile
     container_name: smartschool-api
     restart: always
     ports:
       - "3002:3000"
     environment:
-      # On utilise la variable définie dans Portainer
       - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@smartschool-db:5432/${DB_NAME}
     depends_on:
       - smartschool-db
