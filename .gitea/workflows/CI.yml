@@ -3,18 +3,18 @@ on: [push]
 
 jobs:
   backend:
-    runs-on: ubuntu-latest  # Runner sur ZimaBoard s'en occupera
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
+          
       - name: Install dependencies
-        run: npm install  # C'est cette ligne qui manquait sûrement !
-
+        # On force Git à aller dans le dossier backend
+        run: cd backend && npm install
+        
       - name: Build
-        run: npm run build
+        run: cd backend && npm run build
