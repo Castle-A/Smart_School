@@ -1,18 +1,9 @@
 version: '3.8'
-services:
-  smartschool-api:
-    build:
-      context: ./backend  # <--- On dit à Docker d'aller dans le dossier backend
-      dockerfile: Dockerfile
-    container_name: smartschool-api
-    restart: always
-    ports:
-      - "3002:3000"
-    environment:
-      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@smartschool-db:5432/${DB_NAME}
-    depends_on:
-      - smartschool-db
 
+services:
+  # -----------------------------------------------------------------------------
+  # SERVICE: BASE DE DONNÉES (PostgreSQL)
+  # -----------------------------------------------------------------------------
   smartschool-db:
     image: postgres:15
     container_name: smartschool-db
@@ -23,6 +14,51 @@ services:
       - POSTGRES_DB=${DB_NAME}
     volumes:
       - smartschool_data:/var/lib/postgresql/data
+    networks:
+      - smartschool-network
+
+  # -----------------------------------------------------------------------------
+  # SERVICE: API BACKEND (NestJS)
+  # -----------------------------------------------------------------------------
+  smartschool-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: smartschool-api
+    restart: always
+    ports:
+      - "3002:3000"
+    environment:
+      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@smartschool-db:5432/${DB_NAME}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - smartschool-db
+    networks:
+      - smartschool-network
+
+  # -----------------------------------------------------------------------------
+  # SERVICE: INTERFACE UTILISATEUR (Frontend Vite/React)
+  # -----------------------------------------------------------------------------
+  smartschool-ui:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: smartschool-ui
+    restart: always
+    ports:
+      - "3003:3000"
+    environment:
+      - VITE_API_URL=https://smartschool-api.castole.dedyn.io
+      - NEXT_PUBLIC_API_URL=https://smartschool-api.castole.dedyn.io
+    depends_on:
+      - smartschool-api
+    networks:
+      - smartschool-network
+
+networks:
+  smartschool-network:
+    driver: bridge
 
 volumes:
   smartschool_data:
