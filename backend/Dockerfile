@@ -5,6 +5,7 @@ COPY package*.json ./
 RUN npm install --legacy-peer-deps
 COPY . .
 # On force le build même s'il y a des avertissements
+RUN npx prisma generate
 RUN npm run build || echo "Build failed but continuing..."
 EXPOSE 3000
 CMD ["npm", "run", "start:prod"]
