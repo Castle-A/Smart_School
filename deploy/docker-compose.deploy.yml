@@ -1,0 +1,126 @@
+version: "3.9"
+
+services:
+  # =========================
+  # Redis
+  # =========================
+  smartschool-redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --save 60 1 --loglevel warning
+    ports:
+      - "6379:6379"
+    volumes:
+      - smartschool-redis-data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    networks:
+      - smartschool-network
+
+  # =========================
+  # Backend NestJS
+  # =========================
+  smartschool-api:
+    image: registrydocker.castole.dedyn.io/smartschool-api:${IMAGE_TAG}
+    # Sécurité : Exécution en tant qu'utilisateur non-root
+    security_opt:
+      - no-new-privileges:true
+    # Système de fichiers en lecture seule (sauf volumes montés)
+    read_only: true
+    tmpfs:
+      - /tmp
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@smartschool-db:5432/${DB_NAME}?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL}
+      PORT: ${BACKEND_PORT}
+      NODE_ENV: ${NODE_ENV}
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 256M
+    networks:
+      - smartschool-network
+
+  # =========================
+  # Frontend Vite / Nginx
+  # =========================
+  smartschool-ui:
+    image: registrydocker.castole.dedyn.io/smartschool-ui:${IMAGE_TAG}
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/run
+    ports:
+      - "${UI_PORT}:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - smartschool-network
+
+  # =========================
+  # Frontend Support (Interface de support technique)
+  # =========================
+  smartschool-support:
+    image: registrydocker.castole.dedyn.io/smartschool-support:${IMAGE_TAG}
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/run
+    ports:
+      - "${SUPPORT_PORT:-3004}:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - smartschool-network
+
+# =========================
+# Réseau commun (externe)
+# =========================
+networks:
+  smartschool-network:
+    name: smartschool-network

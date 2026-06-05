@@ -1,0 +1,110 @@
+name: CI SmartSchool
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    # CORRECTION : On utilise l'image 'act-latest' qui possède l'outil Docker
+    container:
+      image: catthehacker/ubuntu:act-latest
+
+    steps:
+      # ----------------------------
+      #  1. Cloner le repo
+      # ----------------------------
+      - name: Manual Clone
+        shell: bash
+        run: |
+          set -e
+          rm -rf ./* || true
+          git clone https://x-access-token:${{ secrets.MY_ACCESS_TOKEN }}@gitea.castole.dedyn.io/castole/smartschool.git .
+          ls -la
+
+      # ----------------------------
+      #  2. Installer & build Backend
+      # ----------------------------
+      - name: Install & Build Backend
+        shell: bash
+        run: |
+          set -e
+          cd backend
+          rm -f package-lock.json
+          rm -rf node_modules
+          npm install
+          npx prisma generate
+          npm run build
+          echo "✅ Build Backend terminé"
+
+      # ----------------------------
+      #  3. Installer & build Frontend
+      # ----------------------------
+      - name: Install & Build Frontend
+        shell: bash
+        run: |
+          set -e
+          cd frontend
+          rm -f package-lock.json
+          npm install
+          npm run build
+          echo "✅ Build Frontend terminé"
+
+      # ----------------------------
+      #  4. Installer & build Frontend Support
+      # ----------------------------
+      - name: Install & Build Frontend Support
+        shell: bash
+        run: |
+          set -e
+          cd frontend-support
+          rm -f package-lock.json
+          npm install
+          npm run build
+          echo "✅ Build Frontend Support terminé"
+
+      # ----------------------------
+      #  5. Connexion au Registre Docker
+      # ----------------------------
+      - name: Docker Login
+        run: |
+          # Utilise le socket de la ZimaBoard monté dans Portainer
+          echo "${{ secrets.DOCKER_REGISTRY_PASSWORD }}" | docker login registrydocker.castole.dedyn.io -u "${{ secrets.DOCKER_REGISTRY_USER }}" --password-stdin
+
+      # ----------------------------
+      #  6. Build & Tag des Images
+      # ----------------------------
+      - name: Build and Push Images
+        shell: bash
+        run: |
+          if [[ "${{ gitea.ref_name }}" == "main" ]]; then
+            TAG="prod"
+          else
+            TAG="dev"
+          fi
+          
+          echo "🚀 Building tag: $TAG"
+          
+          docker build -t registrydocker.castole.dedyn.io/smartschool-api:$TAG ./backend
+          docker push registrydocker.castole.dedyn.io/smartschool-api:$TAG
+          
+          docker build -t registrydocker.castole.dedyn.io/smartschool-ui:$TAG ./frontend
+          docker push registrydocker.castole.dedyn.io/smartschool-ui:$TAG
+          
+          docker build -t registrydocker.castole.dedyn.io/smartschool-support:$TAG ./frontend-support
+          docker push registrydocker.castole.dedyn.io/smartschool-support:$TAG
+
+      # ----------------------------
+      #  7. Déploiement via Webhooks Portainer
+      # ----------------------------
+      - name: Deploy via Webhook
+        shell: bash
+        run: |
+          if [[ "${{ gitea.ref_name }}" == "main" ]]; then
+            curl -X POST "${{ secrets.PORTAINER_WEBHOOK_PROD }}"
+          elif [[ "${{ gitea.ref_name }}" == "dev" ]]; then
+            curl -X POST "${{ secrets.PORTAINER_WEBHOOK_STAGING }}"
+          fi

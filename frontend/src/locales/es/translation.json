@@ -1,0 +1,285 @@
+{
+    "app": {
+        "name": "SmartSchool",
+        "tagline": "Plataforma SaaS N°1 en África"
+    },
+    "home": {
+        "nav": {
+            "features": "Funcionalidades",
+            "pricing": "Precios",
+            "contact": "Contacto",
+            "login": "Iniciar sesión",
+            "start": "Empezar"
+        },
+        "hero": {
+            "title": "Gestione su escuela",
+            "intelligently": "inteligentemente",
+            "subtitle": "SmartSchool revoluciona la gestión escolar con una plataforma todo en uno: notas, finanzas, ausencias, comunicación y mucho más.",
+            "cta": "Crear mi escuela gratis",
+            "demo": "Ver demo"
+        },
+        "stats": {
+            "schools": "Escuelas",
+            "students": "Estudiantes",
+            "uptime": "Tiempo de actividad",
+            "support": "Soporte"
+        },
+        "features": {
+            "title": "Todo lo que necesita",
+            "subtitle": "Una plataforma completa para gestionar su institución",
+            "management": {
+                "title": "Gestión Completa",
+                "description": "Estudiantes, profesores, clases y materias en un solo lugar"
+            },
+            "grades": {
+                "title": "Notas y Boletines",
+                "description": "Seguimiento del rendimiento con boletines PDF automáticos"
+            },
+            "calendar": {
+                "title": "Calendario Inteligente",
+                "description": "Eventos escolares, exámenes y calendario nacional"
+            },
+            "security": {
+                "title": "Seguridad Avanzada",
+                "description": "Autenticación JWT y gestión de permisos granulares"
+            },
+            "finance": {
+                "title": "Finanzas y Nómina",
+                "description": "Gestión de pagos, recibos y nóminas del personal"
+            },
+            "communication": {
+                "title": "Comunicación",
+                "description": "Mensajería interna y notificaciones SMS/Email"
+            }
+        },
+        "pricing": {
+            "title": "Precios transparentes",
+            "subtitle": "Elija el plan que se adapte a sus necesidades",
+            "popular": "Popular",
+            "perMonth": "FCFA/mes",
+            "start": "Empezar",
+            "plans": {
+                "basic": {
+                    "name": "BÁSICO",
+                    "features": [
+                        "Gestión de estudiantes y profesores",
+                        "Notas y boletines PDF",
+                        "Gestión de ausencias",
+                        "Soporte estándar"
+                    ]
+                },
+                "standard": {
+                    "name": "ESTÁNDAR",
+                    "features": [
+                        "Todo BÁSICO +",
+                        "Gestión financiera completa",
+                        "Recibos PDF automáticos",
+                        "SMS manuales",
+                        "Calendario interno"
+                    ]
+                },
+                "premium": {
+                    "name": "PREMIUM",
+                    "features": [
+                        "Todo ESTÁNDAR +",
+                        "SMS automáticos",
+                        "IA análisis de notas",
+                        "Multi-campus",
+                        "Calendario avanzado",
+                        "Soporte prioritario"
+                    ]
+                }
+            }
+        },
+        "cta": {
+            "title": "¿Listo para transformar su escuela?",
+            "subtitle": "Únase a cientos de escuelas que confían en SmartSchool",
+            "button": "Crear mi cuenta ahora"
+        },
+        "footer": {
+            "product": "Producto",
+            "company": "Empresa",
+            "legal": "Legal",
+            "links": {
+                "features": "Funcionalidades",
+                "pricing": "Precios",
+                "docs": "Documentación",
+                "about": "Acerca de",
+                "blog": "Blog",
+                "contact": "Contacto",
+                "privacy": "Privacidad",
+                "terms": "Términos"
+            },
+            "rights": "© 2025 SmartSchool. Todos los derechos reservados."
+        }
+    },
+    "auth": {
+        "login": {
+            "title": "Bienvenido",
+            "subtitle": "Inicie sesión en su cuenta",
+            "email": "Correo electrónico",
+            "password": "Contraseña",
+            "submit": "Iniciar sesión",
+            "noAccount": "¿No tiene una cuenta?",
+            "register": "Registrarse"
+        },
+        "register": {
+            "title": "Cree su escuela",
+            "subtitle": "Únase a SmartSchool en unos pocos clics",
+            "heading": "Registro de Fundador",
+            "firstName": "Nombre",
+            "lastName": "Apellido",
+            "email": "Correo electrónico",
+            "password": "Contraseña",
+            "confirmPassword": "Confirmar",
+            "submit": "Crear mi cuenta",
+            "submitting": "Registrando...",
+            "hasAccount": "¿Ya está registrado?",
+            "login": "Iniciar sesión",
+            "passwordMismatch": "Las contraseñas no coinciden",
+            "success": "¡Registro exitoso! Por favor inicie sesión.",
+            "error": "Error en el registro"
+        },
+        "changePassword": {
+            "title": "Cambio de contraseña obligatorio",
+            "subtitle": "Por su seguridad, por favor cambie su contraseña",
+            "currentPassword": "Contraseña actual",
+            "newPassword": "Nueva contraseña",
+            "confirmPassword": "Confirmar nueva contraseña",
+            "submit": "Cambiar contraseña",
+            "submitting": "Cambiando...",
+            "passwordMismatch": "Las nuevas contraseñas no coinciden",
+            "success": "¡Contraseña cambiada con éxito!",
+            "error": "Error al cambiar la contraseña"
+        }
+    },
+    "dashboard": {
+        "founder": {
+            "title": "Panel del Fundador",
+            "welcome": "Bienvenido",
+            "schools": "Mis Escuelas",
+            "addSchool": "Añadir una escuela",
+            "noSchools": "Aún no hay escuelas",
+            "createFirst": "Cree su primera escuela para comenzar",
+            "stats": {
+                "students": "Total Estudiantes",
+                "teachers": "Profesores",
+                "attendance": "Tasa de asistencia",
+                "events": "Eventos"
+            },
+            "overview": "Resumen de la escuela",
+            "quickActions": {
+                "title": "Acciones Rápidas",
+                "addStudent": "Añadir un estudiante",
+                "createSchedule": "Crear horario",
+                "sendNotification": "Enviar notificación"
+            }
+        },
+        "menu": {
+            "vue_ensemble": "Visión General",
+            "administration": "Administración",
+            "comptabilite": "Contabilidad",
+            "vie_scolaire": "Vida Escolar",
+            "programme_scolaire": "Plan de Estudios",
+            "communication": "Comunicación",
+            "configuration": "Configuración",
+            "settings": "Ajustes"
+        }
+    },
+    "subscription": {
+        "title": "Elija su suscripción",
+        "subtitle": "Seleccione el plan que mejor se adapte a las necesidades de su escuela",
+        "successMessage": "¡Registro exitoso! Elija su suscripción.",
+        "popular": "Más popular",
+        "perMonth": "FCFA/mes",
+        "plans": {
+            "basic": {
+                "name": "Básico",
+                "features": [
+                    "Hasta 200 estudiantes",
+                    "3 usuarios administradores",
+                    "Gestión básica",
+                    "Soporte por correo electrónico",
+                    "Informes mensuales"
+                ]
+            },
+            "standard": {
+                "name": "Estándar",
+                "features": [
+                    "Hasta 500 estudiantes",
+                    "10 usuarios administradores",
+                    "Gestión completa",
+                    "Soporte prioritario",
+                    "Informes personalizados",
+                    "Módulo de pago",
+                    "SMS a padres"
+                ]
+            },
+            "premium": {
+                "name": "Premium",
+                "features": [
+                    "Estudiantes ilimitados",
+                    "Usuarios ilimitados",
+                    "Todas las funcionalidades",
+                    "Soporte 24/7",
+                    "Paneles avanzados",
+                    "API personalizada",
+                    "Formación dedicada",
+                    "Copia de seguridad diaria"
+                ]
+            }
+        },
+        "cycles": {
+            "monthly": "Mensual",
+            "semiannual": "6 Meses",
+            "annual": "9 Meses + 1 Gratis"
+        },
+        "selected": "Seleccionado",
+        "choose": "Elegir",
+        "savings": "¡1 mes gratis incluido!",
+        "payment": {
+            "title": "Método de pago",
+            "selectMethod": "Por favor seleccione un método de pago",
+            "methods": {
+                "momo": {
+                    "name": "MTN MoMo",
+                    "description": "Pago a través de MTN MoMo"
+                },
+                "moov": {
+                    "name": "Moov Money",
+                    "description": "Pago a través de Moov Money"
+                },
+                "celtiis": {
+                    "name": "Celtiis",
+                    "description": "Pago a través de Celtiis"
+                },
+                "card": {
+                    "name": "Tarjeta Bancaria",
+                    "description": "Visa, Mastercard, etc."
+                }
+            }
+        },
+        "summary": {
+            "title": "Resumen del pedido",
+            "selectedPlan": "Plan seleccionado",
+            "amount": "Precio unitario",
+            "period": "Período de compromiso",
+            "total": "Total a pagar"
+        },
+        "subscribe": "Pagar y Activar",
+        "processing": "Procesamiento seguro...",
+        "securePayment": "Pago 100% seguro y cifrado",
+        "backToLogin": "Cancelar y volver al inicio de sesión",
+        "processingMessage": "Suscripción en proceso. Inicie sesión para acceder a su panel."
+    },
+    "common": {
+        "loading": "Cargando...",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "edit": "Editar",
+        "close": "Cerrar",
+        "search": "Buscar",
+        "logout": "Cerrar sesión"
+    }
+}

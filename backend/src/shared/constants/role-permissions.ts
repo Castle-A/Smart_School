@@ -1,0 +1,96 @@
+export const ROLE_PERMISSIONS: Record<string, string[]> = {
+  FOUNDER: [
+    'calendar.manage',
+    'finance.view',
+    'finance.manage',
+    'students.manage',
+    'students.view',
+    'parents.manage',
+    'parents.view',
+    'staff.manage',
+    'staff.view',
+    'teachers.manage',
+    'teachers.view',
+    'classes.manage',
+    'classes.view',
+    'subjects.manage',
+    'subjects.view',
+    'settings.manage',
+    'school-life.manage',
+    'school-life.view',
+    'curriculum.manage',
+    'curriculum.view',
+    'communication.manage',
+    'communication.view',
+  ],
+  DIRECTOR: [
+    'teachers.manage',
+    'teachers.view',
+    'classes.manage',
+    'classes.view',
+    'subjects.manage',
+    'subjects.view',
+    'students.manage',
+    'students.view',
+    'parents.view',
+    'school-life.view',
+    'curriculum.view',
+    'communication.manage',
+    'communication.view',
+    'calendar.manage',
+  ],
+  SECRETARY: [
+    'students.manage',
+    'students.view',
+    'parents.manage',
+    'parents.view',
+    'school-life.view',
+    'curriculum.view',
+    'communication.manage',
+    'communication.view',
+    'classes.view',
+    'teachers.view', // Ensures access to Teachers List
+    'subjects.view',
+  ],
+  SUPERVISOR: [
+    'school-life.manage',
+    'school-life.view',
+    'curriculum.view',
+    'communication.manage',
+    'communication.view',
+    'students.view',
+    'classes.view',
+  ],
+  CENSOR: [
+    'school-life.manage',
+    'school-life.view',
+    'curriculum.view',
+    'communication.manage',
+    'communication.view',
+    'students.view',
+    'classes.view',
+    'teachers.view',
+  ],
+  ACCOUNTANT: [
+    'finance.manage',
+    'finance.view',
+    'students.view',
+    'parents.view',
+    'communication.manage',
+    'communication.view',
+  ],
+  TEACHER: [
+    'school-life.manage', // For their own classes
+    'school-life.view',
+    'curriculum.manage', // For their own subjects
+    'curriculum.view',
+    'communication.manage',
+    'communication.view',
+  ],
+};
+
+// Helper to get permissions for a role (handles case insensitivity)
+export const getPermissionsForRole = (role: string): string[] => {
+  const normalizedRole = role.toUpperCase();
+  return ROLE_PERMISSIONS[normalizedRole] || [];
+};

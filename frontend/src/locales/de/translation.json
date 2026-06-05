@@ -1,0 +1,285 @@
+{
+    "app": {
+        "name": "SmartSchool",
+        "tagline": "SaaS-Plattform Nr. 1 in Afrika"
+    },
+    "home": {
+        "nav": {
+            "features": "Funktionen",
+            "pricing": "Preise",
+            "contact": "Kontakt",
+            "login": "Anmelden",
+            "start": "Starten"
+        },
+        "hero": {
+            "title": "Verwalten Sie Ihre Schule",
+            "intelligently": "intelligent",
+            "subtitle": "SmartSchool revolutioniert das Schulmanagement mit einer All-in-One-Plattform: Noten, Finanzen, Abwesenheiten, Kommunikation und vieles mehr.",
+            "cta": "Meine Schule kostenlos erstellen",
+            "demo": "Demo ansehen"
+        },
+        "stats": {
+            "schools": "Schulen",
+            "students": "Schüler",
+            "uptime": "Verfügbarkeit",
+            "support": "Support"
+        },
+        "features": {
+            "title": "Alles, was Sie brauchen",
+            "subtitle": "Eine komplette Plattform zur Verwaltung Ihrer Einrichtung",
+            "management": {
+                "title": "Komplettes Management",
+                "description": "Schüler, Lehrer, Klassen und Fächer an einem Ort"
+            },
+            "grades": {
+                "title": "Noten & Zeugnisse",
+                "description": "Leistungsverfolgung mit automatischen PDF-Zeugnissen"
+            },
+            "calendar": {
+                "title": "Intelligenter Kalender",
+                "description": "Schulveranstaltungen, Prüfungen und nationaler Kalender"
+            },
+            "security": {
+                "title": "Erweiterte Sicherheit",
+                "description": "JWT-Authentifizierung und granulare Berechtigungsverwaltung"
+            },
+            "finance": {
+                "title": "Finanzen & Gehaltsabrechnung",
+                "description": "Verwaltung von Zahlungen, Quittungen und Gehaltsabrechnungen des Personals"
+            },
+            "communication": {
+                "title": "Kommunikation",
+                "description": "Interne Nachrichtenübermittlung und SMS/E-Mail-Benachrichtigungen"
+            }
+        },
+        "pricing": {
+            "title": "Transparente Preise",
+            "subtitle": "Wählen Sie den Plan, der Ihren Bedürfnissen entspricht",
+            "popular": "Beliebt",
+            "perMonth": "FCFA/Monat",
+            "start": "Starten",
+            "plans": {
+                "basic": {
+                    "name": "BASIC",
+                    "features": [
+                        "Schüler- & Lehrerverwaltung",
+                        "Noten & PDF-Zeugnisse",
+                        "Abwesenheitsmanagement",
+                        "Standard-Support"
+                    ]
+                },
+                "standard": {
+                    "name": "STANDARD",
+                    "features": [
+                        "Alles in BASIC +",
+                        "Komplettes Finanzmanagement",
+                        "Automatische PDF-Quittungen",
+                        "Manuelle SMS",
+                        "Interner Kalender"
+                    ]
+                },
+                "premium": {
+                    "name": "PREMIUM",
+                    "features": [
+                        "Alles in STANDARD +",
+                        "Automatische SMS",
+                        "KI-Notenanalyse",
+                        "Multi-Campus",
+                        "Erweiterter Kalender",
+                        "Prioritäts-Support"
+                    ]
+                }
+            }
+        },
+        "cta": {
+            "title": "Bereit, Ihre Schule zu transformieren?",
+            "subtitle": "Schließen Sie sich Hunderten von Schulen an, die SmartSchool vertrauen",
+            "button": "Mein Konto jetzt erstellen"
+        },
+        "footer": {
+            "product": "Produkt",
+            "company": "Unternehmen",
+            "legal": "Rechtliches",
+            "links": {
+                "features": "Funktionen",
+                "pricing": "Preise",
+                "docs": "Dokumentation",
+                "about": "Über uns",
+                "blog": "Blog",
+                "contact": "Kontakt",
+                "privacy": "Datenschutz",
+                "terms": "AGB"
+            },
+            "rights": "© 2025 SmartSchool. Alle Rechte vorbehalten."
+        }
+    },
+    "auth": {
+        "login": {
+            "title": "Willkommen",
+            "subtitle": "Melden Sie sich bei Ihrem Konto an",
+            "email": "E-Mail",
+            "password": "Passwort",
+            "submit": "Anmelden",
+            "noAccount": "Noch kein Konto?",
+            "register": "Registrieren"
+        },
+        "register": {
+            "title": "Erstellen Sie Ihre Schule",
+            "subtitle": "Treten Sie SmartSchool in wenigen Klicks bei",
+            "heading": "Gründer-Registrierung",
+            "firstName": "Vorname",
+            "lastName": "Nachname",
+            "email": "E-Mail",
+            "password": "Passwort",
+            "confirmPassword": "Bestätigen",
+            "submit": "Mein Konto erstellen",
+            "submitting": "Registrierung...",
+            "hasAccount": "Bereits registriert?",
+            "login": "Anmelden",
+            "passwordMismatch": "Passwörter stimmen nicht überein",
+            "success": "Registrierung erfolgreich! Bitte melden Sie sich an.",
+            "error": "Fehler bei der Registrierung"
+        },
+        "changePassword": {
+            "title": "Passwortänderung erforderlich",
+            "subtitle": "Zu Ihrer Sicherheit ändern Sie bitte Ihr Passwort",
+            "currentPassword": "Aktuelles Passwort",
+            "newPassword": "Neues Passwort",
+            "confirmPassword": "Neues Passwort bestätigen",
+            "submit": "Passwort ändern",
+            "submitting": "Änderung...",
+            "passwordMismatch": "Neue Passwörter stimmen nicht überein",
+            "success": "Passwort erfolgreich geändert!",
+            "error": "Fehler beim Ändern des Passworts"
+        }
+    },
+    "dashboard": {
+        "founder": {
+            "title": "Gründer-Dashboard",
+            "welcome": "Willkommen",
+            "schools": "Meine Schulen",
+            "addSchool": "Schule hinzufügen",
+            "noSchools": "Noch keine Schulen",
+            "createFirst": "Erstellen Sie Ihre erste Schule, um zu beginnen",
+            "stats": {
+                "students": "Gesamtschüler",
+                "teachers": "Lehrer",
+                "attendance": "Anwesenheitsquote",
+                "events": "Ereignisse"
+            },
+            "overview": "Schulübersicht",
+            "quickActions": {
+                "title": "Schnellaktionen",
+                "addStudent": "Schüler hinzufügen",
+                "createSchedule": "Stundenplan erstellen",
+                "sendNotification": "Benachrichtigung senden"
+            }
+        },
+        "menu": {
+            "vue_ensemble": "Übersicht",
+            "administration": "Verwaltung",
+            "comptabilite": "Buchhaltung",
+            "vie_scolaire": "Schulleben",
+            "programme_scolaire": "Lehrplan",
+            "communication": "Kommunikation",
+            "configuration": "Konfiguration",
+            "settings": "Einstellungen"
+        }
+    },
+    "subscription": {
+        "title": "Wählen Sie Ihr Abonnement",
+        "subtitle": "Wählen Sie den Plan, der am besten zu den Bedürfnissen Ihrer Schule passt",
+        "successMessage": "Registrierung erfolgreich! Wählen Sie Ihr Abonnement.",
+        "popular": "Beliebteste",
+        "perMonth": "FCFA/Monat",
+        "plans": {
+            "basic": {
+                "name": "Basic",
+                "features": [
+                    "Bis zu 200 Schüler",
+                    "3 Administrator-Benutzer",
+                    "Grundlegende Verwaltung",
+                    "E-Mail-Support",
+                    "Monatliche Berichte"
+                ]
+            },
+            "standard": {
+                "name": "Standard",
+                "features": [
+                    "Bis zu 500 Schüler",
+                    "10 Administrator-Benutzer",
+                    "Komplette Verwaltung",
+                    "Prioritäts-Support",
+                    "Benutzerdefinierte Berichte",
+                    "Zahlungsmodul",
+                    "SMS an Eltern"
+                ]
+            },
+            "premium": {
+                "name": "Premium",
+                "features": [
+                    "Unbegrenzte Schüler",
+                    "Unbegrenzte Benutzer",
+                    "Alle Funktionen",
+                    "24/7 Support",
+                    "Erweiterte Dashboards",
+                    "Benutzerdefinierte API",
+                    "Dedizierte Schulung",
+                    "Tägliches Backup"
+                ]
+            }
+        },
+        "cycles": {
+            "monthly": "Monatlich",
+            "semiannual": "6 Monate",
+            "annual": "9 Monate + 1 Gratis"
+        },
+        "selected": "Ausgewählt",
+        "choose": "Wählen",
+        "savings": "1 Monat gratis inklusive!",
+        "payment": {
+            "title": "Zahlungsmethode",
+            "selectMethod": "Bitte wählen Sie eine Zahlungsmethode aus",
+            "methods": {
+                "momo": {
+                    "name": "MTN MoMo",
+                    "description": "Bezahlung über MTN MoMo"
+                },
+                "moov": {
+                    "name": "Moov Money",
+                    "description": "Bezahlung über Moov Money"
+                },
+                "celtiis": {
+                    "name": "Celtiis",
+                    "description": "Bezahlung über Celtiis"
+                },
+                "card": {
+                    "name": "Bankkarte",
+                    "description": "Visa, Mastercard, etc."
+                }
+            }
+        },
+        "summary": {
+            "title": "Bestellübersicht",
+            "selectedPlan": "Ausgewählter Plan",
+            "amount": "Einzelpreis",
+            "period": "Verpflichtungsdauer",
+            "total": "Zu zahlender Gesamtbetrag"
+        },
+        "subscribe": "Bezahlen und Aktivieren",
+        "processing": "Sichere Verarbeitung...",
+        "securePayment": "100% sichere und verschlüsselte Zahlung",
+        "backToLogin": "Abbrechen und zur Anmeldung zurückkehren",
+        "processingMessage": "Abonnement wird bearbeitet. Melden Sie sich an, um auf Ihr Dashboard zuzugreifen."
+    },
+    "common": {
+        "loading": "Laden...",
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "delete": "Löschen",
+        "edit": "Bearbeiten",
+        "close": "Schließen",
+        "search": "Suchen",
+        "logout": "Abmelden"
+    }
+}
